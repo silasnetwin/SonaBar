@@ -5,8 +5,20 @@ $cache=Join-Path $root '.tools'
 New-Item -ItemType Directory -Force $cache | Out-Null
 $archive=Join-Path $cache 'ffmpeg.zip'
 $manifest=Get-Content (Join-Path $PSScriptRoot 'dependencies.json') -Raw | ConvertFrom-Json
-if(!(Test-Path -LiteralPath $archive)) { Invoke-WebRequest $manifest.ffmpeg.url -OutFile $archive }
-if((Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash -ne $manifest.ffmpeg.sha256) { throw 'FFmpeg checksum mismatch. Refresh the pinned dependency manifest before changing this binary.' }
+$unpinned=Join-Path $cache 'ffmpeg-unpinned'
+if(!(Test-Path -LiteralPath $archive)) {
+    try { Invoke-WebRequest $manifest.ffmpeg.url -OutFile $archive -ErrorAction Stop }
+    catch {
+        if(!$manifest.ffmpeg.fallbackUrl) { throw }
+        # Autobuild archives are pruned upstream. The rolling release keeps the build working;
+        # it is not byte-identical, so it cannot be pinned and has to be reported as unverified.
+        Write-Warning 'The pinned FFmpeg archive is no longer published. Using the rolling build; refresh scripts/dependencies.json to pin it again.'
+        Remove-Item -LiteralPath $archive -Force -ErrorAction SilentlyContinue
+        Invoke-WebRequest $manifest.ffmpeg.fallbackUrl -OutFile $archive -ErrorAction Stop
+        New-Item -ItemType File -Path $unpinned -Force | Out-Null
+    }
+}
+if(!(Test-Path -LiteralPath $unpinned) -and $manifest.ffmpeg.sha256 -and (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash -ne $manifest.ffmpeg.sha256) { throw 'FFmpeg checksum mismatch. Refresh the pinned dependency manifest before changing this binary.' }
 $extract=Join-Path $cache 'ffmpeg'
 if(!(Test-Path -LiteralPath $extract)) { Expand-Archive -LiteralPath $archive -DestinationPath $extract }
 $decoder=Get-ChildItem -LiteralPath $extract -Filter ffmpeg.exe -Recurse | Select-Object -First 1
