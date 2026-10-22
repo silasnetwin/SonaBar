@@ -97,13 +97,12 @@ First you will be offered a short onboarding; afterwards SineFlow lives in the t
 - Personal dictionary with explicit *heard → intended* replacements.
 - Snippets with variables and exact triggers.
 - Per-application profiles: tone, insertion strategy, trailing Enter, clipboard mode.
-- Custom commands for recurring prompts.
+- Statistics for dictations, words, recorded time and average speed.
 
 ### Files and meetings
 - Transcribe audio and video files in batches; export TXT, SRT and VTT.
 - Record meetings from microphone, system audio or both with incremental transcripts.
 - Optional local speaker separation, renaming and PDF/Markdown export.
-- Local summaries and action items.
 
 ### Privacy
 - No account, no telemetry, no advertising identifiers, no cloud transcription.
