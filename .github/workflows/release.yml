@@ -47,7 +47,7 @@ jobs:
           $hash = (Get-FileHash dist\SineFlow-Setup-x64.exe -Algorithm SHA256).Hash.ToLowerInvariant()
           Get-FileHash -LiteralPath dist\SineFlow-Portable-x64.zip,dist\SineFlow-Setup-x64.exe -Algorithm SHA256 | ForEach-Object { "$($_.Hash.ToLowerInvariant())  $([IO.Path]::GetFileName($_.Path))" } | Set-Content -LiteralPath dist\SHA256SUMS.txt
           $manifest = @(@{ Version=$version; Channel='stable'; Url="https://github.com/silasnetwin/SineFlow/releases/download/$env:RELEASE_TAG/SineFlow-Setup-x64.exe"; Sha256=$hash })
-          $manifest | ConvertTo-Json -Depth 3 | Set-Content -LiteralPath dist\sineflow-update.json -Encoding utf8
+          $manifest | ConvertTo-Json -Depth 3 -AsArray | Set-Content -LiteralPath dist\sineflow-update.json -Encoding utf8
       - name: Publish GitHub release
         uses: softprops/action-gh-release@v2
         with:

@@ -25,7 +25,7 @@
 </p>
 
 <p align="center">
-  <sub>Windows 11 x64 · Windows 10 22H2 with current updates · no account required</sub>
+  <sub>Windows 11 x64 · no account required</sub>
 </p>
 
 ---
@@ -59,7 +59,7 @@ Both packages are self-contained: .NET and the native inference libraries are in
 
 | | |
 | --- | --- |
-| Operating system | Windows 11 x64, or Windows 10 22H2 x64 with current updates |
+| Operating system | Windows 11 x64. Windows 10 22H2 is best effort and not part of the test matrix. |
 | Memory | 4 GB for Base, 8 GB for Balanced, 16 GB for the largest model |
 | Storage | ~150 MB for the app plus 140 MB – 3 GB per speech model |
 | Microphone | Any WASAPI input device |
