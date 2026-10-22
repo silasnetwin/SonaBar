@@ -16,10 +16,16 @@ permissions:
 jobs:
   release:
     runs-on: windows-latest
+    env:
+      # Secrets are mapped to environment variables here because the `secrets` context
+      # cannot be used inside a step condition.
+      WINDOWS_SIGNING_PFX_BASE64: ${{ secrets.WINDOWS_SIGNING_PFX_BASE64 }}
+      WINDOWS_SIGNING_PASSWORD: ${{ secrets.WINDOWS_SIGNING_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+          submodules: recursive
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '10.0.x'
@@ -27,11 +33,8 @@ jobs:
         shell: pwsh
         run: ./build.ps1 -Configuration Release -UpdateFeed https://github.com/silasnetwin/SineFlow/releases/latest/download/sineflow-update.json
       - name: Optionally sign release files
-        if: ${{ secrets.WINDOWS_SIGNING_PFX_BASE64 != '' && secrets.WINDOWS_SIGNING_PASSWORD != '' }}
+        if: ${{ env.WINDOWS_SIGNING_PFX_BASE64 != '' && env.WINDOWS_SIGNING_PASSWORD != '' }}
         shell: pwsh
-        env:
-          WINDOWS_SIGNING_PFX_BASE64: ${{ secrets.WINDOWS_SIGNING_PFX_BASE64 }}
-          WINDOWS_SIGNING_PASSWORD: ${{ secrets.WINDOWS_SIGNING_PASSWORD }}
         run: |
           $certificate = Join-Path $env:RUNNER_TEMP 'sineflow-signing.pfx'
           [IO.File]::WriteAllBytes($certificate, [Convert]::FromBase64String($env:WINDOWS_SIGNING_PFX_BASE64))
