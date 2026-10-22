@@ -1,0 +1,112 @@
+[
+  {
+    "Name": "Whisper tiny",
+    "License": "MIT",
+    "Engine": "Whisper",
+    "Url": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.bin",
+    "Bytes": 77691713,
+    "Id": "tiny",
+    "Hardware": "4 GB RAM · fastest",
+    "Sha256": "be07e048e1e599ad46341c8d2a135645097a538221678b7acdd1b1919c6e1b21"
+  },
+  {
+    "Name": "Whisper base",
+    "License": "MIT",
+    "Engine": "Whisper",
+    "Url": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin",
+    "Bytes": 147951465,
+    "Id": "base",
+    "Hardware": "4 GB RAM · fastest",
+    "Sha256": "60ed5bc3dd14eea856493d334349b405782ddcaf0028d4b5df4088345fba2efe"
+  },
+  {
+    "Name": "Whisper small",
+    "License": "MIT",
+    "Engine": "Whisper",
+    "Url": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin",
+    "Bytes": 487601967,
+    "Id": "small",
+    "Hardware": "4–8 GB RAM · balanced accuracy",
+    "Sha256": "1be3a9b2063867b937e64e2ec7483364a79917e157fa98c5d94b5c1fffea987b"
+  },
+  {
+    "Name": "Whisper medium",
+    "License": "MIT",
+    "Engine": "Whisper",
+    "Url": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-medium.bin",
+    "Bytes": 1533763059,
+    "Id": "medium",
+    "Hardware": "8–16 GB RAM · highest accuracy",
+    "Sha256": "6c14d5adee5f86394037b4e4e8b59f1673b6cee10e3cf0b11bbdbee79c156208"
+  },
+  {
+    "Name": "Whisper large-v2",
+    "License": "MIT",
+    "Engine": "Whisper",
+    "Url": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v2.bin",
+    "Bytes": 3094623691,
+    "Id": "large-v2",
+    "Hardware": "8–16 GB RAM · highest accuracy",
+    "Sha256": "9a423fe4d40c82774b6af34115b8b935f34152246eb19e80e376071d3f999487"
+  },
+  {
+    "Name": "Whisper large-v3",
+    "License": "MIT",
+    "Engine": "Whisper",
+    "Url": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3.bin",
+    "Bytes": 3095033483,
+    "Id": "large-v3",
+    "Hardware": "8–16 GB RAM · highest accuracy",
+    "Sha256": "64d182b440b98d5203c4f9bd541544d84c605196c4f7b845dfa11fb23594d1e2"
+  },
+  {
+    "Name": "Whisper large-v3-turbo",
+    "License": "MIT",
+    "Engine": "Whisper",
+    "Url": "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin",
+    "Bytes": 1624555275,
+    "Id": "large-v3-turbo",
+    "Hardware": "8–16 GB RAM · highest accuracy",
+    "Sha256": "1fc70f774d38eb169993ac391eea357ef47c88757ef72ee5943879b7e8e2bc69"
+  },
+  {
+    "Id": "parakeet-tdt-0.6b-v3",
+    "Engine": "NeMo-Speech.cpp",
+    "Bytes": 713975456,
+    "Sha256": "e3880d0aaaaf2c308ea2c35016b2b895c423eb3fda924c1b463d1c19b7f4d32e",
+    "Url": "https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3/resolve/541d1f99c6b0c3cd0b11a95167540bb8edefd82b/parakeet-tdt-0.6b-v3.q8_0.gguf",
+    "License": "CC-BY-4.0",
+    "Name": "Parakeet TDT · fast multilingual",
+    "Hardware": "4–8 GB RAM · 25 languages · NVIDIA native runtime"
+  },
+  {
+    "Name": "Writing · recommended",
+    "License": "Apache-2.0",
+    "Engine": "llama.cpp",
+    "Url": "https://huggingface.co/unsloth/Qwen3-4B-Instruct-2507-GGUF/resolve/main/Qwen3-4B-Instruct-2507-Q4_K_M.gguf",
+    "Bytes": 2497281120,
+    "Id": "qwen3-4b",
+    "Hardware": "8–16 GB RAM · multilingual editing and translation",
+    "Sha256": "3605803b982cb64aead44f6c1b2ae36e3acdb41d8e46c8a94c6533bc4c67e597"
+  },
+  {
+    "Name": "Writing · compact",
+    "License": "Apache-2.0",
+    "Engine": "llama.cpp",
+    "Url": "https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF/resolve/main/qwen2.5-1.5b-instruct-q4_k_m.gguf",
+    "Bytes": 1117320736,
+    "Id": "qwen2.5-1.5b",
+    "Hardware": "4 GB RAM · local writing assistant",
+    "Sha256": "6a1a2eb6d15622bf3c96857206351ba97e1af16c30d7a74ee38970e434e9407e"
+  },
+  {
+    "Id": "wespeaker",
+    "Engine": "ONNX",
+    "Bytes": 26534365,
+    "Sha256": "5ef208a9da1453335308a6b6f4e6dfbd7e183a38b604de0a57664f45d257fe94",
+    "Url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/wespeaker_en_voxceleb_resnet34.onnx",
+    "License": "Apache-2.0",
+    "Name": "Speaker recognition · WeSpeaker",
+    "Hardware": "4 GB RAM · meeting speaker embeddings"
+  }
+]

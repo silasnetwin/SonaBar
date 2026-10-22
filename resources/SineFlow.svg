@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-labelledby="sineflow-title sineflow-desc">
+  <title id="sineflow-title">SineFlow</title>
+  <desc id="sineflow-desc">Five vertical sound bars with a blue leaf sweeping through the tall centre bar.</desc>
+  <defs>
+    <linearGradient id="surface" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0" stop-color="#FDFEFF"/>
+      <stop offset="1" stop-color="#E8EFFB"/>
+    </linearGradient>
+    <linearGradient id="baraccent" x1="0.1" y1="0" x2="0.6" y2="1">
+      <stop offset="0" stop-color="#8FB9FF"/>
+      <stop offset="0.45" stop-color="#5C93F0"/>
+      <stop offset="1" stop-color="#2E5FA8"/>
+    </linearGradient>
+    <linearGradient id="coreDeep" x1="0.2" y1="0" x2="0.7" y2="1">
+      <stop offset="0" stop-color="#1D2836"/>
+      <stop offset="0.55" stop-color="#16202C"/>
+      <stop offset="1" stop-color="#101821"/>
+    </linearGradient>
+    <linearGradient id="ribbonaccent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#B9D2FF"/>
+      <stop offset="0.6" stop-color="#7FA9F7"/>
+      <stop offset="1" stop-color="#4C8DF6"/>
+    </linearGradient>
+    <clipPath id="coreClip">
+      <rect x="110" y="53" width="36" height="140" rx="18"/>
+    </clipPath>
+  </defs>
+
+  <rect x="0" y="0" width="256" height="256" rx="20" fill="url(#surface)"/>
+
+  <rect x="59" y="111" width="17" height="30" rx="8.5" fill="url(#baraccent)"/>
+  <rect x="82" y="84" width="20" height="79" rx="10" fill="url(#baraccent)"/>
+
+  <rect x="110" y="53" width="36" height="140" rx="18" fill="url(#coreDeep)"/>
+  <g clip-path="url(#coreClip)">
+    <path d="M107 80 C126 88 140 104 145 120 C144 129 141 137 138 142 C128 132 116 116 110 99 C107 91 106 84 107 80 Z" fill="url(#ribbonaccent)"/>
+    <path d="M107 80 C119 85 132 95 141 109 C129 98 116 87 107 80 Z" fill="#FFFFFF" opacity="0.55"/>
+  </g>
+
+  <rect x="154" y="94" width="20" height="69" rx="10" fill="url(#baraccent)"/>
+  <rect x="180" y="113" width="17" height="27" rx="8.5" fill="url(#baraccent)"/>
+</svg>

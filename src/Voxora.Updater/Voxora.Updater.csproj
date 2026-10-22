@@ -1,0 +1,1 @@
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><AssemblyName>SineFlow.Updater</AssemblyName></PropertyGroup><ItemGroup><ProjectReference Include="../Voxora.Core/Voxora.Core.csproj" /></ItemGroup><ItemGroup></ItemGroup></Project>

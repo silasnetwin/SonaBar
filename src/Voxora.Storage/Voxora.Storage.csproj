@@ -1,0 +1,2 @@
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><AssemblyName>SineFlow.Storage</AssemblyName></PropertyGroup><ItemGroup><ProjectReference Include="../Voxora.Core/Voxora.Core.csproj" /></ItemGroup><ItemGroup><PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.0" /></ItemGroup><ItemGroup><PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.5" /></ItemGroup></Project>
+

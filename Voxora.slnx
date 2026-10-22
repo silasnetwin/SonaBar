@@ -1,0 +1,19 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Voxora.App/Voxora.App.csproj" />
+    <Project Path="src/Voxora.Audio/Voxora.Audio.csproj" />
+    <Project Path="src/Voxora.Core/Voxora.Core.csproj" />
+    <Project Path="src/Voxora.Enhancement/Voxora.Enhancement.csproj" />
+    <Project Path="src/Voxora.Meetings/Voxora.Meetings.csproj" />
+    <Project Path="src/Voxora.Models/Voxora.Models.csproj" />
+    <Project Path="src/Voxora.Storage/Voxora.Storage.csproj" />
+    <Project Path="src/Voxora.Transcription/Voxora.Transcription.csproj" />
+    <Project Path="src/Voxora.Updater/Voxora.Updater.csproj" />
+    <Project Path="src/Voxora.WindowsIntegration/Voxora.WindowsIntegration.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Voxora.Tests/Voxora.Tests.csproj">
+      <Platform Project="x64" />
+    </Project>
+  </Folder>
+</Solution>

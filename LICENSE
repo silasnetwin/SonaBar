@@ -1,0 +1,39 @@
+# SineFlow License
+
+Copyright © 2026 SNine Studios. All rights reserved.
+
+SineFlow is proprietary software. No license, express or implied, is granted to copy,
+modify, merge, publish, distribute, sublicense, sell, host, or create derivative works
+from this repository or the compiled application, except with prior written permission
+from SNine Studios.
+
+This includes, without limitation:
+
+- re-distributing the installer, the portable package or any part of the binaries;
+- publishing modified builds, forks or rebranded versions;
+- using the application or its assets in a commercial product or service;
+- using the SineFlow name, logo or icon in a way that suggests endorsement.
+
+Evaluation, security review and contribution to this repository by authorized
+collaborators are permitted.
+
+## Third-party components
+
+SineFlow includes third-party software under its own licenses, including whisper.cpp,
+llama.cpp, .NET, NAudio, SQLitePCLRaw, PDFsharp, sherpa-onnx, WeSpeaker and others.
+Those components remain under their respective licenses. The complete attribution and
+the license texts are listed in `THIRD_PARTY_NOTICES.md` and `resources/licenses/`.
+Nothing in this file restricts the rights granted by those licenses.
+
+Speech and writing models are not part of this repository. They are downloaded
+separately and are governed by their own licenses, which are shown before every
+download and in the Models page.
+
+## No warranty
+
+The software is provided "as is", without warranty of any kind, express or implied,
+including but not limited to the warranties of merchantability, fitness for a
+particular purpose and non-infringement. In no event shall the copyright holder be
+liable for any claim, damages or other liability arising from the use of the software.
+
+For licensing requests, contact SNine Studios through the repository owner.

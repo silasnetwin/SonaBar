@@ -1,0 +1,2 @@
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><AssemblyName>SineFlow.Models</AssemblyName></PropertyGroup><ItemGroup><ProjectReference Include="../Voxora.Core/Voxora.Core.csproj" /></ItemGroup><ItemGroup></ItemGroup><ItemGroup><EmbeddedResource Include="catalog.json" LogicalName="SineFlow.Models.catalog.json" /></ItemGroup></Project>
+

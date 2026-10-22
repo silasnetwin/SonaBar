@@ -1,0 +1,2096 @@
+You are the lead engineer responsible for building a production-ready Windows desktop application.
+
+PROJECT NAME
+Voxora
+
+PUBLISHER
+SNine Studios
+
+TAGLINE
+Speech to Text.
+Private. Offline.
+
+PRIMARY GOAL
+
+Build a COMPLETE, polished Windows-native alternative to the macOS application WhisperBar from:
+
+https://whisperbar.pro/
+https://whisperbar.pro/changelog.html
+
+The reference application is a private/offline speech-to-text utility that lives in the macOS menu bar.
+
+Voxora must provide essentially the same FUNCTIONAL EXPERIENCE on Windows, adapted correctly to Windows APIs and Windows UX.
+
+Do NOT copy WhisperBar's proprietary source code, logo, trademark, icons, paid assets, bundled proprietary files, or application package.
+
+Do NOT call the product WhisperBar.
+
+We are implementing equivalent functionality independently under the Voxora / SNine Studios brand.
+
+The final result must feel like a finished commercial application, not a prototype.
+
+==================================================
+0. MOST IMPORTANT INSTRUCTION
+==================================================
+
+DO NOT merely analyze the project and give me a plan.
+
+Actually implement it.
+
+Continue working through the project until:
+
+- the application builds successfully
+- the application runs successfully
+- core functionality works
+- automated tests pass
+- a Windows installer is generated
+- a portable build is generated
+- there are no obvious TODO placeholders
+- there are no mock buttons pretending to work
+- there are no fake progress indicators
+- there are no dead settings
+- all major error states are handled
+
+You have permission to create, edit, move, refactor and delete files inside this repository when needed.
+
+Before making destructive changes, inspect the repository and preserve anything valuable that already exists.
+
+If the repository is empty, scaffold the complete application yourself.
+
+Do not repeatedly ask me what to do next.
+
+Use sensible engineering decisions and continue autonomously.
+
+Only stop if something genuinely requires information only I can provide, such as a private code-signing certificate.
+
+==================================================
+1. PRODUCT EXPERIENCE
+==================================================
+
+Voxora should normally stay out of the user's way.
+
+It is primarily:
+
+- a Windows system-tray application
+- a global voice dictation tool
+- a local AI writing assistant
+- a selected-text rewriting tool
+- a file transcription tool
+- a meeting transcription tool
+
+The user should be able to install Voxora, launch it, configure it once and then use it in:
+
+- Discord
+- Slack
+- Microsoft Teams
+- Outlook
+- Gmail
+- Chrome
+- Edge
+- Firefox
+- Notepad
+- Word
+- VS Code
+- JetBrains IDEs
+- terminals
+- ChatGPT
+- browsers
+- web forms
+- basically every normal Windows application containing editable text
+
+The user must NOT need to separately install:
+
+- Python
+- Node.js
+- FFmpeg
+- .NET
+- Visual C++ runtime
+- Whisper
+- CUDA
+- Ollama
+- llama.cpp
+- another AI program
+
+Anything required by Voxora must either:
+
+A. be bundled with Voxora
+
+or
+
+B. be automatically downloaded/configured from within Voxora.
+
+There must never be a "go install this dependency manually" step for a normal user.
+
+==================================================
+2. RECOMMENDED TECH STACK
+==================================================
+
+Use:
+
+- C#
+- .NET 10
+- WPF for desktop UI
+- modern MVVM architecture
+- Windows UI Automation
+- Win32 interoperability where necessary
+- NAudio / WASAPI for Windows audio
+- SQLite for local application data
+- whisper.cpp or another high-quality native local inference implementation
+- llama.cpp-compatible local model runtime for local text enhancement when appropriate
+- ONNX Runtime where useful for speaker recognition / auxiliary models
+
+Avoid Electron.
+
+Avoid requiring a browser.
+
+Avoid running a local web server for the application UI.
+
+The app should feel like a real Windows desktop utility.
+
+All native binaries required by the app must ship with it.
+
+==================================================
+3. SOLUTION ARCHITECTURE
+==================================================
+
+Create a maintainable solution similar to:
+
+src/
+
+Voxora.App
+Voxora.Core
+Voxora.Audio
+Voxora.Transcription
+Voxora.Enhancement
+Voxora.WindowsIntegration
+Voxora.Storage
+Voxora.Meetings
+Voxora.Models
+Voxora.Updater
+
+tests/
+
+Voxora.Core.Tests
+Voxora.Transcription.Tests
+Voxora.Storage.Tests
+Voxora.Integration.Tests
+
+scripts/
+
+installer/
+resources/
+docs/
+
+Keep business logic independent from WPF wherever reasonable.
+
+Use dependency injection.
+
+Use interfaces for inference engines.
+
+Example concepts:
+
+ITranscriptionEngine
+
+IEnhancementEngine
+
+IAudioCaptureService
+
+ITextInsertionService
+
+IGlobalHotkeyService
+
+IModelManager
+
+IClipboardService
+
+IActiveApplicationService
+
+IHistoryRepository
+
+IMeetingTranscriptionService
+
+ISpeakerDiarizationService
+
+==================================================
+4. SYSTEM TRAY APPLICATION
+==================================================
+
+Voxora should start as a tray application.
+
+Tray menu:
+
+Voxora
+
+Start Dictation
+Enhanced Dictation
+Edit Selected Text
+Transcribe File
+Meeting Mode
+
+History
+Settings
+
+Pause Voxora
+
+Quit
+
+Left click:
+
+open the main Voxora interface.
+
+Right click:
+
+show quick menu.
+
+Tray icon states should visually distinguish:
+
+idle
+recording
+processing
+error
+
+==================================================
+5. GLOBAL DICTATION
+==================================================
+
+Core workflow:
+
+1. user places cursor inside ANY editable text field
+2. user presses global shortcut
+3. Voxora starts recording
+4. small floating recording overlay appears
+5. user speaks
+6. user presses shortcut again
+7. audio stops
+8. audio is transcribed locally
+9. optional enhancement is applied locally
+10. finished text is inserted directly at the original cursor location
+
+Default Windows shortcut:
+
+Ctrl + Shift + Space
+
+Allow complete customization.
+
+Also support:
+
+toggle-to-record
+
+and
+
+push-to-talk
+
+Push-to-talk:
+
+hold shortcut
+→ record
+
+release shortcut
+→ stop + transcribe
+
+==================================================
+6. SMART TEXT INSERTION
+==================================================
+
+This is EXTREMELY IMPORTANT.
+
+Voxora must reliably insert text into applications across Windows.
+
+Create a robust multi-strategy insertion pipeline.
+
+STRATEGY 1
+
+Windows UI Automation.
+
+Attempt direct insertion using supported UI Automation patterns.
+
+STRATEGY 2
+
+Clipboard insertion.
+
+Temporarily place transcription into clipboard.
+
+Send Ctrl+V using Windows SendInput.
+
+Then restore the user's previous clipboard contents when configured.
+
+STRATEGY 3
+
+Unicode SendInput fallback if appropriate.
+
+The app must remember which strategy works best for specific applications.
+
+Create per-application profiles.
+
+Examples:
+
+Discord.exe
+Code.exe
+chrome.exe
+msedge.exe
+WINWORD.EXE
+OUTLOOK.EXE
+
+Never type into a detected password field.
+
+Use UI Automation IsPassword or equivalent detection.
+
+==================================================
+7. CLIPBOARD BEHAVIOUR
+==================================================
+
+Settings:
+
+Preserve clipboard
+Replace clipboard
+Ask
+
+Default:
+
+Preserve clipboard.
+
+When preserving clipboard:
+
+store existing clipboard content
+insert generated text
+restore clipboard after insertion
+
+Correctly handle:
+
+text
+HTML
+RTF
+images
+file lists
+
+Avoid accidentally destroying complex clipboard data.
+
+==================================================
+8. RECORDING OVERLAY
+==================================================
+
+Build a beautiful compact floating overlay.
+
+It should look premium and minimal.
+
+States:
+
+IDLE
+
+normally hidden
+
+RECORDING
+
+microphone icon
+live waveform
+timer
+cancel button
+
+TRANSCRIBING
+
+animated processing state
+
+ENHANCING
+
+"Improving text…"
+
+SUCCESS
+
+small check animation
+
+ERROR
+
+useful error message
+
+The overlay should:
+
+- stay above normal windows
+- never steal keyboard focus
+- work with multiple monitors
+- remember position
+- automatically stay inside visible monitor bounds
+- animate smoothly
+- use 60 FPS animation where possible
+
+The overlay MUST NOT look like a debug utility.
+
+==================================================
+9. LIVE WAVEFORM
+==================================================
+
+During recording display an actual waveform derived from microphone amplitude.
+
+Do NOT fake the animation.
+
+Use real audio samples.
+
+Keep animation responsive and smooth.
+
+==================================================
+10. AUDIO CAPTURE
+==================================================
+
+Use Windows WASAPI.
+
+Support:
+
+microphone
+
+system audio
+
+microphone + system audio
+
+User can select input device from settings.
+
+Detect:
+
+device added
+device removed
+default device changed
+
+Gracefully recover if a device disappears.
+
+==================================================
+11. LOCAL SPEECH RECOGNITION
+==================================================
+
+Speech recognition must work completely locally after models have been downloaded.
+
+Implement a transcription engine abstraction.
+
+At minimum support high-quality Whisper models.
+
+Expose a model manager with options similar to:
+
+Tiny
+Base
+Small
+Medium
+Large
+Large V3
+Large V3 Turbo
+
+Do not hardcode the architecture so Whisper is the only possible engine.
+
+The system should later allow:
+
+Parakeet
+Qwen ASR
+other ONNX models
+
+without rewriting the application.
+
+==================================================
+12. HARDWARE ACCELERATION
+==================================================
+
+Automatically inspect the machine.
+
+Detect:
+
+CPU
+RAM
+GPU
+VRAM where available
+Windows version
+
+Provide:
+
+CPU inference
+
+and hardware accelerated inference where reasonably possible.
+
+Prefer a generic Windows-compatible backend such as:
+
+Vulkan
+DirectML
+ONNX execution providers
+
+instead of forcing users to install CUDA.
+
+CPU fallback MUST always work.
+
+Never crash because GPU acceleration is unavailable.
+
+Automatically benchmark or estimate the best default backend.
+
+Settings:
+
+Automatic
+CPU
+GPU / accelerated
+
+==================================================
+13. MODEL MANAGER
+==================================================
+
+Models must NOT require manual installation.
+
+Create:
+
+Settings
+→ Models
+
+Each model shows:
+
+name
+engine
+size
+download status
+recommended hardware
+estimated speed
+language capabilities
+
+Actions:
+
+Download
+Pause
+Resume
+Delete
+
+Downloads must:
+
+show real progress
+support cancellation
+resume partial downloads
+verify SHA256
+detect corruption
+check free disk space
+
+If the currently selected model is unavailable:
+
+automatically fall back to another installed model.
+
+Never silently fail.
+
+==================================================
+14. FIRST START EXPERIENCE
+==================================================
+
+Create a beautiful onboarding flow.
+
+PAGE 1
+
+Welcome to Voxora
+
+"Your voice. Your words. Your computer."
+
+PAGE 2
+
+Microphone permission / test.
+
+Show actual microphone level.
+
+PAGE 3
+
+Choose language.
+
+Recommended default:
+
+Automatic
+
+PAGE 4
+
+Choose model.
+
+Provide simple choices:
+
+Fast
+Balanced
+Best quality
+
+Do NOT overwhelm normal users with model names initially.
+
+Advanced users can change the exact model later.
+
+PAGE 5
+
+Hotkey test.
+
+Press shortcut and speak.
+
+PAGE 6
+
+Finished.
+
+Voxora minimizes to tray.
+
+==================================================
+15. AUTOMATIC LANGUAGE DETECTION
+==================================================
+
+Support automatic language detection.
+
+At minimum provide excellent support for:
+
+German
+English
+French
+Spanish
+Italian
+Portuguese
+Dutch
+Polish
+
+and all languages supported by the installed Whisper model.
+
+User setting:
+
+Automatic
+German
+English
+etc.
+
+==================================================
+16. CUSTOM WORDS
+==================================================
+
+Create:
+
+Settings
+→ Custom Words
+
+Users can add:
+
+names
+brands
+technical terms
+product names
+abbreviations
+
+Examples:
+
+Voxora
+SNine Studios
+Minecraft
+Fabric
+IntelliJ
+GeckoLib
+
+Apply custom words intelligently during transcription correction / enhancement.
+
+Allow:
+
+add
+edit
+delete
+import
+export
+
+==================================================
+17. TRANSCRIPTION CLEANUP
+==================================================
+
+Plain dictation must already produce clean output.
+
+Remove obvious transcription artifacts.
+
+Handle:
+
+repeated filler hallucinations
+duplicate phrases
+unwanted blank lines
+broken punctuation
+
+Do NOT silently rewrite the user's meaning.
+
+==================================================
+18. LOCAL ENHANCEMENT
+==================================================
+
+Implement an optional local AI enhancement mode.
+
+Purpose:
+
+turn natural messy speech into polished text.
+
+Example input:
+
+"hey anna ähm kannst du mir vielleicht die folien bis freitag schicken danke"
+
+Possible enhanced output:
+
+"Hey Anna,
+
+kannst du mir die Folien bitte bis Freitag schicken?
+
+Danke!"
+
+Enhancement features:
+
+grammar correction
+punctuation
+remove filler words
+self-correction handling
+paragraph formatting
+natural capitalization
+number formatting
+email formatting
+message formatting
+
+Keep the user's language unless explicitly instructed otherwise.
+
+Do NOT send text to a cloud API.
+
+Use a local lightweight model.
+
+Prefer llama.cpp-compatible inference when practical.
+
+Model downloads are managed automatically inside Voxora.
+
+==================================================
+19. TWO DICTATION MODES
+==================================================
+
+Allow two configurable shortcuts.
+
+Example:
+
+Ctrl + Shift + Space
+→ plain transcription
+
+Ctrl + Alt + Space
+→ transcription + enhancement
+
+Users can customize both.
+
+==================================================
+20. APPLICATION-AWARE ENHANCEMENT
+==================================================
+
+Detect foreground application.
+
+Examples:
+
+Outlook
+→ email formatting
+
+Gmail
+→ email formatting
+
+Discord
+→ natural conversational message
+
+Teams
+→ professional but conversational
+
+VS Code
+→ preserve code-related terms
+
+Terminal
+→ avoid destructive rewriting
+
+Allow per-application preferences.
+
+==================================================
+21. SELECTED TEXT CONTEXT MENU
+==================================================
+
+Implement a global text editing feature.
+
+Workflow:
+
+1. user selects text inside another application
+2. presses context-menu shortcut
+3. Voxora safely reads selected text
+4. a floating menu appears
+5. user chooses an action
+6. Voxora locally processes the text
+7. original selected text is replaced
+
+Actions:
+
+Improve writing
+
+Spelling & grammar
+
+Shorten
+
+Expand
+
+Make professional
+
+Make casual
+
+Bullet list
+
+To-do list
+
+Translate…
+
+Custom instruction
+
+Also support:
+
+type custom instruction
+
+or
+
+record custom instruction with microphone
+
+Example:
+
+selected:
+
+"hey anna send slides friday thanks"
+
+choose:
+
+Make professional
+
+result:
+
+"Hi Anna,
+
+Could you please send me the slides by Friday?
+
+Thank you."
+
+==================================================
+22. READING SELECTED TEXT SAFELY
+==================================================
+
+Use Windows UI Automation where possible.
+
+If unavailable:
+
+temporarily send Ctrl+C
+
+read clipboard
+
+restore previous clipboard afterwards.
+
+Do not permanently alter clipboard unless necessary.
+
+Never process password fields.
+
+==================================================
+23. SNIPPETS
+==================================================
+
+Create snippet expansion.
+
+Example:
+
+voice phrase:
+
+"insert my address"
+
+could produce configured text.
+
+Settings:
+
+Snippets
+
+Each snippet:
+
+name
+trigger phrases
+content
+
+Preserve formatting including:
+
+newlines
+tabs
+
+Support variables where useful:
+
+{date}
+{time}
+{clipboard}
+
+==================================================
+24. HISTORY
+==================================================
+
+Create local transcription history.
+
+Each entry:
+
+timestamp
+original transcription
+enhanced version
+duration
+language
+application
+model
+word count
+
+Actions:
+
+copy
+reuse
+delete
+search
+
+Filters:
+
+today
+week
+month
+custom range
+language
+application
+
+Provide:
+
+Clear history
+
+and
+
+Disable history entirely
+
+Privacy-conscious users must be able to completely disable history.
+
+==================================================
+25. STATISTICS
+==================================================
+
+Statistics page:
+
+total dictations
+total recorded duration
+total words
+average dictation length
+language breakdown
+most used applications
+model usage
+
+Statistics remain local.
+
+Deleting history should NOT accidentally destroy lifetime statistics unless user explicitly resets statistics.
+
+==================================================
+26. FILE TRANSCRIPTION
+==================================================
+
+Allow:
+
+dragging an audio/video file onto Voxora
+
+or:
+
+File
+→ Transcribe File
+
+Support common formats:
+
+MP3
+WAV
+M4A
+AAC
+FLAC
+OGG
+MP4
+MOV
+MKV
+WEBM
+
+If FFmpeg is required:
+
+bundle a redistributable compatible FFmpeg build inside the application.
+
+The user must not install FFmpeg.
+
+Respect FFmpeg licensing and include THIRD_PARTY_NOTICES.
+
+For longer media:
+
+show real transcription progress.
+
+Allow cancellation.
+
+==================================================
+27. BATCH TRANSCRIPTION
+==================================================
+
+User can:
+
+select several files
+
+or:
+
+select/drop an entire folder.
+
+Process them using a queue.
+
+Show:
+
+pending
+processing
+completed
+failed
+
+Allow:
+
+pause
+resume
+cancel
+
+For a folder:
+
+create one .txt file per source file.
+
+Optionally export:
+
+TXT
+SRT
+VTT
+
+==================================================
+28. MEETING MODE
+==================================================
+
+Implement a dedicated Meeting Mode.
+
+Meeting Mode can record:
+
+microphone
+
+system audio
+
+or both.
+
+Show:
+
+live recording duration
+live transcription
+speaker labels where possible
+
+Example:
+
+Mara
+Let's release it Friday.
+
+Max
+Okay, I'll finish the build tonight.
+
+==================================================
+29. SPEAKER RECOGNITION / DIARIZATION
+==================================================
+
+Implement local speaker diarization.
+
+Research a redistributable Windows-compatible local solution.
+
+Prefer:
+
+ONNX-based models
+speaker embedding models
+local VAD
+
+No cloud service.
+
+Output:
+
+Speaker 1
+Speaker 2
+Speaker 3
+
+After the meeting allow the user to rename:
+
+Speaker 1 → Mara
+Speaker 2 → Max
+
+Renaming should update all transcript entries.
+
+Keep diarization implementation modular.
+
+==================================================
+30. MEETING EXPORT
+==================================================
+
+Meeting export:
+
+TXT
+Markdown
+PDF
+
+PDF contains:
+
+title
+date
+duration
+participants
+full transcript
+
+Optional local AI summary:
+
+Summary
+
+Decisions
+
+Action Items
+
+Example:
+
+☐ Mara — send final build
+
+☐ Max — check deployment
+
+Use an appropriate redistributable PDF library.
+
+==================================================
+31. AUDIO DUCKING
+==================================================
+
+Optional setting:
+
+"Lower system audio while recording"
+
+When enabled:
+
+reduce system audio volume while dictating
+
+restore EXACT previous volume afterwards.
+
+Also restore volume if recording crashes or is cancelled.
+
+==================================================
+32. AUDIO FEEDBACK
+==================================================
+
+Optional sounds:
+
+recording started
+recording finished
+error
+
+Provide subtle built-in sounds.
+
+Setting:
+
+Off
+Minimal
+Standard
+
+==================================================
+33. PER-APP ENTER KEY
+==================================================
+
+Provide an advanced option:
+
+"Press Enter after inserting text"
+
+Configured per application.
+
+Example:
+
+Discord:
+ON
+
+Terminal:
+OFF
+
+Word:
+OFF
+
+Never enable globally by default.
+
+==================================================
+34. SETTINGS UI
+==================================================
+
+Create a polished modern Settings interface.
+
+Navigation:
+
+General
+
+Dictation
+
+Enhancement
+
+Models
+
+Languages
+
+Audio
+
+Shortcuts
+
+Custom Words
+
+Snippets
+
+Applications
+
+Meeting Mode
+
+History
+
+Statistics
+
+Privacy
+
+Advanced
+
+Debug
+
+About
+
+Use a modern Fluent-inspired Windows design.
+
+==================================================
+35. VISUAL DESIGN
+==================================================
+
+The overall aesthetic should feel similar in QUALITY to WhisperBar:
+
+minimal
+premium
+calm
+professional
+very little visual clutter
+
+But use Voxora's own identity.
+
+Brand palette:
+
+light background:
+#F7F7F5
+
+primary text:
+#151515
+
+secondary:
+#6B6B6B
+
+accent:
+#26A269
+
+dark surfaces:
+#181818
+
+Use subtle borders.
+
+Use restrained shadows.
+
+Corner radii:
+
+10-16 px depending on component.
+
+No giant gradients.
+
+No gamer-looking UI.
+
+No unnecessary glassmorphism.
+
+No cheap-looking Material UI.
+
+Dark mode must also be supported.
+
+Follow Windows system theme by default.
+
+==================================================
+36. VOXORA BRAND
+==================================================
+
+Use:
+
+Voxora
+
+by SNine Studios
+
+Create an ORIGINAL simple icon.
+
+Concept:
+
+minimal microphone / waveform / V
+
+Do not copy WhisperBar's icon.
+
+Create app assets for:
+
+16x16
+24x24
+32x32
+48x48
+64x64
+128x128
+256x256
+
+and ICO.
+
+Keep branding values centralized so I can rename the project later easily.
+
+==================================================
+37. START WITH WINDOWS
+==================================================
+
+Setting:
+
+Launch Voxora when Windows starts.
+
+Implement using an appropriate Windows startup mechanism.
+
+Do not require administrator privileges.
+
+==================================================
+38. SINGLE INSTANCE
+==================================================
+
+Only one Voxora instance should normally run.
+
+If a second instance starts:
+
+bring existing settings window to foreground.
+
+==================================================
+39. PRIVACY
+==================================================
+
+Privacy is a major selling point.
+
+By default:
+
+NO telemetry
+NO analytics
+NO cloud transcription
+NO account
+NO uploaded recordings
+NO advertising tracking
+
+Speech and enhancement stay on-device.
+
+Temporary recordings must be deleted after processing unless user explicitly asks to save them.
+
+Clean up abandoned temporary files on next launch after a crash.
+
+==================================================
+40. LOGGING
+==================================================
+
+Normal logs must never contain:
+
+raw audio
+full transcription text
+selected document contents
+
+Debug mode can contain additional metadata but must still avoid unnecessarily storing sensitive content.
+
+Create:
+
+Settings
+→ Debug
+
+Options:
+
+Enable debug logging
+
+Open log folder
+
+Copy diagnostics
+
+Diagnostics can include:
+
+Voxora version
+Windows version
+CPU
+GPU
+RAM
+selected transcription engine
+selected model
+audio device
+
+but no transcript contents.
+
+==================================================
+41. ERROR HANDLING
+==================================================
+
+Every important failure must produce a useful message.
+
+Examples:
+
+"No microphone found."
+
+"The selected model is not downloaded."
+
+"Not enough free disk space."
+
+"Could not insert text into this application."
+
+"Recording device was disconnected."
+
+"Model download failed. Retry?"
+
+"GPU acceleration failed. Switched to CPU."
+
+Never silently fail.
+
+==================================================
+42. CRASH RECOVERY
+==================================================
+
+Implement global exception handling.
+
+After a crash:
+
+no permanently locked microphone
+no stuck audio ducking
+no orphan temporary recording
+no broken hotkeys
+
+On next startup:
+
+recover safely.
+
+==================================================
+43. PERFORMANCE
+==================================================
+
+The tray app should consume very little CPU while idle.
+
+Targets:
+
+idle CPU approximately 0%
+
+no constant polling loops where events are possible
+
+reasonable memory usage
+
+recording begins almost immediately after shortcut
+
+overlay appears almost instantly
+
+Keep models unloaded when configured for lower RAM usage.
+
+Provide option:
+
+Keep transcription model loaded
+
+Keep enhancement model loaded
+
+This trades memory for response speed.
+
+==================================================
+44. ACCESSIBILITY
+==================================================
+
+Support:
+
+keyboard navigation
+screen readers
+high DPI
+125%
+150%
+175%
+200%
+multiple monitors
+Windows text scaling
+high contrast where reasonable
+
+==================================================
+45. WINDOWS SUPPORT
+==================================================
+
+Target:
+
+Windows 11
+
+and reasonably support:
+
+Windows 10 22H2 x64
+
+Primary installer:
+
+x64
+
+Design architecture so ARM64 can be added.
+
+==================================================
+46. INSTALLER
+==================================================
+
+THIS IS REQUIRED.
+
+The final end-user must NOT need:
+
+Visual Studio
+.NET
+Python
+Node
+Git
+FFmpeg
+CMake
+
+Build a proper installer.
+
+Installer name:
+
+Voxora-Setup-x64.exe
+
+Installer should:
+
+install Voxora
+create Start Menu shortcut
+optionally create Desktop shortcut
+register uninstall entry
+install required native libraries
+install the self-contained .NET runtime
+launch Voxora
+
+No admin rights unless genuinely required.
+
+==================================================
+47. FIRST-RUN MODEL DOWNLOAD
+==================================================
+
+Models may be too large to include inside the normal installer.
+
+That is acceptable.
+
+The important rule is:
+
+THE USER MUST NOT MANUALLY INSTALL THEM.
+
+Voxora itself downloads and manages them.
+
+Example:
+
+"Preparing Voxora"
+
+Downloading Balanced Speech Model
+
+412 MB / 512 MB
+
+██████████████░░
+
+82%
+
+After this, dictation works offline.
+
+==================================================
+48. OPTIONAL FULL OFFLINE PACKAGE
+==================================================
+
+If model redistribution licenses permit it, also provide:
+
+Voxora-Full-Offline-x64.exe
+
+containing the default speech model.
+
+This version should work without internet immediately after installation.
+
+Only do this if the relevant model licenses allow redistribution.
+
+==================================================
+49. THIRD PARTY LICENSE COMPLIANCE
+==================================================
+
+Inspect licenses for every dependency and model.
+
+Create:
+
+THIRD_PARTY_NOTICES.md
+
+Include correct attribution.
+
+Do not redistribute models or binaries whose licenses prohibit it.
+
+==================================================
+50. UPDATE SYSTEM
+==================================================
+
+Add an updater architecture.
+
+Settings:
+
+Check automatically
+
+Check for updates
+
+Channel:
+
+Stable
+Beta
+
+Updates must NEVER overwrite downloaded models unnecessarily.
+
+It is acceptable for unsigned development builds to disable automatic installation if code signing is required.
+
+But the updater architecture should exist.
+
+==================================================
+51. SECURITY
+==================================================
+
+Do NOT:
+
+open unnecessary listening ports
+run a local HTTP server
+require administrator mode
+store sensitive secrets in plaintext
+disable Windows security protections
+
+Use Windows DPAPI where secrets need local storage.
+
+Validate downloaded models with hashes.
+
+Use HTTPS.
+
+==================================================
+52. TESTING
+==================================================
+
+Write real tests.
+
+Unit tests for:
+
+text cleanup
+settings
+history
+model metadata
+language handling
+snippet expansion
+application profiles
+
+Integration tests for:
+
+clipboard preservation
+database
+model manager
+audio service where practical
+
+Create smoke tests for:
+
+startup
+settings loading
+tray creation
+
+Run:
+
+dotnet restore
+dotnet build
+dotnet test
+
+Fix failures.
+
+Repeat until green.
+
+==================================================
+53. MANUAL TEST CHECKLIST
+==================================================
+
+Create:
+
+docs/MANUAL_TEST_CHECKLIST.md
+
+Include tests for:
+
+Notepad
+Word
+Chrome
+Edge
+Discord
+VS Code
+JetBrains
+Windows Terminal
+
+Test:
+
+plain dictation
+enhanced dictation
+clipboard restore
+custom words
+history
+selected-text editing
+push-to-talk
+multi-monitor overlay
+sleep/resume
+microphone disconnect
+
+==================================================
+54. BUILD SCRIPT
+==================================================
+
+Create:
+
+build.ps1
+
+It must:
+
+clean
+restore
+build
+test
+publish
+package installer
+generate checksums
+
+One command should create the release.
+
+Example:
+
+./build.ps1 -Configuration Release
+
+Output:
+
+dist/
+
+Voxora/
+Voxora-Portable-x64.zip
+Voxora-Setup-x64.exe
+SHA256SUMS.txt
+
+Do not require me to manually copy files around.
+
+==================================================
+55. GITHUB ACTIONS
+==================================================
+
+If appropriate, add:
+
+.github/workflows/build-windows.yml
+
+It should:
+
+restore
+build
+test
+publish
+create artifact
+
+Do not require private credentials for ordinary unsigned builds.
+
+==================================================
+56. README
+==================================================
+
+Create a useful README containing:
+
+What Voxora is
+
+Features
+
+System requirements
+
+Building
+
+Release build
+
+Architecture
+
+Privacy
+
+Model management
+
+Third-party licenses
+
+==================================================
+57. NO PLACEHOLDER IMPLEMENTATIONS
+==================================================
+
+Search the entire repository for things such as:
+
+TODO
+FIXME
+NotImplementedException
+throw new Exception("TODO")
+fake data
+demo transcript
+mock processing
+placeholder button handlers
+
+Remove them or turn them into functioning implementations unless intentionally documented as future optional functionality.
+
+==================================================
+58. UX DETAILS THAT MATTER
+==================================================
+
+Implement polish:
+
+button hover transitions
+
+keyboard focus states
+
+loading states
+
+proper progress bars
+
+empty states
+
+tooltips
+
+confirmation before destructive actions
+
+cancelable operations
+
+smooth recording waveform
+
+no UI freezing during inference
+
+all inference runs outside UI thread
+
+responsive settings window
+
+==================================================
+59. CONCURRENCY
+==================================================
+
+Prevent multiple dictation operations from corrupting each other.
+
+Define explicit operation state:
+
+Idle
+
+Recording
+
+Transcribing
+
+Enhancing
+
+Inserting
+
+Cancelled
+
+Failed
+
+Use cancellation tokens throughout long-running tasks.
+
+==================================================
+60. APPLICATION STATE MACHINE
+==================================================
+
+Do not scatter random booleans throughout the app.
+
+Implement a reliable state machine.
+
+Prevent invalid transitions.
+
+Example:
+
+Idle → Recording
+
+Recording → Transcribing
+
+Transcribing → Enhancing
+
+Enhancing → Inserting
+
+Inserting → Idle
+
+Any operation:
+
+→ Cancelled
+
+or:
+
+→ Failed
+
+==================================================
+61. HOTKEY RELIABILITY
+==================================================
+
+Global hotkeys must recover after:
+
+Windows sleep
+lock/unlock
+display changes
+audio device changes
+
+Detect conflicts.
+
+Settings UI must tell user:
+
+"This shortcut is already being used."
+
+Do not silently accept broken shortcuts.
+
+==================================================
+62. WINDOWS FOCUS HANDLING
+==================================================
+
+This is critical.
+
+When dictation starts:
+
+remember:
+
+foreground HWND
+process
+caret/text control where possible
+
+The overlay must NOT steal focus.
+
+When transcription finishes:
+
+insert into the intended original application.
+
+If application disappeared:
+
+place text on clipboard and tell user:
+
+"Application closed — transcription copied."
+
+==================================================
+63. HISTORY PRIVACY
+==================================================
+
+Add:
+
+Store transcription history
+
+Default can be ON.
+
+But user can disable it.
+
+When OFF:
+
+do not store transcript contents.
+
+Add:
+
+Clear all history
+
+with confirmation.
+
+==================================================
+64. SMART FALLBACK
+==================================================
+
+If enhancement fails:
+
+insert plain transcription.
+
+If GPU fails:
+
+retry using CPU.
+
+If selected model fails:
+
+fallback to another installed compatible model.
+
+If direct insertion fails:
+
+copy text to clipboard.
+
+User should almost never lose their spoken text.
+
+==================================================
+65. REFERENCE FEATURE PARITY
+==================================================
+
+WhisperBar publicly describes functionality including:
+
+- global speech-to-text
+- text insertion into the active application
+- live waveform
+- push-to-talk
+- automatic language detection
+- several local speech models
+- local text enhancement
+- custom words
+- snippets
+- transcription history
+- history search/filter
+- statistics
+- audio feedback
+- audio ducking
+- file transcription
+- batch transcription
+- selected-text rewrite menu
+- typed or spoken rewrite instructions
+- translation
+- app-aware text formatting
+- configurable shortcuts
+- meeting recording
+- microphone/system-audio capture
+- live meeting transcription
+- speaker recognition
+- speaker renaming
+- PDF export
+- meeting summaries / action items
+- cancellation during processing
+- model download progress
+- model download resume
+- model fallback
+- local debug logging
+- per-app Enter behavior
+
+Treat this list as a feature-parity checklist.
+
+==================================================
+66. RELEASE QUALITY BAR
+==================================================
+
+Ask yourself:
+
+"Would I be comfortable sending Voxora-Setup-x64.exe to someone who has never used a developer tool?"
+
+If not, keep improving it.
+
+The user should only have to:
+
+1. download Voxora-Setup-x64.exe
+2. install
+3. launch
+4. finish onboarding
+5. speak
+
+No command line.
+
+No developer software.
+
+No manual model copying.
+
+No configuration files.
+
+==================================================
+67. FINAL VERIFICATION
+==================================================
+
+Before finishing:
+
+Run the complete build.
+
+Run all tests.
+
+Launch the release build.
+
+Verify no startup exception.
+
+Verify tray icon exists.
+
+Verify settings open.
+
+Verify recording pipeline initializes.
+
+Verify model manager loads.
+
+Verify installer is created.
+
+Verify portable package is created.
+
+Search for TODO/FIXME/NotImplementedException.
+
+Check git diff.
+
+Fix regressions you find.
+
+==================================================
+68. FINAL RESPONSE TO ME
+==================================================
+
+ONLY after implementation is complete, give me a concise summary containing:
+
+1. What you implemented
+2. Important architecture decisions
+3. Which models/inference engines are supported
+4. Which features were verified
+5. Tests executed and results
+6. Exact installer path
+7. Exact portable ZIP path
+8. Remaining limitations, ONLY if genuinely unavoidable
+9. Recommended next steps
+
+Do not finish by merely showing code examples or a proposed implementation.
+
+Actually modify the repository and produce the application.
+
+START NOW.
+
+First inspect the entire repository, current git status and existing architecture.
+
+Then begin implementing Voxora systematically and continue until a releasable Windows build exists.
