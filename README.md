@@ -28,6 +28,15 @@
   <sub>Windows 11 x64 · no account required</sub>
 </p>
 
+<p align="center">
+  <a href="#download">Download</a> ·
+  <a href="#features">Features</a> ·
+  <a href="#screenshots">Screenshots</a> ·
+  <a href="#how-it-works">How it works</a> ·
+  <a href="#build-from-source">Build</a> ·
+  <a href="#faq">FAQ</a>
+</p>
+
 ---
 
 SineFlow turns speech into text in any Windows application. Hold one shortcut, speak, and the words appear where your cursor is — transcribed on your own machine with [whisper.cpp](https://github.com/ggml-org/whisper.cpp). No account, no cloud, no telemetry, no local network service.
@@ -53,6 +62,8 @@ SineFlow turns speech into text in any Windows application. Hold one shortcut, s
 
 Both packages are self-contained: .NET and the native inference libraries are included. Speech models are downloaded inside the app, not with the installer.
 
+> These links resolve to assets in this private repository, so downloading them requires an account with access.
+
 > **Early access.** 0.1.3 is an unsigned development build. Signed releases and automatic update verification are prepared but not yet published.
 
 ### Requirements
@@ -65,7 +76,9 @@ Both packages are self-contained: .NET and the native inference libraries are in
 | Microphone | Any WASAPI input device |
 | Internet | Only for the initial model download and optional updates |
 
-## First run
+## Install and first run
+
+Run `SineFlow-Setup-x64.exe` for a per-user installation, or extract `SineFlow-Portable-x64.zip` and start `SineFlow.App.exe`. Neither needs administrator rights.
 
 1. **Choose a microphone.** SineFlow lists the available inputs and plays back a short test recording.
 2. **Pick a starting profile.** Fast, Balanced or Maximum. Balanced is the everyday choice; the hardware screen explains what your computer can handle.
@@ -77,6 +90,14 @@ First you will be offered a short onboarding; afterwards SineFlow lives in the t
 <p align="center">
   <img src="docs/media/overlay.png" alt="Recording overlay" width="640">
 </p>
+
+## What's new in 0.1.3
+
+- **Window first.** The shell is visible in about 0.6 seconds; engine and model work starts afterwards.
+- **No silent download.** Start-up no longer pulls a large model in the background. A missing model is an explicit state with a direct link to Models.
+- **Native frame and one palette.** Real caption buttons, per-monitor DPI and rounded corners, with dark as the default for new installations.
+
+Full details: [CHANGELOG.md](CHANGELOG.md) · [v0.1.3 release notes](../../releases/tag/v0.1.3).
 
 ## Features
 
@@ -196,6 +217,36 @@ docs/           design notes, verification and manual test matrix
 | Code signing, update feed | Prepared, not published |
 
 Known limits are documented in [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md). Device and application checks live in [docs/MANUAL_TEST_CHECKLIST.md](docs/MANUAL_TEST_CHECKLIST.md).
+
+## FAQ
+
+**Does audio leave the computer?**
+No. Capture, transcription and the optional writing model run on the local machine. There is no account system, no telemetry and no listening socket.
+
+**Which model should I start with?**
+Balanced. It pairs Whisper small with the everyday profile and fits 8 GB machines. Base is the choice for 4 GB systems and slower hardware; large-v3 is for maximum accuracy on 16 GB machines.
+
+**Does SineFlow type into password fields?**
+No. Password fields are recognised and refused; no text is inserted there.
+
+**Can I run it without installing?**
+Yes. The portable ZIP contains the same build. Extract it and run `SineFlow.App.exe`; settings and history still live under `%LOCALAPPDATA%`.
+
+**Which applications are supported?**
+Any Windows application with a standard text field: browsers, Office, editors, chat clients and terminals. Insertion uses UI Automation first, then clipboard and Unicode input where a field cannot be inspected.
+
+**Is there a Mac or Linux version?**
+No. The shell, hotkeys and insertion layer are Windows-specific.
+
+## Documentation
+
+| Document | What it covers |
+| --- | --- |
+| [CHANGELOG.md](CHANGELOG.md) | Release history and user-visible changes |
+| [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md) | Implemented features and known gaps |
+| [docs/MANUAL_TEST_CHECKLIST.md](docs/MANUAL_TEST_CHECKLIST.md) | Device, installer and application checks |
+| [SECURITY.md](SECURITY.md) | Private vulnerability reporting |
+| [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) | Licenses of bundled components |
 
 ## Contributing
 
