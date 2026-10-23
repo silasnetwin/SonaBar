@@ -1,4 +1,4 @@
-# Voice, hardware and branding pass — 22 October 2026
+# Voice, hardware and branding pass - 22 October 2026 (updated 23 October 2026)
 
 This pass added the parts of the dictation workflow that were still missing, and it fixed two
 defects that would have made the product unusable. Every number below was measured on the
@@ -163,9 +163,9 @@ trained on. A dictation on a real microphone is still part of the manual test ch
 | Check | Result |
 |---|---|
 | `dotnet build Voxora.slnx -c Release` | passed, 0 warnings, 0 errors |
-| `dotnet test Voxora.slnx -c Release` | passed, 164 of 164 |
+| `dotnet test Voxora.slnx -c Release` | passed, 193 of 193 |
 | `tests/Voxora.NativeSmoke` | passed: speech, automatic language, writing model, translation into English, French and Chinese, German prompt, speaker embeddings, PDF export |
-| Application smoke test | passed: tray, settings, 11 catalogue models, 4 microphones, all 19 pages built and laid out without an error |
+| Application smoke test | passed: tray, settings, 12 catalogue models, 4 microphones, all 19 pages built and laid out without an error, then clean shutdown with exit code 0 |
 
 ## Open items
 
@@ -176,5 +176,6 @@ trained on. A dictation on a real microphone is still part of the manual test ch
   language would remove the extra encoder pass, but it was left out because a wrong guess
   would silently produce a wrong transcript.
 * German was verified with synthetic speech only.
-* The NeMo-Speech.cpp runtime and the Qwen ASR sidecar from the previous pass are still not
-  packaged, so Parakeet cannot be selected.
+* Parakeet and Qwen are now packaged and verified on CPU. The remaining manual device,
+  browser, Office, DPI and clean-machine checks are tracked in
+  `docs/MANUAL_TEST_CHECKLIST.md`.

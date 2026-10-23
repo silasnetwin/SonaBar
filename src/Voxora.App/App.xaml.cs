@@ -22,6 +22,7 @@ public partial class App : Application
     private MainWindow? window;
     private AppController? controller;
     private bool quitting;
+    private bool smoke;
     private string? downloadedUpdate;
     protected override async void OnStartup(StartupEventArgs e)
     {
@@ -29,7 +30,7 @@ public partial class App : Application
         var startupClock = System.Diagnostics.Stopwatch.StartNew();
         void Mark(string stage) => SafeLog.WriteDiagnostic("Startup", ("stage", stage), ("elapsed_ms", $"{startupClock.Elapsed.TotalMilliseconds:F0}"));
         Mark("process");
-        var smoke=e.Args.Contains("--smoke-test");
+        smoke=e.Args.Contains("--smoke-test");
         var instance=smoke?"Local\\SNineStudios.SineFlow.Smoke."+Environment.ProcessId:"Local\\SNineStudios.SineFlow";
         if(smoke&&Environment.GetEnvironmentVariable("SINEFLOW_DATA_ROOT") is null)Environment.SetEnvironmentVariable("SINEFLOW_DATA_ROOT",Path.Combine(Path.GetTempPath(),"SineFlow-smoke-"+Environment.ProcessId));
         mutex = new Mutex(true, instance, out var first);
@@ -44,7 +45,7 @@ public partial class App : Application
             Shutdown();
             return;
         }
-        DispatcherUnhandledException += (_, args) => { SafeLog.Write("UI", args.Exception); controller?.Cancel(); MessageBox.Show("SineFlow could not complete the operation. " + args.Exception.Message, "SineFlow", MessageBoxButton.OK, MessageBoxImage.Warning); args.Handled = true; };
+        DispatcherUnhandledException += (_, args) => { SafeLog.Write("UI", args.Exception); controller?.Cancel(); if(!smoke)MessageBox.Show("SineFlow could not complete the operation. " + args.Exception.Message, "SineFlow", MessageBoxButton.OK, MessageBoxImage.Warning); args.Handled = true; };
         TaskScheduler.UnobservedTaskException += (_, args) => { SafeLog.Write("Background", args.Exception); args.SetObserved(); };
         AppDomain.CurrentDomain.UnhandledException += (_, args) => { if (args.ExceptionObject is Exception error) SafeLog.Write("Fatal", error); };
         Brand.MigrateLegacyData(); Directory.CreateDirectory(Brand.DataRoot);
@@ -55,7 +56,7 @@ public partial class App : Application
         registry.AddSingleton(new SettingsStore()); registry.AddSingleton(p => p.GetRequiredService<SettingsStore>().Load());
         registry.AddSingleton(new HistoryRepository()); registry.AddSingleton(new ModelManager());
         registry.AddSingleton<AudioCaptureService>(); registry.AddSingleton<AudioDucker>(); registry.AddSingleton<ClipboardService>(); registry.AddSingleton<TextInsertionService>(); registry.AddSingleton<GlobalHotkeyService>();
-        registry.AddSingleton<WhisperEngine>(); registry.AddSingleton<ParakeetEngine>(); registry.AddSingleton<ITranscriptionEngine, TranscriptionEngineRouter>(); registry.AddSingleton<IEnhancementEngine, LocalEnhancementEngine>(); registry.AddSingleton<AppController>();
+        registry.AddSingleton<WhisperEngine>(); registry.AddSingleton<ParakeetEngine>(); registry.AddSingleton<QwenEngine>(); registry.AddSingleton<ITranscriptionEngine, TranscriptionEngineRouter>(); registry.AddSingleton<IEnhancementEngine, LocalEnhancementEngine>(); registry.AddSingleton<AppController>();
         services = registry.BuildServiceProvider(); controller = services.GetRequiredService<AppController>();
         // Fields inside SineFlow are inspected on the interface thread; other applications are
         // inspected on the automation thread so a busy target can never freeze the window.
@@ -115,6 +116,9 @@ public partial class App : Application
             if(shotIndex>=0&&shotIndex+1<e.Args.Length)
             {
                 window.Navigate(e.Args[shotIndex+1]);content.UpdateLayout();
+                // Let bindings and styles settle, so the picture shows the finished page.
+                await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Background);
+                content.UpdateLayout();
                 var width=(int)Math.Max(1,content.ActualWidth);var height=(int)Math.Max(1,content.ActualHeight);
                 var bitmap=new System.Windows.Media.Imaging.RenderTargetBitmap(width,height,96,96,System.Windows.Media.PixelFormats.Pbgra32);
                 bitmap.Render(content);
@@ -151,10 +155,20 @@ public partial class App : Application
         if (quitting) return;
         if (controller?.Busy == true && MessageBox.Show("An operation is still running. Cancel it and quit?", "Quit SineFlow", MessageBoxButton.YesNo) != MessageBoxResult.Yes) return;
         quitting = true;
-        if(controller is not null)await controller.StopSafelyAsync();
-        tray?.Dispose(); activationWait?.Unregister(null); SystemEvents.UserPreferenceChanged -= PreferenceChanged;
+        try
+        {
+            if(controller is not null)await controller.StopSafelyAsync();
+            tray?.Dispose(); activationWait?.Unregister(null); SystemEvents.UserPreferenceChanged -= PreferenceChanged;
+            services?.Dispose(); activation?.Dispose(); mutex?.Dispose();
+        }
+        catch(Exception error)
+        {
+            SafeLog.Write("Quit", error);
+            if(smoke)Console.Error.WriteLine(error);
+            Environment.ExitCode=1;
+        }
+        finally { Shutdown(); }
         var update=downloadedUpdate;
-        services?.Dispose(); activation?.Dispose(); mutex?.Dispose(); Shutdown();
         if(update is not null&&File.Exists(update))
             Process.Start(new ProcessStartInfo(update,$"--update --wait-pid {Environment.ProcessId}"){UseShellExecute=true});
     }

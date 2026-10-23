@@ -10,12 +10,20 @@ The `licenses` directory in the distribution contains upstream license texts. Na
 | NAudio 2.2.1 | WASAPI capture, resampling | MIT, Mark Heath and contributors; https://github.com/naudio/NAudio |
 | whisper.cpp 1.9.4 / ggml | Direct C ABI local speech inference; pinned as `third_party/whisper.cpp` | MIT, Georgi Gerganov and contributors; https://github.com/ggml-org/whisper.cpp |
 | NeMo-Speech.cpp 0.1.0 | Direct C ABI Parakeet TDT local speech inference; pinned as `third_party/NeMo-Speech.cpp` | Apache-2.0, NVIDIA Corporation & affiliates; https://github.com/NVIDIA/NeMo-Speech.cpp |
+| SentencePiece | Tokenizer linked into the Parakeet runtime | Apache-2.0, Google Inc.; https://github.com/google/sentencepiece |
+| Abseil | Runtime support library linked into the Parakeet runtime | Apache-2.0, The Abseil Authors; https://github.com/abseil/abseil-cpp |
+| Protocol Buffers | Serialization runtime linked into the Parakeet runtime | BSD-3-Clause, Google Inc.; https://github.com/protocolbuffers/protobuf |
 | NVIDIA Parakeet TDT 0.6B v3 GGUF | Optional offline multilingual speech model | CC-BY-4.0, NVIDIA; https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3 |
 | OpenAI Whisper models | Downloadable multilingual speech models | MIT, OpenAI; https://github.com/openai/whisper; GGML conversions: https://huggingface.co/ggerganov/whisper.cpp |
 | LLamaSharp 0.27.0 | Local writing bindings | MIT, SciSharp contributors; https://github.com/SciSharp/LLamaSharp |
 | llama.cpp / ggml | CPU / Vulkan writing inference | MIT, Georgi Gerganov and contributors; https://github.com/ggml-org/llama.cpp |
 | Qwen2.5-1.5B-Instruct GGUF | Downloadable local writing model | Apache-2.0, Alibaba Cloud / Qwen; https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct-GGUF |
 | Qwen3-4B-Instruct-2507 GGUF | Recommended local writing model | Apache-2.0, Qwen; quantization by Unsloth; https://huggingface.co/unsloth/Qwen3-4B-Instruct-2507-GGUF |
+| Qwen3-ASR-1.7B-hf | Optional offline multilingual speech model, downloaded separately | Apache-2.0, Alibaba Cloud / Qwen; pinned revision `bcd2b5b7f32b480ab5790554cfa8347f246a14f3`; https://huggingface.co/Qwen/Qwen3-ASR-1.7B-hf |
+| CPython 3.12.15 embedded runtime | Private Python process for the Qwen sidecar | PSF-2.0, Python Software Foundation; runtime build from https://github.com/astral-sh/python-build-standalone |
+| PyTorch 2.14.1 (CPU) | Qwen tensor inference | BSD-3-Clause, The PyTorch Foundation and contributors; https://github.com/pytorch/pytorch |
+| Transformers 5.20.2 | Qwen model loading and generation | Apache-2.0, Hugging Face; https://github.com/huggingface/transformers |
+| Pinned Qwen Python dependencies | Tokenizers, NumPy, SoundFile, Hugging Face Hub, Safetensors, and support libraries | Apache-2.0, MIT, BSD-3-Clause, PSF-2.0, and other upstream licenses; exact versions in `scripts/qwen-requirements.txt`; texts in `licenses/qwen` |
 | sherpa-onnx 1.13.8 | Local speaker embedding inference | Apache-2.0, Xiaomi Corporation and contributors; https://github.com/k2-fsa/sherpa-onnx |
 | ONNX Runtime | Native inference used by sherpa-onnx | MIT, Microsoft; https://github.com/microsoft/onnxruntime |
 | WeSpeaker VoxCeleb ResNet34 ONNX | Downloadable speaker embeddings | Apache-2.0, WeSpeaker team; https://github.com/wenet-e2e/wespeaker; ONNX conversion distributed by sherpa-onnx |
@@ -32,7 +40,7 @@ Before public distribution, retain the corresponding source and build recipes fo
 
 ## Models
 
-Models are not embedded in the standard installer. Downloads use HTTPS and must match the byte size and SHA-256 digest in `src/Voxora.Models/catalog.json`. The model manager retains no Hugging Face account credentials. Model license texts are included even when model weights are downloaded later.
+Models are not embedded in the standard installer. Downloads use HTTPS and must match the byte size and SHA-256 digest in `src/Voxora.Models/catalog.json`. The model manager retains no Hugging Face account credentials. Model license texts are included even when model weights are downloaded later. The Qwen3-ASR bundle includes its embedded Python runtime, but its model weights are downloaded separately and are never committed to this repository.
 
 ## Build-only dependencies
 

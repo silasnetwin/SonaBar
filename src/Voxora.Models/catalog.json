@@ -77,7 +77,7 @@
     "Url": "https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3/resolve/541d1f99c6b0c3cd0b11a95167540bb8edefd82b/parakeet-tdt-0.6b-v3.q8_0.gguf",
     "License": "CC-BY-4.0",
     "Name": "Parakeet TDT · fast multilingual",
-    "Hardware": "4–8 GB RAM · 25 languages · NVIDIA native runtime"
+    "Hardware": "4-8 GB RAM · 25 European languages · CPU inference"
   },
   {
     "Name": "Writing · recommended",
@@ -98,6 +98,60 @@
     "Id": "qwen2.5-1.5b",
     "Hardware": "4 GB RAM · local writing assistant",
     "Sha256": "6a1a2eb6d15622bf3c96857206351ba97e1af16c30d7a74ee38970e434e9407e"
+  },
+  {
+    "Id": "qwen3-asr-1.7b",
+    "Engine": "Qwen3-ASR",
+    "Bytes": 4087628216,
+    "Sha256": "2db53c7d81bd9b8cbc6a074e89be2c968a0d373fb4ee68bb1b1e14f7042dfee1",
+    "Url": "https://huggingface.co/Qwen/Qwen3-ASR-1.7B-hf",
+    "License": "Apache-2.0",
+    "Name": "Qwen3-ASR 1.7B - highest accuracy",
+    "Hardware": "8-16 GB RAM - 30 languages - CPU inference",
+    "Files": [
+      {
+        "Path": "model.safetensors",
+        "Url": "https://huggingface.co/Qwen/Qwen3-ASR-1.7B-hf/resolve/bcd2b5b7f32b480ab5790554cfa8347f246a14f3/model.safetensors",
+        "Sha256": "2db53c7d81bd9b8cbc6a074e89be2c968a0d373fb4ee68bb1b1e14f7042dfee1",
+        "Bytes": 4076193080
+      },
+      {
+        "Path": "tokenizer.json",
+        "Url": "https://huggingface.co/Qwen/Qwen3-ASR-1.7B-hf/resolve/bcd2b5b7f32b480ab5790554cfa8347f246a14f3/tokenizer.json",
+        "Sha256": "fe1fad59be22a41ee293363fcf95fdedbc7c93f3b49270b1d2e18bd1399a7a05",
+        "Bytes": 11429653
+      },
+      {
+        "Path": "config.json",
+        "Url": "https://huggingface.co/Qwen/Qwen3-ASR-1.7B-hf/resolve/bcd2b5b7f32b480ab5790554cfa8347f246a14f3/config.json",
+        "Sha256": "117ac8e63e2af7cae3665e5a632d6eb03f5f384915519ceb6403c15ec6533f63",
+        "Bytes": 2399
+      },
+      {
+        "Path": "generation_config.json",
+        "Url": "https://huggingface.co/Qwen/Qwen3-ASR-1.7B-hf/resolve/bcd2b5b7f32b480ab5790554cfa8347f246a14f3/generation_config.json",
+        "Sha256": "9939fc9388b79bd70757f938b87381e817173d6a6158f5af6506c0b73e775c3c",
+        "Bytes": 165
+      },
+      {
+        "Path": "processor_config.json",
+        "Url": "https://huggingface.co/Qwen/Qwen3-ASR-1.7B-hf/resolve/bcd2b5b7f32b480ab5790554cfa8347f246a14f3/processor_config.json",
+        "Sha256": "bc0b230081b44e629dd5b9045b78495615c1831b4b9f4cffe97bd37e82a6156a",
+        "Bytes": 487
+      },
+      {
+        "Path": "tokenizer_config.json",
+        "Url": "https://huggingface.co/Qwen/Qwen3-ASR-1.7B-hf/resolve/bcd2b5b7f32b480ab5790554cfa8347f246a14f3/tokenizer_config.json",
+        "Sha256": "945e980986de2ca7768f3326bfdbb4fbea3406f972b8ae0be233089f2b253c11",
+        "Bytes": 998
+      },
+      {
+        "Path": "chat_template.jinja",
+        "Url": "https://huggingface.co/Qwen/Qwen3-ASR-1.7B-hf/resolve/bcd2b5b7f32b480ab5790554cfa8347f246a14f3/chat_template.jinja",
+        "Sha256": "f50e6b694fbf4a683206e37869990d68333fe95d285730f084c838a34b0d98c2",
+        "Bytes": 1434
+      }
+    ]
   },
   {
     "Id": "wespeaker",

@@ -10,7 +10,7 @@ public sealed class ParakeetEngine : ITranscriptionEngine
     private readonly SemaphoreSlim gate = new(1, 1);
     private IntPtr recognizer;
     private string? loadedPath;
-    public TranscriptionEngineCapabilities Capabilities => new(true, true, false, ["en", "de", "fr", "es", "it", "pt", "nl", "pl", "ru", "uk", "ja", "ko", "zh", "ar", "hi", "tr", "sv", "da", "no", "fi", "cs", "el", "he", "hu", "ro"], "NVIDIA NeMo-Speech.cpp v0.1.0");
+    public TranscriptionEngineCapabilities Capabilities => new(false, true, false, ["auto", "en", "bg", "cs", "da", "de", "el", "es", "et", "fi", "fr", "hr", "hu", "it", "lt", "lv", "mt", "nl", "pl", "pt", "ro", "ru", "sk", "sl", "sv", "uk"], "NVIDIA NeMo-Speech.cpp v0.1.0");
 
     public async Task WarmAsync(string modelPath, CancellationToken cancellationToken)
     {
@@ -45,7 +45,8 @@ public sealed class ParakeetEngine : ITranscriptionEngine
                             if (!string.IsNullOrWhiteSpace(word)) words.Add(new(TimeSpan.FromMilliseconds(Native.ResultWordStart(result, UIntPtr.Zero, (UIntPtr)index)), TimeSpan.FromMilliseconds(Native.ResultWordEnd(result, UIntPtr.Zero, (UIntPtr)index)), word));
                         }
                         var segments = words.Count == 0 ? (string.IsNullOrWhiteSpace(text) ? [] : [new TranscriptSegment(TimeSpan.Zero, TimeSpan.FromSeconds(samples.Length / 16_000d), TextProcessing.Clean(text))]) : words;
-                        return new TranscriptionResult(TextProcessing.Clean(text), language, TimeSpan.FromSeconds(samples.Length / 16_000d), segments);
+                        var detected = DetectedLanguage(result) ?? language;
+                        return new TranscriptionResult(TextProcessing.Clean(text), detected, TimeSpan.FromSeconds(samples.Length / 16_000d), segments);
                     }
                     finally { if (result != IntPtr.Zero) Native.DestroyResult(result); }
                 }
@@ -71,6 +72,16 @@ public sealed class ParakeetEngine : ITranscriptionEngine
             loadedPath = modelPath;
         }
         finally { Marshal.FreeCoTaskMem(modelPathPointer); }
+    }
+    private static string? DetectedLanguage(IntPtr result)
+    {
+        var count = Native.ResultLanguageCount(result, UIntPtr.Zero).ToUInt64();
+        for (ulong index = 0; index < count; index++)
+        {
+            var code = Native.Utf8(Native.ResultLanguageCode(result, UIntPtr.Zero, (UIntPtr)index));
+            if (!string.IsNullOrWhiteSpace(code)) return code;
+        }
+        return null;
     }
     private void Unload() { if (recognizer != IntPtr.Zero) Native.Destroy(recognizer); recognizer = IntPtr.Zero; loadedPath = null; }
     public async Task UnloadAsync(CancellationToken cancellationToken) { await gate.WaitAsync(cancellationToken); try { Unload(); } finally { gate.Release(); } }
@@ -103,18 +114,36 @@ public sealed class ParakeetEngine : ITranscriptionEngine
         [DllImport(Library, CallingConvention = CallingConvention.Cdecl, EntryPoint = "nemo_speech_asr_result_word_text")] internal static extern IntPtr ResultWordText(IntPtr result, UIntPtr alternative, UIntPtr word);
         [DllImport(Library, CallingConvention = CallingConvention.Cdecl, EntryPoint = "nemo_speech_asr_result_word_start_time")] internal static extern int ResultWordStart(IntPtr result, UIntPtr alternative, UIntPtr word);
         [DllImport(Library, CallingConvention = CallingConvention.Cdecl, EntryPoint = "nemo_speech_asr_result_word_end_time")] internal static extern int ResultWordEnd(IntPtr result, UIntPtr alternative, UIntPtr word);
+        [DllImport(Library, CallingConvention = CallingConvention.Cdecl, EntryPoint = "nemo_speech_asr_result_language_count")] internal static extern UIntPtr ResultLanguageCount(IntPtr result, UIntPtr alternative);
+        [DllImport(Library, CallingConvention = CallingConvention.Cdecl, EntryPoint = "nemo_speech_asr_result_language_code")] internal static extern IntPtr ResultLanguageCode(IntPtr result, UIntPtr alternative, UIntPtr language);
         [DllImport(Library, CallingConvention = CallingConvention.Cdecl, EntryPoint = "nemo_speech_asr_last_error")] internal static extern IntPtr LastError();
         internal static string? Utf8(IntPtr value) => value == IntPtr.Zero ? null : Marshal.PtrToStringUTF8(value);
     }
 }
 
 /// <summary>Selects an engine using verified model metadata rather than UI state.</summary>
-public sealed class TranscriptionEngineRouter(WhisperEngine whisper, ParakeetEngine parakeet) : ITranscriptionEngine
+public sealed class TranscriptionEngineRouter(WhisperEngine whisper, ParakeetEngine parakeet, QwenEngine qwen) : ITranscriptionEngine
 {
     public TranscriptionEngineCapabilities Capabilities => new(true, true, true, Languages.All.Keys.ToArray(), "SineFlow local engine router");
-    private ITranscriptionEngine Select(string modelPath) => Path.GetFileName(modelPath).StartsWith("parakeet-", StringComparison.OrdinalIgnoreCase) ? parakeet : whisper;
+    /// <summary>Capabilities of the engine that owns a specific installed model path.</summary>
+    public TranscriptionEngineCapabilities CapabilitiesFor(string modelPath) => Select(modelPath).Capabilities;
+    /// <summary>Falls back to automatic detection when a saved language is not supported by the selected engine.</summary>
+    public string LanguageFor(string modelPath, string language)
+    {
+        var engine = Select(modelPath);
+        if (engine is QwenEngine) return QwenLanguages.IsSupported(language) ? language : "auto";
+        if (engine is ParakeetEngine && language != "auto" && !engine.Capabilities.Languages.Contains(language, StringComparer.OrdinalIgnoreCase)) return "auto";
+        return language;
+    }
+    private ITranscriptionEngine Select(string modelPath)
+    {
+        var name = Path.GetFileName(modelPath);
+        if (name.StartsWith("parakeet-", StringComparison.OrdinalIgnoreCase)) return parakeet;
+        if (name.StartsWith("qwen3-asr-", StringComparison.OrdinalIgnoreCase)) return qwen;
+        return whisper;
+    }
     public Task WarmAsync(string modelPath, CancellationToken cancellationToken) => Select(modelPath).WarmAsync(modelPath, cancellationToken);
     public Task<TranscriptionResult> TranscribeAsync(string waveFile, string modelPath, string language, string prompt, bool keepLoaded, CancellationToken cancellationToken) => Select(modelPath).TranscribeAsync(waveFile, modelPath, language, prompt, keepLoaded, cancellationToken);
-    public Task UnloadAsync(CancellationToken cancellationToken) => Task.WhenAll(whisper.UnloadAsync(cancellationToken), parakeet.UnloadAsync(cancellationToken));
-    public void Dispose() { whisper.Dispose(); parakeet.Dispose(); }
+    public Task UnloadAsync(CancellationToken cancellationToken) => Task.WhenAll(whisper.UnloadAsync(cancellationToken), parakeet.UnloadAsync(cancellationToken), qwen.UnloadAsync(cancellationToken));
+    public void Dispose() { whisper.Dispose(); parakeet.Dispose(); qwen.Dispose(); }
 }

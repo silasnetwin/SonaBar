@@ -138,10 +138,17 @@ public sealed partial class MainWindow : ThemedWindow
         foreach(var item in new[]{("Dictation","Language, formatting and voice controls.","Dictation"),("Microphone","Input device and audio behavior.","Audio"),("Shortcuts","Global keys and push-to-talk.","Shortcuts"),("Models","Speech and writing engines.","Models"),("Writing","Local rewrite and translation.","Writing"),("Dictionary","Names and recurring corrections.","Custom Words"),("Privacy","History and local data controls.","Privacy"),("More settings","Snippets, app profiles and advanced tools.","Advanced")})shortcuts.Children.Add(Destination(item.Item1,item.Item2,item.Item3));
         return Ui.Stack(Ui.Card(Ui.Text("Appearance & startup",18),Ui.SettingRow("Appearance","Match Windows or choose a fixed theme.",appearance),Ui.SettingRow("Start with Windows","Keep SineFlow available from the system tray.",startup),Ui.SettingRow("Automatic updates","Download verified releases quietly and install them when SineFlow closes.",updates)),Ui.Text("WORKSPACE SETTINGS",11,true),shortcuts,Ui.Row(Ui.Button("About SineFlow",()=>Navigate("About"))));
     }
+    private List<LanguageChoice> LanguageChoices()
+    {
+        var languages=c.SupportedLanguages().Select(x=>new LanguageChoice(x.Code,x.Name)).ToList();
+        if(languages.Count==0)languages.Add(new("auto","Automatic"));
+        if(!languages.Any(x=>x.Code==c.Settings.Language))c.Settings.Language=languages[0].Code;
+        return languages;
+    }
     private UIElement Dictation()
     {
         var quality=Ui.Choice(Enum.GetValues<SpeechQuality>(),c.Settings.Quality,x=>{c.Settings.Quality=x;c.Settings.UseCustomSpeechModel=false;c.Settings.AutoQuality=false;});
-        var languages=Languages.All.Select(x=>new LanguageChoice(x.Key,x.Value)).ToList();
+        var languages=LanguageChoices();
         var status=Ui.Text(c.ModelPreparation,12,true);status.SetBinding(TextBlock.TextProperty,new Binding(nameof(AppController.ModelPreparation)));
         var language=Ui.Choice(languages,languages.FirstOrDefault(x=>x.Code==c.Settings.Language)??languages[0],x=>c.Settings.Language=x.Code);
         var smartFormatting=Ui.Check("",c.Settings.AutomaticPunctuation&&c.Settings.CorrectObviousMistakes,x=>{c.Settings.AutomaticPunctuation=x;c.Settings.CorrectObviousMistakes=x;});
@@ -161,8 +168,8 @@ public sealed partial class MainWindow : ThemedWindow
     private UIElement WritingTools() => Ui.Stack(Ui.Card(Ui.Text("Writing tools, when you ask for them.",22),Ui.Text("SineFlow uses its local writing model only for translation, rewrites, prompt creation and selected-text actions. Everyday dictation stays fast and direct.",14,true),Ui.Check("Keep writing model loaded between uses",c.Settings.KeepEnhancementLoaded,x=>c.Settings.KeepEnhancementLoaded=x),Ui.Row(Ui.Button("Download writing model",()=>Navigate("Models")),Ui.Button("Try the writing assistant",()=>new RewriteWindow(c, "").ShowDialog()))));
     private UIElement LanguagePage()
     {
-        var languages = Languages.All.Select(x=>new LanguageChoice(x.Key,x.Value)).ToList();
-        return Ui.Stack(Ui.Card(Ui.Text("Speak your language",22),Ui.Text("Automatic detects any language supported by the selected multilingual Whisper model.",14,true),Ui.Choice(languages,languages.FirstOrDefault(x=>x.Code==c.Settings.Language)??languages[0],x=>c.Settings.Language=x.Code)));
+        var languages = LanguageChoices();
+        return Ui.Stack(Ui.Card(Ui.Text("Speak your language",22),Ui.Text("Automatic detects the language when the selected speech model supports it. The list follows the engine in Models.",14,true),Ui.Choice(languages,languages.FirstOrDefault(x=>x.Code==c.Settings.Language)??languages[0],x=>c.Settings.Language=x.Code)));
     }
     private sealed record LanguageChoice(string Code,string Name) { public override string ToString()=>Name; }
     private UIElement AudioPage()

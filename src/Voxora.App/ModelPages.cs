@@ -10,11 +10,12 @@ public sealed partial class MainWindow
         foreach(var model in c.Models.Catalog)
         {
             var ready=c.Models.IsInstalled(model);
-            var status=Ui.Text(ready?"Ready offline":"Not downloaded",13,true); var progress=new ProgressBar { Maximum=100,Visibility=Visibility.Collapsed };
+            var runtimeReady=model.Engine!="Qwen3-ASR"||Voxora.Transcription.QwenEngine.RuntimeAvailable;
+            var status=Ui.Text(!runtimeReady?"Runtime not packaged":ready?"Ready offline":"Not downloaded",13,true); var progress=new ProgressBar { Maximum=100,Visibility=Visibility.Collapsed };
             var pauseButton=Ui.Button("Pause",()=>download?.Cancel()); pauseButton.IsEnabled=false;
             var deleteButton=Ui.Button("Delete",()=> {if(c.Busy)throw new InvalidOperationException("Finish the current operation before deleting a model.");if(Confirm("Delete "+model.Name+" from this computer?")){c.Models.Delete(model);Navigate("Models");}}); deleteButton.IsEnabled=ready;
             Button? useButton=null;
-            if(model.Engine is "Whisper" or "NeMo-Speech.cpp") { useButton=Ui.Button(c.Settings.EffectiveSpeechModel==model.Id?"Selected":"Use this model",()=> {if(!c.Models.IsInstalled(model))throw new InvalidOperationException("Download this model first.");c.Settings.SpeechModel=model.Id;c.Settings.UseCustomSpeechModel=true;c.SaveSettings();Navigate("Models");});useButton.IsEnabled=ready&&c.Settings.EffectiveSpeechModel!=model.Id; }
+            if(model.Engine is "Whisper" or "NeMo-Speech.cpp" or "Qwen3-ASR") { useButton=Ui.Button(c.Settings.EffectiveSpeechModel==model.Id?"Selected":"Use this model",()=> {if(!c.Models.IsInstalled(model))throw new InvalidOperationException("Download this model first.");if(!runtimeReady)throw new InvalidOperationException("The Qwen runtime is not packaged in this build. Reinstall SineFlow.");c.Settings.SpeechModel=model.Id;c.Settings.UseCustomSpeechModel=true;c.SaveSettings();Navigate("Models");});useButton.IsEnabled=ready&&runtimeReady&&c.Settings.EffectiveSpeechModel!=model.Id; }
             Button? downloadButton=null;
             downloadButton=Ui.AsyncButton(ready?"Verify integrity":"Download / resume",async()=>
             {
@@ -34,7 +35,7 @@ public sealed partial class MainWindow
             var row=new Grid(); row.ColumnDefinitions.Add(new ColumnDefinition()); row.ColumnDefinitions.Add(new ColumnDefinition { Width=GridLength.Auto });
             row.Children.Add(info); Grid.SetColumn(actions,1); row.Children.Add(actions);
             var card=Ui.Card(row,progress); card.Padding=new Thickness(22,16,18,14);
-            if(model.Id is "small" or "qwen3-4b" || model.Id==c.Settings.EffectiveSpeechModel || ready)content.Children.Add(card);
+            if(model.Id is "small" or "qwen3-4b" or "qwen3-asr-1.7b" || model.Id==c.Settings.EffectiveSpeechModel || ready)content.Children.Add(card);
             else advanced.Children.Add(card);
         }
         Button? advancedButton=null; advancedButton=Ui.Button("Show all models  +",()=>{advanced.Visibility=advanced.Visibility==Visibility.Visible?Visibility.Collapsed:Visibility.Visible;advancedButton!.Content=advanced.Visibility==Visibility.Visible?"Hide other models  −":"Show all models  +";});

@@ -129,7 +129,14 @@ public sealed record HistoryEntry(long Id, DateTimeOffset Timestamp, string Orig
     public int WordCount => Regex.Matches(Text, @"\S+").Count;
     public override string ToString() => $"{Timestamp.LocalDateTime:g}  ·  {Application}\n{Text}";
 }
-public sealed record ModelDefinition(string Id, string Name, string Engine, string Url, string Sha256, long Bytes, string Hardware, string License);
+public sealed record ModelFile(string Path, string Url, string Sha256, long Bytes);
+public sealed record ModelDefinition(string Id, string Name, string Engine, string Url, string Sha256, long Bytes, string Hardware, string License)
+{
+    /// <summary>A model made of several files is stored in a directory named after its Id.</summary>
+    public IReadOnlyList<ModelFile> Files { get; init; } = [];
+    public bool IsBundle => Files.Count != 0;
+    public long TotalBytes => IsBundle ? Files.Sum(file => file.Bytes) : Bytes;
+}
 public sealed record DownloadProgress(long Received, long Total, string Stage)
 {
     public double Percent => Total > 0 ? Received * 100d / Total : 0;

@@ -13,7 +13,7 @@
   <a href="../../releases/latest"><img alt="Latest release" src="https://img.shields.io/badge/release-0.1.3%20early%20access-5C93F0"></a>
   <img alt="Platform" src="https://img.shields.io/badge/platform-Windows%2011%20x64-0E1116?logo=windows11&logoColor=white">
   <img alt=".NET" src="https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white">
-  <img alt="Engine" src="https://img.shields.io/badge/speech-whisper.cpp-5C93F0">
+  <img alt="Engine" src="https://img.shields.io/badge/speech-whisper.cpp%20%7C%20Parakeet%20%7C%20Qwen-5C93F0">
   <img alt="Offline" src="https://img.shields.io/badge/cloud-none-171B21">
   <img alt="Telemetry" src="https://img.shields.io/badge/telemetry-none-171B21">
   <img alt="License" src="https://img.shields.io/badge/license-proprietary-6B7280">
@@ -39,7 +39,7 @@
 
 ---
 
-SineFlow turns speech into text in any Windows application. Hold one shortcut, speak, and the words appear where your cursor is — transcribed on your own machine with [whisper.cpp](https://github.com/ggml-org/whisper.cpp). No account, no cloud, no telemetry, no local network service.
+SineFlow turns speech into text in any Windows application. Hold one shortcut, speak, and the words appear where your cursor is — transcribed on your own machine with [whisper.cpp](https://github.com/ggml-org/whisper.cpp), NVIDIA Parakeet through NeMo-Speech.cpp, or Qwen3-ASR. No account, no cloud, no telemetry, no network listener.
 
 <p align="center">
   <img src="docs/media/overview.png" alt="SineFlow running on Windows 11" width="900">
@@ -56,11 +56,11 @@ SineFlow turns speech into text in any Windows application. Hold one shortcut, s
 
 | | Package | Size | Notes |
 | --- | --- | --- | --- |
-| **Installer** | [`SineFlow-Setup-x64.exe`](../../releases/latest/download/SineFlow-Setup-x64.exe) | ~330 MB | Per-user install, Start Menu entry, uninstaller, optional autostart |
-| **Portable** | [`SineFlow-Portable-x64.zip`](../../releases/latest/download/SineFlow-Portable-x64.zip) | ~190 MB | Extract and run `SineFlow.App.exe`, no installation |
+| **Installer** | [`SineFlow-Setup-x64.exe`](../../releases/latest/download/SineFlow-Setup-x64.exe) | ~493 MB | Per-user install, Start Menu entry, uninstaller, optional autostart |
+| **Portable** | [`SineFlow-Portable-x64.zip`](../../releases/latest/download/SineFlow-Portable-x64.zip) | ~360 MB | Extract and run `SineFlow.App.exe`, no installation |
 | **Checksums** | [`SHA256SUMS.txt`](../../releases/latest/download/SHA256SUMS.txt) | 1 KB | Verify every download before running it |
 
-Both packages are self-contained: .NET and the native inference libraries are included. Speech models are downloaded inside the app, not with the installer.
+Both packages are self-contained: .NET, the native inference libraries and the Qwen Python runtime are included. Speech models are downloaded inside the app, not with the installer.
 
 > These links resolve to assets in this private repository, so downloading them requires an account with access.
 
@@ -71,8 +71,8 @@ Both packages are self-contained: .NET and the native inference libraries are in
 | | |
 | --- | --- |
 | Operating system | Windows 11 x64. Windows 10 22H2 is best effort and not part of the test matrix. |
-| Memory | 4 GB for Base, 8 GB for Balanced, 16 GB for the largest model |
-| Storage | ~150 MB for the app plus 140 MB – 3 GB per speech model |
+| Memory | 4 GB for Base, 8 GB for Balanced or Qwen3-ASR-1.7B, 16 GB for the largest Whisper model |
+| Storage | ~1.1 GB for the app (including the 607 MB embedded Qwen runtime) plus 140 MB - 4.1 GB per speech model |
 | Microphone | Any WASAPI input device |
 | Internet | Only for the initial model download and optional updates |
 
@@ -146,7 +146,8 @@ Dark is the default. Light and *follow Windows* are one click away, and both pal
 ## How it works
 
 ```
-Microphone ──► WASAPI capture ──► silence trim ──► whisper.cpp (local)
+Microphone ──► WASAPI capture ──► silence trim ──► local speech engine
+                                                   (whisper.cpp / Parakeet / Qwen)
                                                         │
                                    text pipeline ◄──────┘
                     (dictionary, commands, translation, casing)
@@ -158,7 +159,7 @@ Microphone ──► WASAPI capture ──► silence trim ──► whisper.cpp
 | --- | --- |
 | `Voxora.Core` | Settings, readiness states, text pipeline, hardware profiles |
 | `Voxora.Audio` | WASAPI capture, resampling, ducking |
-| `Voxora.Transcription` | whisper.cpp bridge, Parakeet adapter, engine routing |
+| `Voxora.Transcription` | whisper.cpp bridge, Parakeet C ABI adapter, authenticated Qwen Python sidecar, engine routing |
 | `Voxora.Enhancement` | Local writing model (llama.cpp) |
 | `Voxora.Models` | Catalogue, verified downloads, integrity |
 | `Voxora.WindowsIntegration` | Hotkeys, focus and field inspection, insertion, tray |
@@ -184,7 +185,7 @@ git submodule update --init --recursive
 .tools/dotnet/dotnet test  Voxora.slnx -c Release
 ```
 
-The release build writes `dist/SineFlow-Portable-x64.zip`, `dist/SineFlow-Setup-x64.exe` and `dist/SHA256SUMS.txt`.
+The release build writes `dist/SineFlow-Portable-x64.zip`, `dist/SineFlow-Setup-x64.exe` and `dist/SHA256SUMS.txt`. It also downloads and installs the pinned embedded CPython runtime and Qwen Python dependencies into `dist/SineFlow/qwen`; the Qwen model weights remain a separate verified download.
 
 ### Native inference check
 
@@ -193,6 +194,18 @@ The smoke test transcribes public reference audio with the real models and print
 ```powershell
 .tools/dotnet/dotnet run --project tests/Voxora.NativeSmoke -c Release -- .tools/jfk.wav artifacts/native-smoke.json
 ```
+
+Parakeet and Qwen use the same harness:
+
+```powershell
+.tools/dotnet/dotnet run --project tests/Voxora.NativeSmoke -c Release -- .tools/jfk.wav artifacts/parakeet-smoke.json --model=parakeet-tdt-0.6b-v3 --speech-only
+
+$env:SINEFLOW_QWEN_PYTHON="$PWD/dist/SineFlow/qwen/python.exe"
+$env:SINEFLOW_QWEN_SIDECAR="$PWD/dist/SineFlow/qwen/qwen_sidecar.py"
+.tools/dotnet/dotnet run --project tests/Voxora.NativeSmoke -c Release -- .tools/jfk.wav artifacts/qwen-smoke.json --model=qwen3-asr-1.7b --speech-only
+```
+
+The Qwen sidecar is launched with a random per-process named pipe and mutual HMAC authentication. It has no listening socket, loads the model with `local_files_only=True`, and is terminated when the app exits.
 
 ### Repository layout
 
@@ -212,8 +225,8 @@ docs/           design notes, verification and manual test matrix
 | Dictation, insertion, history, snippets, file transcription | Stable |
 | Meeting capture, speaker separation, PDF export | Stable |
 | Local writing models, translation, spoken commands | Stable |
-| Parakeet (NeMo-Speech.cpp) | Adapter present, native runtime not bundled yet |
-| Qwen ASR | Not implemented |
+| Parakeet (NeMo-Speech.cpp) | Runtime bundled; model downloads on demand; verified on CPU (25 European languages) |
+| Qwen3-ASR 1.7B | Runtime bundled; model downloads on demand; verified on CPU with 30 languages plus automatic detection |
 | Code signing, update feed | Prepared, not published |
 
 Known limits are documented in [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md). Device and application checks live in [docs/MANUAL_TEST_CHECKLIST.md](docs/MANUAL_TEST_CHECKLIST.md).
@@ -260,7 +273,7 @@ Please do not open a public issue for a security problem. See [SECURITY.md](SECU
 
 SineFlow is proprietary software by SNine Studios. All rights reserved. See [LICENSE](LICENSE).
 
-Bundled third-party components keep their own licenses: whisper.cpp, llama.cpp, .NET, NAudio, SQLite, PDFsharp, sherpa-onnx and WeSpeaker. The full attribution list is in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and `resources/licenses/`.
+Bundled third-party components keep their own licenses: whisper.cpp, NeMo-Speech.cpp, llama.cpp, .NET, NAudio, SQLite, PDFsharp, sherpa-onnx, WeSpeaker, CPython, PyTorch and Transformers. The full attribution list is in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and `resources/licenses/`.
 
 ---
 

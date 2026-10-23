@@ -5,9 +5,13 @@ using System.Windows.Threading;
 using Voxora.Audio;
 using Voxora.Models;
 using Voxora.Storage;
+using Voxora.Transcription;
 using Voxora.WindowsIntegration;
 
 namespace Voxora.App;
+
+/// <summary>A language code paired with the name shown in the speech picker.</summary>
+public sealed record SpeechLanguage(string Code, string Name);
 
 public sealed partial class AppController : INotifyPropertyChanged, IDisposable
 {
@@ -29,6 +33,21 @@ public sealed partial class AppController : INotifyPropertyChanged, IDisposable
     /// <summary>The speech profile that is actually used, honouring the automatic choice.</summary>
     public string EffectiveSpeechModel => Settings.AutoQuality ? HardwareRecommendations.RecommendModel(Hardware) : Settings.EffectiveSpeechModel;
     public void RefreshHardware() => hardware = HardwareDetector.Detect();
+    /// <summary>The language codes the selected speech model can actually transcribe.</summary>
+    public IReadOnlyList<SpeechLanguage> SupportedLanguages()
+    {
+        var model = ResolveSpeechModel() ?? Models.Catalog.FirstOrDefault(candidate => candidate.Id == EffectiveSpeechModel);
+        IReadOnlyCollection<string> codes = Speech is TranscriptionEngineRouter router && model is not null
+            ? router.CapabilitiesFor(Models.PathFor(model)).Languages
+            : Speech.Capabilities.Languages;
+        if (!codes.Contains("auto", StringComparer.OrdinalIgnoreCase)) codes = ["auto", .. codes];
+        return codes.Select(code => new SpeechLanguage(code, LanguageName(model?.Engine, code))).ToArray();
+    }
+    private static string LanguageName(string? engine, string code)
+    {
+        if (engine == "Qwen3-ASR") return QwenLanguages.NameFor(code) ?? Languages.All.GetValueOrDefault(code) ?? code;
+        return Languages.All.GetValueOrDefault(code) ?? code;
+    }
     /// <summary>A readable summary of this computer for the settings pages.</summary>
     public string DescribeHardware()
     {
@@ -322,7 +341,9 @@ public sealed partial class AppController : INotifyPropertyChanged, IDisposable
                 {
                     await Models.EnsureVerifiedAsync(model,token);
                     recognitionStarted?.Invoke();
-                    var result=await Speech.TranscribeAsync(prepared, Models.PathFor(model), Settings.Language, VocabularyPrompt.Build(Settings.CustomWords), Settings.KeepSpeechLoaded, token);
+                    var modelPath=Models.PathFor(model);
+                    var language=Speech is TranscriptionEngineRouter router?router.LanguageFor(modelPath,Settings.Language):Settings.Language;
+                    var result=await Speech.TranscribeAsync(prepared, modelPath, language, VocabularyPrompt.Build(Settings.CustomWords), Settings.KeepSpeechLoaded, token);
                     LastSpeechModel=model.Id;
                     if(model.Id!=EffectiveSpeechModel)Status="Using "+model.Name+" while the preferred model is unavailable";
                     return result;
@@ -341,7 +362,18 @@ public sealed partial class AppController : INotifyPropertyChanged, IDisposable
             if(trimmed is not null){try{File.Delete(trimmed);}catch(IOException error){SafeLog.Write("TempCleanup",error);}}
         }
     }
-    private List<ModelDefinition> AvailableSpeechModels() => Models.Catalog.Where(m => (m.Engine == "Whisper" || m.Engine == "NeMo-Speech.cpp" && File.Exists(Path.Combine(AppContext.BaseDirectory,"nemo_speech_asr_c.dll"))) && Models.IsInstalled(m)).OrderByDescending(m => m.Id == EffectiveSpeechModel).ThenBy(m => m.Bytes).ToList();
+    private List<ModelDefinition> AvailableSpeechModels() =>
+        Models.Catalog
+            .Where(m => Models.IsInstalled(m) && m.Engine switch
+            {
+                "Whisper" => true,
+                "NeMo-Speech.cpp" => File.Exists(Path.Combine(AppContext.BaseDirectory, "nemo_speech_asr_c.dll")),
+                "Qwen3-ASR" => QwenEngine.RuntimeAvailable,
+                _ => false
+            })
+            .OrderByDescending(m => m.Id == EffectiveSpeechModel)
+            .ThenBy(m => m.Bytes)
+            .ToList();
     public async Task<string> EnhanceAsync(string text, string instruction, CancellationToken token,bool preserveDetails=true,bool formatOutput=true)
     {
         var model = Models.Catalog.FirstOrDefault(m => m.Engine == "llama.cpp"&&Models.IsInstalled(m))??Models.Catalog.First(m=>m.Engine=="llama.cpp");

@@ -3,7 +3,46 @@
 All notable changes to SineFlow are documented here. Versions follow
 [Semantic Versioning](https://semver.org/); dates use ISO 8601.
 
-## [0.1.3] – 2026-10-22
+## [Unreleased]
+
+### Added
+
+- **Parakeet TDT 0.6B v3 now runs from the release package.** The NeMo-Speech.cpp
+  runtime and its required ggml, Abseil and protobuf DLLs are bundled, so the
+  verified 25-language European model can run on CPU without a separate C++
+  toolchain. The native smoke test transcribes the 11-second JFK reference clip
+  in about 1.1 seconds on CPU.
+- **Qwen3-ASR 1.7B is available as an optional local speech engine.** The app
+  downloads a pinned seven-file model bundle, verifies every file, and runs it in
+  an isolated Python sidecar over a random per-launch Windows named pipe with
+  mutual HMAC authentication. It supports 30 languages plus automatic detection,
+  uses no network listener, and maps SineFlow's `tl` code to the model's `fil`
+  code. Native smoke and lifecycle probes now pass on CPU with the packaged
+  runtime, including automatic detection, cancellation and sidecar restart.
+- **The Qwen runtime ships with the app.** `build.ps1` packages a pinned
+  python-build-standalone CPython 3.12.15 runtime with PyTorch 2.14.1 CPU,
+  Transformers 5.20.2, tokenizers, NumPy and SoundFile. The model weights remain
+  a separate verified download and are never committed.
+- Added per-file verification and resumable directory bundles to the model
+  manager, with aggregate progress and a bundle fingerprint that is invalidated
+  when any file changes.
+- The language picker now follows the selected speech engine. Qwen shows its 30
+  languages plus automatic detection, Parakeet shows its 25 European languages,
+  and an older unsupported language setting falls back to automatic detection
+  instead of failing a dictation.
+- Added upstream SentencePiece, Abseil, protobuf, CPython, PyTorch, Transformers
+  and Qwen dependency license texts to the packaged third-party notices.
+
+### Fixed
+
+- **SineFlow now exits cleanly after the application smoke test.** The service
+  container and the speech router both disposed the Qwen engine; the second
+  disposal waited on an already disposed semaphore and could leave a hidden
+  process behind. Engine disposal is now idempotent, the smoke test no longer
+  opens a modal error box, and shutdown always reaches `Shutdown()` even if a
+  cleanup step fails.
+
+## [0.1.3] - 2026-10-22
 
 ### Fixed
 

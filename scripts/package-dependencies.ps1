@@ -34,6 +34,11 @@ foreach($name in @('vcruntime140.dll','vcruntime140_1.dll','msvcp140.dll','msvcp
     if(!(Test-Path -LiteralPath $source)) { throw "Build machine is missing Microsoft C++ redistributable file $name." }
     Copy-Item -LiteralPath $source -Destination $Destination
 }
+# ggml's OpenMP CPU backend imports vcomp140.dll. It is not part of the base CRT folder.
+$openmp=Get-ChildItem 'C:/Program Files/Microsoft Visual Studio/*/*/VC/Redist/MSVC/*/x64/Microsoft.VC143.OpenMP' -Directory -ErrorAction SilentlyContinue | Sort-Object FullName -Descending | Select-Object -First 1
+$vcomp=if($openmp){Join-Path $openmp.FullName 'vcomp140.dll'}else{Join-Path $env:WINDIR 'System32/vcomp140.dll'}
+if(!(Test-Path -LiteralPath $vcomp)) { throw 'Build machine is missing Microsoft OpenMP redistributable file vcomp140.dll.' }
+Copy-Item -LiteralPath $vcomp -Destination $Destination
 # Retain only Windows x64 runtime payloads in the x64 distribution.
 $runtimes=Join-Path $Destination 'runtimes'
 if(Test-Path -LiteralPath $runtimes) {

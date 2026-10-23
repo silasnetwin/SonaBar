@@ -13,7 +13,10 @@ using var manager=new ModelManager();
 var requestedModel=args.FirstOrDefault(x=>x.StartsWith("--model=",StringComparison.Ordinal))?[8..]??"small";
 var speechModel=manager.Catalog.First(x=>x.Id==requestedModel);
 if(!manager.IsInstalled(speechModel))await manager.DownloadAsync(speechModel,null,default);
-WhisperEngine.ConfigureBackend(args.Contains("--gpu")?"GPU / accelerated":"CPU");using var speech=new WhisperEngine();
+var parakeet=speechModel.Engine=="NeMo-Speech.cpp";
+var qwen=speechModel.Engine=="Qwen3-ASR";
+if(!parakeet&&!qwen)WhisperEngine.ConfigureBackend(args.Contains("--gpu")?"GPU / accelerated":"CPU");
+using ITranscriptionEngine speech=qwen?new QwenEngine():parakeet?new ParakeetEngine():new WhisperEngine();
 if(args.Contains("--latency-only"))
 {
     if(args.Contains("--greedy"))Console.WriteLine("whisper.cpp production bridge uses its pinned beam-search profile; --greedy is retained for compatibility only.");
@@ -28,7 +31,22 @@ if(args.Contains("--latency-only"))
     return;
 }
 var transcript=await speech.TranscribeAsync(args[0],manager.PathFor(speechModel),"en","",false,default);
+Console.WriteLine($"Transcript [{speechModel.Id}]: {transcript.Text}");
 if(!transcript.Text.Contains("country",StringComparison.OrdinalIgnoreCase))throw new InvalidDataException("Speech inference failed reference-audio check.");
+string? automaticLanguage=null;
+if(parakeet||qwen)
+{
+    var autoResult=await speech.TranscribeAsync(args[0],manager.PathFor(speechModel),"auto","",false,default);
+    automaticLanguage=autoResult.Language;
+    Console.WriteLine($"Automatic language [{autoResult.Language}]: {autoResult.Text}");
+    if(!autoResult.Text.Contains("country",StringComparison.OrdinalIgnoreCase))throw new InvalidDataException($"{speechModel.Engine} automatic-language inference failed reference-audio check.");
+}
+if(args.Contains("--speech-only"))
+{
+    await File.WriteAllTextAsync(args[1],JsonSerializer.Serialize(new{testedAt=DateTimeOffset.UtcNow,seconds=elapsed.Elapsed.TotalSeconds,engine=speechModel.Engine,speechModel=speechModel.Id,speech=true,automaticLanguage,transcript=transcript.Text},new JsonSerializerOptions{WriteIndented=true}));
+    Console.WriteLine($"PASS: {speechModel.Engine} speech inference.");
+    return;
+}
 // The automatic language setting must recognise the language and still deliver the words.
 // whisper.cpp returns right after its detection when it is asked to detect only, so this
 // check protects against a bridge that only detects and never transcribes.

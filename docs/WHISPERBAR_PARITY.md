@@ -1,4 +1,4 @@
-# WhisperBar parity audit — 3 October 2026
+# WhisperBar parity audit — 3 October 2026 (updated 23 October 2026)
 
 Sources: [current product page](https://whisperbar.pro/) and [full public changelog through 1.20.1](https://whisperbar.pro/changelog.html), checked on 3 October 2026. WhisperBar descriptions below are public claims, not independently reproduced behavior. SineFlow status is based on repository inspection and the tests stated below. “Implemented” does not mean equal accuracy or polish.
 
@@ -10,8 +10,8 @@ Sources: [current product page](https://whisperbar.pro/) and [full public change
 | Overlay and cancellation | Floating status; cancel through enhancement | Implemented | Nonactivating WPF pill and cancellation token | Build | Mixed-DPI and inference cancellation remain manual |
 | Optional sounds | Start, done, error | Gap | Setting exists but no bundled feedback player | No | Off is the only effective option |
 | Audio ducking | Lowers audio during recording | Implemented | Windows audio session/volume recovery | Unit | Device changes remain manual |
-| Speech engines | Qwen3-ASR, Parakeet, Whisper | Partial | Local whisper.cpp, Fast/Balanced/Maximum | Native smoke in this pass | No comparable accuracy or speed benchmark; other engines absent |
-| Automatic language | Model-dependent detection | Fixed in this pass | Whisper auto language | Native smoke in this pass | The bridge asked whisper.cpp to detect only, which returned before the transcription; corrected and covered by a native check |
+| Speech engines | Qwen3-ASR, Parakeet, Whisper | Implemented | Local whisper.cpp, bundled NeMo-Speech.cpp Parakeet C ABI, and authenticated Qwen3-ASR Python sidecar | Native smoke (Whisper, Parakeet and Qwen) | No comparable accuracy or speed benchmark; Qwen end-to-end sidecar timing is measured on CPU |
+| Automatic language | Model-dependent detection | Implemented | Whisper auto language; Parakeet automatic decode; Qwen automatic language request | Native smoke | The bridge asked whisper.cpp to detect only, which returned before the transcription; corrected and covered by a native check. Parakeet accepts `auto` but the runtime returns no detected language code, so history keeps `auto`. Qwen returns a parsed language when automatic detection is used. |
 | Custom words | Recognition and enhancement guidance | Implemented | Whisper prompt, writing context, explicit correction rules | Unit | Effect depends on model |
 | Enhance and self-corrections | Grammar, fillers, context, instructions | Partial | Fast deterministic cleanup, spoken commands for bullets, professional email, tone, spelling, fillers and summary, explicit actions through local writer | Unit/native smoke in this pass | No general semantic intent classifier; automatic writer is deliberately limited |
 | Spoken translation | Explicit natural commands | Partial | Deterministic end-command patterns, local translation and protected details | Unit/native smoke in this pass | Ambiguous commands and every language pair untested |
@@ -32,6 +32,11 @@ Sources: [current product page](https://whisperbar.pro/) and [full public change
 ## This pass
 
 - Preserved the existing uncommitted insertion, waveform, selected-text, meeting and branding work.
+- Bundled the Parakeet TDT 0.6B v3 native runtime and verified it end to end on CPU. `build.ps1` now builds the pinned NeMo-Speech.cpp ASR C ABI, links vcpkg's separate Abseil flag archives, adds NeMo's include directory explicitly, copies the required DLL closure, and packages the OpenMP runtime needed by ggml.
+- Added SentencePiece, Abseil and protobuf license texts to the packaged notices.
+- Added the Qwen3-ASR 1.7B engine as a pinned seven-file model bundle and an authenticated named-pipe Python sidecar. The model is loaded offline, the app maps `tl` to `fil`, and the sidecar supports warm, transcribe, cancel and unload requests.
+- Added the embedded CPython 3.12.15 runtime packaging step with exact PyTorch 2.14.1 CPU and Transformers 5.20.2 versions, runtime guards, and upstream license texts.
+- The language picker now follows the selected engine's capabilities, and a saved unsupported code falls back to automatic detection before dictation.
 - Fixed the automatic language setting. The native bridge asked whisper.cpp to detect the language only, and whisper.cpp returns right after the detection. With the default setting SineFlow recognised the language and then inserted nothing. The bridge now detects and transcribes in one call, and the native smoke test checks it.
 - Added hardware detection and an automatic speech profile with the measured machine explained in plain words.
 - Added voice activity detection for the leading and trailing silence of a recording, without touching a pause inside a sentence.
@@ -44,4 +49,4 @@ Sources: [current product page](https://whisperbar.pro/) and [full public change
 
 ## Verification and remaining gaps
 
-After these edits, the full Release package command passed: 164/164 automated tests, Release build with zero warnings and errors, self-contained app publish, portable ZIP and installer. The analyzer verification also passed. Packages are `dist/SineFlow-Portable-x64.zip` and `dist/SineFlow-Setup-x64.exe`. The native smoke test passed against the real models, including the automatic language check. No direct WhisperBar binary comparison, physical microphone, browser/Office insertion, multi-monitor/DPI, multi-speaker meeting or clean-machine installer test is claimed. The current user request is larger than this pass; optional sounds, typed snippet expansion, a Help page, broader spoken intent, external STT engines and measured parity remain open.
+After these edits, 193/193 automated tests pass. The full `./build.ps1 -Configuration Release` package command completed; the .NET build reported 0 warnings and 0 errors: `dist/SineFlow` is 1,064.6 MiB, the portable ZIP is 359.62 MiB and the installer is 492.95 MiB. The Parakeet native smoke test passed against the real model: the 11-second JFK clip transcribed in 1.11 seconds on CPU with the expected text, and the same run passed with the DLLs copied from the packaged `dist/SineFlow` output. Qwen3-ASR native smoke passed with the final `dist/SineFlow/qwen` runtime, including forced English and automatic detection (`en`) and two sidecar starts; the Qwen lifecycle probe passed warm, transcribe, cancel, reuse, unload and restart. No direct WhisperBar binary comparison, physical microphone, browser/Office insertion, multi-monitor/DPI, multi-speaker meeting or clean-machine installer test is claimed. Optional sounds, typed snippet expansion, a Help page, broader spoken intent and measured parity remain open.
