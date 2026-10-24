@@ -12,6 +12,20 @@ set(NEMO_SPEECH_BUILD_HTTP OFF CACHE BOOL "" FORCE)
 set(NEMO_SPEECH_BUILD_GRPC OFF CACHE BOOL "" FORCE)
 set(NEMO_SPEECH_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(NEMO_SPEECH_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+
+# NeMo-Speech resolves SentencePiece with find_library(). With the Visual Studio
+# multi-config generator that lookup can select vcpkg's debug/lib archive even
+# for a Release build, which then fails at link time with MDd/MD mismatches.
+# Pin the release archive explicitly so every configuration uses the same CRT.
+if(WIN32 AND DEFINED VCPKG_INSTALLED_DIR AND DEFINED VCPKG_TARGET_TRIPLET)
+    set(_sentencepiece_root "${VCPKG_INSTALLED_DIR}/${VCPKG_TARGET_TRIPLET}")
+    set(SENTENCEPIECE_LIB "${_sentencepiece_root}/lib/sentencepiece.lib" CACHE FILEPATH "Release SentencePiece static library" FORCE)
+    set(SENTENCEPIECE_INCLUDE_DIR "${_sentencepiece_root}/include" CACHE PATH "SentencePiece headers" FORCE)
+    if(NOT EXISTS "${SENTENCEPIECE_LIB}")
+        message(FATAL_ERROR "SentencePiece release library not found at ${SENTENCEPIECE_LIB}")
+    endif()
+endif()
+
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/../../third_party/NeMo-Speech.cpp ${CMAKE_CURRENT_BINARY_DIR}/nemo-speech)
 
 # NeMo's C ABI target points its build interface at ${CMAKE_SOURCE_DIR}/include,

@@ -48,9 +48,9 @@ SineFlow turns speech into text in any Windows application. Hold one shortcut, s
 ## Why SineFlow
 
 - **Offline by design.** Audio never leaves the computer. Models are downloaded once, verified against SHA-256 and reused.
-- **Native, not a web view.** A .NET 10 WPF shell with the real Windows title bar, per-monitor DPI handling and a non-activating overlay that never steals focus.
+- **Native, not a web view.** A .NET 10 WPF shell with a macOS-style utility title bar, native resize and snap, per-monitor DPI handling and a non-activating overlay that never steals focus.
 - **One shortcut, everywhere.** Works in browsers, Office, editors, chat clients and terminals through UI Automation, clipboard fallback and Unicode input.
-- **Quiet.** A tray icon, a compact status pill and nothing else until you need it.
+- **Quiet.** A tray icon, a compact recording pill and nothing else until you need it.
 
 ## Download
 
@@ -88,14 +88,14 @@ Run `SineFlow-Setup-x64.exe` for a per-user installation, or extract `SineFlow-P
 First you will be offered a short onboarding; afterwards SineFlow lives in the tray.
 
 <p align="center">
-  <img src="docs/media/overlay.png" alt="Recording overlay" width="640">
+  <img src="docs/media/overlay.png" alt="Recording overlay" width="430">
 </p>
 
 ## What's new in 0.1.3
 
 - **Window first.** The shell is visible in about 0.6 seconds; engine and model work starts afterwards.
 - **No silent download.** Start-up no longer pulls a large model in the background. A missing model is an explicit state with a direct link to Models.
-- **Native frame and one palette.** Real caption buttons, per-monitor DPI and rounded corners, with dark as the default for new installations.
+- **WhisperBar-style utility frame.** Traffic lights, segmented tabs and one palette, with native resize and snap and light as the default for new installations.
 
 Full details: [CHANGELOG.md](CHANGELOG.md) · [v0.1.3 release notes](../../releases/tag/v0.1.3).
 
@@ -141,7 +141,7 @@ Full details: [CHANGELOG.md](CHANGELOG.md) · [v0.1.3 release notes](../../relea
 | --- | --- |
 | <img src="docs/media/settings.png" width="460" alt="Preferences"> | <img src="docs/media/light-mode.png" width="460" alt="Light theme"> |
 
-Dark is the default. Light and *follow Windows* are one click away, and both palettes share the same contrast rules.
+Light is the default. Dark and *follow Windows* are one click away, and both palettes share the same contrast rules.
 
 ## How it works
 

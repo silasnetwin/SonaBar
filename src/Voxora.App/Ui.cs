@@ -36,4 +36,19 @@ internal static class Ui
         var pill=new Border { Child=label, Style=(Style)Application.Current.FindResource("StatusPill") };
         return pill;
     }
+    /// <summary>The white ear mark used by the record control in the footer and the overlay.</summary>
+    internal static UIElement EarIcon(double size) => new System.Windows.Shapes.Path
+    {
+        Data=Geometry.Parse("M6,8.5 A6.5,6.5 0 1 1 19,8.5 C19,14.5 13,14.5 13,18.5 A3.5,3.5 0 1 1 6,18.5 M15,8.5 A2.5,2.5 0 0 0 10,8.5 L10,9.5 A2,2 0 1 1 10,13.5"),
+        Stroke=Brushes.White,
+        StrokeThickness=2.1,
+        StrokeStartLineCap=PenLineCap.Round,
+        StrokeEndLineCap=PenLineCap.Round,
+        Fill=Brushes.Transparent,
+        Stretch=Stretch.Uniform,
+        Width=size,
+        Height=size,
+        HorizontalAlignment=HorizontalAlignment.Center,
+        VerticalAlignment=VerticalAlignment.Center
+    };
 }

@@ -1,6 +1,9 @@
+using System.ComponentModel;
 using System.Diagnostics;
+using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Input;
+using System.Windows.Threading;
 using Voxora.Storage;
 
 namespace Voxora.App;
@@ -8,87 +11,236 @@ public sealed partial class MainWindow : ThemedWindow
 {
     private readonly AppController c;
     private readonly ContentControl page = new();
-    private readonly TextBlock heading = Ui.Text("Overview",34);
-    private readonly TextBlock subtitle = Ui.Text("",14,true);
+    private readonly TextBlock heading = Ui.Text("Overview",28);
+    private readonly TextBlock subtitle = Ui.Text("",13,true);
     private readonly ScrollViewer pageScroll = new() { VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+    private readonly StackPanel subNavigation = new() { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0,0,0,8) };
+    private Grid? pageHeader;
+    private readonly Dictionary<string,ToggleButton> tabButtons=[];
+    private readonly Dictionary<string,ToggleButton> subTabButtons=[];
     private Button? footerSave;
-    private readonly Dictionary<string,System.Windows.Controls.Primitives.ToggleButton> navigationButtons=[];
-    private readonly Dictionary<string,StackPanel> navigationGroups=[];
-    private Button? moreToggle;
+    private Button? footerAction;
+    private Button? recordButton;
+    private TextBlock? footerStatus;
+    private TextBlock? footerDetail;
+    private System.Windows.Shapes.Ellipse? footerDot;
+    private Waveform? footerWave;
+    private DispatcherTimer? footerTimer;
+    private readonly Stopwatch footerClock = new();
+    private string currentPage = "Overview";
     private CancellationTokenSource? download;
+    // The six top-level destinations mirror the segmented Preferences toolbar of WhisperBar.
+    // Secondary pages stay reachable through the quiet sub-navigation row below it.
+    private static readonly (string Key,string Label,string[] Pages)[] Tabs =
+    [
+        ("General","General",["Overview","General","Files","Meetings"]),
+        ("Transcription","Transcription",["Dictation","Models","Languages","Writing","Custom Words","Snippets","Applications"]),
+        ("Shortcuts","Shortcuts",["Shortcuts"]),
+        ("Recording","Recording",["Audio","Privacy","Advanced","Debug"]),
+        ("History","History",["History","Statistics"]),
+        ("About","About",["About"])
+    ];
     public MainWindow(AppController controller)
     {
         c = controller; Title = "SineFlow";
         // The window never opens larger than the screen, so the title bar and the footer stay reachable on small laptops.
-        var workArea = SystemParameters.WorkArea; Width = Math.Min(1240, workArea.Width - 32); Height = Math.Min(820, workArea.Height - 48); MinWidth = 940; MinHeight = 620; WindowStartupLocation = WindowStartupLocation.CenterScreen; DataContext = c;
-        UseNativeChrome();
-        var layout = new Grid(); layout.SetResourceReference(System.Windows.Controls.Panel.BackgroundProperty,"Surface"); layout.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(232) }); layout.ColumnDefinitions.Add(new ColumnDefinition());
-        var sidebar = new Grid(); sidebar.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); sidebar.RowDefinitions.Add(new RowDefinition()); sidebar.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-        var identity = new StackPanel { Margin = new Thickness(22,20,18,16) };
-        var logo = new System.Windows.Controls.Image { Width=30,Height=30,HorizontalAlignment=HorizontalAlignment.Left,Stretch=Stretch.Uniform,Source=new System.Windows.Media.Imaging.BitmapImage(new Uri("pack://application:,,,/SineFlow.App;component/Assets/SineFlow-Mark.png",UriKind.Absolute)) };
-        System.Windows.Automation.AutomationProperties.SetName(logo,"SineFlow logo");
-        var brandRow=Ui.Row(logo,Ui.Stack(Ui.Text("SineFlow",17),Ui.Text("LOCAL & PRIVATE",9,true))); brandRow.Margin=new Thickness(0);identity.Children.Add(brandRow);
-        var presence=Ui.StatusPill("●  Ready to listen");presence.Margin=new Thickness(0,14,0,0);
-        if(presence.Child is TextBlock presenceText)presenceText.SetBinding(TextBlock.TextProperty,new Binding(nameof(AppController.PresenceLabel)));
-        identity.Children.Add(presence); sidebar.Children.Add(identity);
-        var navigation = new StackPanel { Margin = new Thickness(12,0,12,12) };
-        AddNavigationGroup(navigation,"WORKSPACE",false,("Overview","Home"),("History","History"),("Files","Files"),("Meetings","Meetings"));
-        AddNavigationGroup(navigation,"SETTINGS",false,("General","Settings"));
-        AddNavigationGroup(navigation,"MORE",true,("Custom Words","Dictionary"),("Snippets","Snippets"),("Applications","App profiles"),("Privacy","Privacy"),("Advanced","Advanced"));
-        var navScroll = new ScrollViewer { Content=navigation,VerticalScrollBarVisibility=ScrollBarVisibility.Auto,HorizontalScrollBarVisibility=ScrollBarVisibility.Disabled }; Grid.SetRow(navScroll,1); sidebar.Children.Add(navScroll);
-        var start=Ui.Button("Start dictation",c.ToggleDictation,true);start.HorizontalAlignment=HorizontalAlignment.Stretch;start.Margin=new Thickness(22,0,22,9);
-        var shortcutHint=Ui.Text("Ctrl + Shift + Space",11,true);shortcutHint.HorizontalAlignment=HorizontalAlignment.Center;shortcutHint.Margin=new Thickness(0,0,0,19);
-        var sidebarFooter=new StackPanel();sidebarFooter.Children.Add(start);sidebarFooter.Children.Add(shortcutHint);Grid.SetRow(sidebarFooter,2); sidebar.Children.Add(sidebarFooter);
-        var side = new Border { BorderThickness = new Thickness(0,0,1,0), Child = sidebar }; side.SetResourceReference(Border.BackgroundProperty,"Sidebar"); side.SetResourceReference(Border.BorderBrushProperty,"Line"); layout.Children.Add(side);
-        var main = new Grid { Margin = new Thickness(40,28,40,20) }; main.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto }); main.RowDefinitions.Add(new RowDefinition()); main.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-        var header=new Grid { MaxWidth=920,HorizontalAlignment=HorizontalAlignment.Stretch }; header.ColumnDefinitions.Add(new ColumnDefinition()); header.ColumnDefinitions.Add(new ColumnDefinition { Width=GridLength.Auto });
-        var titles=Ui.Stack(heading,subtitle); heading.Margin=new Thickness(0,0,0,1); header.Children.Add(titles);
-        var privacy=Ui.StatusPill("●  Local & private");privacy.VerticalAlignment=VerticalAlignment.Top;privacy.Margin=new Thickness(10,3,0,0);Grid.SetColumn(privacy,1); header.Children.Add(privacy); main.Children.Add(header);
-        pageScroll.Content=page; pageScroll.Margin=new Thickness(0,26,0,14); pageScroll.MaxWidth=920; pageScroll.HorizontalAlignment=HorizontalAlignment.Stretch; Grid.SetRow(pageScroll,1); main.Children.Add(pageScroll);
-        var status=Ui.Text("",12,true); status.Margin=new Thickness(0); status.SetBinding(TextBlock.TextProperty,new Binding(nameof(AppController.StageLabel)));
-        var footer=new Grid(); footer.ColumnDefinitions.Add(new ColumnDefinition()); footer.ColumnDefinitions.Add(new ColumnDefinition { Width=GridLength.Auto }); status.VerticalAlignment=VerticalAlignment.Center; footer.Children.Add(status);
-        footerSave=Ui.Button("Save settings",()=>{c.SaveSettings();c.Inform("Settings saved");},true); footerSave.Margin=new Thickness(10,0,0,0); Grid.SetColumn(footerSave,1); footer.Children.Add(footerSave);
-        var statusBorder=new Border { BorderThickness=new Thickness(0,1,0,0),Padding=new Thickness(0,14,0,0),Child=footer,MaxWidth=920,HorizontalAlignment=HorizontalAlignment.Stretch }; statusBorder.SetResourceReference(Border.BorderBrushProperty,"Line"); Grid.SetRow(statusBorder,2); main.Children.Add(statusBorder); Grid.SetColumn(main,1); layout.Children.Add(main);
+        var workArea = SystemParameters.WorkArea; Width = Math.Min(1080, workArea.Width - 32); Height = Math.Min(780, workArea.Height - 48); MinWidth = 900; MinHeight = 620; WindowStartupLocation = WindowStartupLocation.CenterScreen; DataContext = c;
+        // A borderless utility frame lets us draw the macOS-style traffic lights and the
+        // segmented toolbar while keeping Windows resize and snap behaviour.
+        UseUtilityChrome();
+        var layout = new Grid();
+        layout.SetResourceReference(System.Windows.Controls.Panel.BackgroundProperty,"Surface");
+        layout.RowDefinitions.Add(new RowDefinition { Height = new GridLength(44) });
+        layout.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        layout.RowDefinitions.Add(new RowDefinition());
+        layout.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        layout.Children.Add(BuildTitleBar());
+        var tabBar = BuildTabBar(); Grid.SetRow(tabBar,1); layout.Children.Add(tabBar);
+        var content = new Grid { Margin = new Thickness(32,8,32,0) };
+        content.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        content.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        content.RowDefinitions.Add(new RowDefinition());
+        pageHeader = new Grid { MaxWidth=920,HorizontalAlignment=HorizontalAlignment.Stretch };
+        pageHeader.ColumnDefinitions.Add(new ColumnDefinition()); pageHeader.ColumnDefinitions.Add(new ColumnDefinition { Width=GridLength.Auto });
+        heading.Margin=new Thickness(0,0,0,2); heading.FontWeight=FontWeights.SemiBold;
+        subtitle.Margin=new Thickness(0,0,0,12);
+        var titles=Ui.Stack(heading,subtitle); pageHeader.Children.Add(titles);
+        var privacy=Ui.StatusPill("●  Local & private");privacy.VerticalAlignment=VerticalAlignment.Top;privacy.Margin=new Thickness(10,3,0,0);Grid.SetColumn(privacy,1); pageHeader.Children.Add(privacy);
+        content.Children.Add(pageHeader);
+        Grid.SetRow(subNavigation,1); content.Children.Add(subNavigation);
+        page.HorizontalContentAlignment=HorizontalAlignment.Stretch;
+        pageScroll.Content=page; pageScroll.Margin=new Thickness(0,4,0,14); pageScroll.MaxWidth=920; pageScroll.HorizontalAlignment=HorizontalAlignment.Stretch; pageScroll.HorizontalContentAlignment=HorizontalAlignment.Stretch; Grid.SetRow(pageScroll,2); content.Children.Add(pageScroll);
+        Grid.SetRow(content,2); layout.Children.Add(content);
+        var footer = BuildFooter(); Grid.SetRow(footer,3); layout.Children.Add(footer);
         Content=layout;
         Closing += (_,e) => { e.Cancel=true; Hide(); };
         AllowDrop = true; Drop += async (_,e) => { if(e.Data.GetData(System.Windows.DataFormats.FileDrop) is string[] files) { Navigate("Files"); await ProcessFilesAsync(files); } };
+        c.Machine.Changed += MachineChanged;
+        c.PropertyChanged += ControllerChanged;
+        c.Audio.Level += AudioLevel;
+        SourceInitialized += (_,_) => Theme.Apply(c.Settings.Theme);
+        Closed += (_,_) => { c.Machine.Changed -= MachineChanged; c.PropertyChanged -= ControllerChanged; c.Audio.Level -= AudioLevel; footerTimer?.Stop(); };
+        footerTimer = new DispatcherTimer(TimeSpan.FromMilliseconds(100),DispatcherPriority.Render,(_,_)=> { if(c.Machine.State==OperationState.Recording&&footerDetail is not null)footerDetail.Text="Listening   "+footerClock.Elapsed.ToString(@"mm\:ss"); },Dispatcher);
+        footerTimer.Stop();
         Navigate("Overview");
     }
-    private void AddNavigationGroup(StackPanel parent,string title,bool collapsible,params (string Key,string Label)[] items)
+    private Grid BuildTitleBar()
     {
-        var group=new StackPanel(); navigationGroups[title]=group;
-        var label=Ui.Text(title+(collapsible?"  +":""),10,true); label.FontWeight=FontWeights.SemiBold; label.Margin=new Thickness(11,12,0,7);
-        if(collapsible)
+        var bar = new Grid { Height=44 };
+        bar.ColumnDefinitions.Add(new ColumnDefinition { Width=GridLength.Auto });
+        bar.ColumnDefinitions.Add(new ColumnDefinition());
+        bar.ColumnDefinitions.Add(new ColumnDefinition { Width=GridLength.Auto });
+        var lights = new StackPanel { Orientation=Orientation.Horizontal,VerticalAlignment=VerticalAlignment.Center,Margin=new Thickness(18,0,0,0) };
+        lights.Children.Add(TrafficLight("#FF5F57","Close",Hide));
+        lights.Children.Add(TrafficLight("#FEBC2E","Minimise",()=>WindowState=WindowState.Minimized));
+        lights.Children.Add(TrafficLight("#28C840","Zoom",ToggleMaximize));
+        bar.Children.Add(lights);
+        var title = Ui.Text("SineFlow",13); title.FontWeight=FontWeights.SemiBold; title.Margin=new Thickness(0); title.HorizontalAlignment=HorizontalAlignment.Center; title.VerticalAlignment=VerticalAlignment.Center; title.SetResourceReference(TextBlock.ForegroundProperty,"TextSecondary");
+        Grid.SetColumn(title,1); bar.Children.Add(title);
+        var gear = new Button { Content="⚙",Style=(Style)FindResource("IconButton"),ToolTip="Settings",HorizontalAlignment=HorizontalAlignment.Right,Margin=new Thickness(0,0,14,0) };
+        gear.Click += (_,_)=>Navigate("General"); MakeChromeControl(gear); Grid.SetColumn(gear,2); bar.Children.Add(gear);
+        return bar;
+    }
+    private Border TrafficLight(string colour,string tooltip,Action action)
+    {
+        var dot = new Border { Width=12,Height=12,CornerRadius=new CornerRadius(6),Background=new SolidColorBrush((Color)ColorConverter.ConvertFromString(colour)),Margin=new Thickness(0,0,8,0),Cursor=System.Windows.Input.Cursors.Hand,ToolTip=tooltip,Focusable=true };
+        System.Windows.Automation.AutomationProperties.SetName(dot,tooltip);
+        dot.MouseLeftButtonUp += (_,_)=>action();
+        MakeChromeControl(dot);
+        return dot;
+    }
+    private void ToggleMaximize() => WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+    private Border BuildTabBar()
+    {
+        var stack = new StackPanel { Orientation=Orientation.Horizontal };
+        foreach(var tab in Tabs)
         {
-            Button? toggle=null; toggle=Ui.Button(title+"  +",()=>{group.Visibility=group.Visibility==Visibility.Visible?Visibility.Collapsed:Visibility.Visible;toggle!.Content=title+(group.Visibility==Visibility.Visible?"  −":"  +");});
-            if(title=="MORE")moreToggle=toggle;
-            toggle.Style=(Style)FindResource("SectionButton"); toggle.Margin=new Thickness(0,10,0,5); parent.Children.Add(toggle); group.Visibility=Visibility.Collapsed;
+            var button = new ToggleButton { Content=tab.Label,Style=(Style)FindResource("TabButton") };
+            button.Click += (_,_)=>Navigate(tab.Pages[0]);
+            stack.Children.Add(button);
+            tabButtons[tab.Key]=button;
         }
-        else parent.Children.Add(label);
-        foreach(var (key,caption) in items)
+        var border = new Border { Child=stack,CornerRadius=new CornerRadius(9),Padding=new Thickness(2),HorizontalAlignment=HorizontalAlignment.Center,Margin=new Thickness(0,6,0,2) };
+        border.SetResourceReference(Border.BackgroundProperty,"Sidebar");
+        return border;
+    }
+    private Border BuildFooter()
+    {
+        var grid = new Grid { MaxWidth=1080,HorizontalAlignment=HorizontalAlignment.Stretch };
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width=GridLength.Auto });
+        grid.ColumnDefinitions.Add(new ColumnDefinition());
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width=GridLength.Auto });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width=GridLength.Auto });
+        grid.ColumnDefinitions.Add(new ColumnDefinition { Width=GridLength.Auto });
+        recordButton = new Button { Style=(Style)FindResource("RecordButton"),Content=Ui.EarIcon(23),ToolTip="Start or stop dictation" };
+        recordButton.Click += (_,_)=>DictationAction();
+        grid.Children.Add(recordButton);
+        var statusPanel = new StackPanel { Margin=new Thickness(14,0,18,0),VerticalAlignment=VerticalAlignment.Center };
+        var statusLine = new StackPanel { Orientation=Orientation.Horizontal,VerticalAlignment=VerticalAlignment.Center };
+        footerDot = new System.Windows.Shapes.Ellipse { Width=8,Height=8,Margin=new Thickness(0,0,8,0),VerticalAlignment=VerticalAlignment.Center };
+        footerDot.SetResourceReference(System.Windows.Shapes.Shape.FillProperty,"Success");
+        footerStatus = Ui.Text("Ready to listen",14); footerStatus.FontWeight=FontWeights.SemiBold; footerStatus.Margin=new Thickness(0,0,0,1);
+        footerDetail = Ui.Text("Ctrl + Shift + Space",11,true); footerDetail.Margin=new Thickness(0);
+        statusLine.Children.Add(footerDot); statusLine.Children.Add(footerStatus);
+        statusPanel.Children.Add(statusLine); statusPanel.Children.Add(footerDetail);
+        Grid.SetColumn(statusPanel,1); grid.Children.Add(statusPanel);
+        footerWave = new Waveform { Width=110,Height=26,Margin=new Thickness(0,0,14,0),VerticalAlignment=VerticalAlignment.Center,Visibility=Visibility.Collapsed };
+        Grid.SetColumn(footerWave,2); grid.Children.Add(footerWave);
+        footerSave = Ui.Button("Save settings",()=>{c.SaveSettings();c.Inform("Settings saved");},true);
+        footerSave.Style=(Style)FindResource("PositiveButton"); footerSave.MinWidth=112; footerSave.Height=36; footerSave.Margin=new Thickness(0,0,10,0); footerSave.HorizontalAlignment=HorizontalAlignment.Right; footerSave.Visibility=Visibility.Collapsed;
+        Grid.SetColumn(footerSave,3); grid.Children.Add(footerSave);
+        footerAction = Ui.Button("Start dictation",DictationAction,true);
+        footerAction.Style=(Style)FindResource("BlueButton"); footerAction.MinWidth=154; footerAction.Height=36; footerAction.Margin=new Thickness(0); footerAction.HorizontalAlignment=HorizontalAlignment.Right;
+        Grid.SetColumn(footerAction,4); grid.Children.Add(footerAction);
+        var border = new Border { Child=grid,BorderThickness=new Thickness(0,1,0,0),Padding=new Thickness(24,10,24,10) };
+        border.SetResourceReference(Border.BackgroundProperty,"Surface");
+        border.SetResourceReference(Border.BorderBrushProperty,"Line");
+        return border;
+    }
+    private static string TabFor(string page)
+    {
+        foreach(var tab in Tabs)if(tab.Pages.Contains(page))return tab.Key;
+        return "General";
+    }
+    private static string SubLabel(string page) => page switch { "General"=>"Settings","Custom Words"=>"Dictionary","Applications"=>"App profiles","Writing"=>"Writing tools",_=>page };
+    private static bool IsSettingsPage(string name) => name is "General" or "Dictation" or "Writing" or "Audio" or "Shortcuts" or "Privacy" or "Advanced" or "Debug" or "Languages";
+    private void RebuildSubTabs(string tabKey)
+    {
+        subNavigation.Children.Clear(); subTabButtons.Clear();
+        var pages = Tabs.First(tab=>tab.Key==tabKey).Pages;
+        if(pages.Length<=1){subNavigation.Visibility=Visibility.Collapsed;return;}
+        subNavigation.Visibility=Visibility.Visible;
+        foreach(var pageName in pages)
         {
-            var button=new System.Windows.Controls.Primitives.ToggleButton { Content=caption,Style=(Style)FindResource("NavigationButton") };
-            button.Click+=(_,_)=>Navigate(key); group.Children.Add(button); navigationButtons[key]=button;
+            var button = new ToggleButton { Content=SubLabel(pageName),Style=(Style)FindResource("SubTabButton") };
+            button.Click += (_,_)=>Navigate(pageName);
+            subNavigation.Children.Add(button);
+            subTabButtons[pageName]=button;
         }
-        parent.Children.Add(group);
+    }
+    private void DictationAction()
+    {
+        if(c.Machine.State==OperationState.Recording)c.ToggleDictation();
+        else if(c.Busy)c.Cancel();
+        else c.ToggleDictation();
+    }
+    private void ControllerChanged(object? sender,PropertyChangedEventArgs e)
+    {
+        if(e.PropertyName is nameof(AppController.PresenceLabel) or nameof(AppController.StageLabel) or nameof(AppController.Busy) or nameof(AppController.LastDictationLatency))
+            Dispatcher.BeginInvoke(UpdateFooter);
+    }
+    private void MachineChanged(OperationState state)
+    {
+        Dispatcher.BeginInvoke(()=>{UpdateFooter();UpdateWaveformState();});
+    }
+    private void AudioLevel(float level) => Dispatcher.BeginInvoke(()=>footerWave?.Add(level));
+    private void UpdateWaveformState()
+    {
+        if(footerWave is null)return;
+        switch(c.Machine.State)
+        {
+            case OperationState.Recording: footerWave.BeginListening(); footerClock.Restart(); footerTimer?.Start(); break;
+            case OperationState.Transcribing:
+            case OperationState.Enhancing:
+            case OperationState.Inserting: footerWave.BeginProcessing(); footerTimer?.Stop(); break;
+            default: footerWave.Stop(); footerTimer?.Stop(); break;
+        }
+    }
+    private void UpdateFooter()
+    {
+        if(footerStatus is null||footerAction is null||footerDetail is null||footerSave is null||footerWave is null)return;
+        var state=c.Machine.State; var recording=state==OperationState.Recording; var busy=c.Busy;
+        footerStatus.Text=c.PresenceLabel;
+        footerStatus.SetResourceReference(TextBlock.ForegroundProperty,"TextPrimary");
+        var dotColour=c.Readiness.Stage switch { ReadinessStage.Recording or ReadinessStage.Transcribing or ReadinessStage.Inserting or ReadinessStage.ApplyingCommand=>"Accent",ReadinessStage.Error=>"Danger",ReadinessStage.NeedsModel=>"Warning",_=>"Success" };
+        footerDot?.SetResourceReference(System.Windows.Shapes.Shape.FillProperty,dotColour);
+        footerAction.Content=recording?"Stop & insert":busy?"Cancel":"Start dictation";
+        footerAction.Style=(Style)FindResource("BlueButton");
+        footerAction.IsEnabled=true;
+        footerSave.Visibility=IsSettingsPage(currentPage)?Visibility.Visible:Visibility.Collapsed;
+        footerDetail.Text=busy?c.StageLabel:c.Settings.PlainHotkey+(string.IsNullOrEmpty(c.LastDictationLatency)?"":"   ·   "+c.LastDictationLatency);
+        footerWave.Visibility=state is OperationState.Recording or OperationState.Transcribing or OperationState.Enhancing or OperationState.Inserting?Visibility.Visible:Visibility.Collapsed;
     }
     public void Navigate(string name)
     {
-        heading.Text=name switch { "Overview"=>"Your words, anywhere.","Custom Words"=>"Dictionary","Applications"=>"App profiles","Audio"=>"Microphone","General"=>"Settings",_=>name };
-        // The overview carries its own headline, so a second one above it would only repeat
-        // the same message and make the window look like a web dashboard.
-        var showHeader = name is not ("Overview" or "Welcome");
-        heading.Visibility = showHeader ? Visibility.Visible : Visibility.Collapsed;
-        subtitle.Visibility = showHeader ? Visibility.Visible : Visibility.Collapsed;
-        subtitle.Text=name switch { "Overview"=>"Speak naturally. SineFlow turns it into text on your computer.","Files"=>"Turn recordings into searchable text.","Meetings"=>"Capture conversations and keep the important parts.","History"=>"Find and reuse previous dictations.","Models"=>"Manage the local engines behind your workflow.","Dictation"=>"Make speech recognition work your way.","General"=>"Make SineFlow yours, without losing focus.","Privacy"=>"Your data stays under your control.",_=>"Set up your private writing workspace." };
-        foreach(var (key,button) in navigationButtons)button.IsChecked=key==name;
-        if(footerSave is not null)footerSave.Visibility=name is "General" or "Dictation" or "Writing" or "Audio" or "Shortcuts" or "Privacy" or "Advanced" or "Debug" or "Languages"?Visibility.Visible:Visibility.Collapsed;
-        if(name is "Custom Words" or "Snippets" or "Applications" or "Privacy" or "Advanced") { navigationGroups["MORE"].Visibility=Visibility.Visible;if(moreToggle is not null)moreToggle.Content="MORE  −"; }
+        currentPage=name;
+        var tabKey=TabFor(name);
+        foreach(var (key,button) in tabButtons)button.IsChecked=key==tabKey;
+        RebuildSubTabs(tabKey);
+        foreach(var (key,button) in subTabButtons)button.IsChecked=key==name;
+        heading.Text=name switch { "Overview"=>"SineFlow","Custom Words"=>"Dictionary","Applications"=>"App profiles","Audio"=>"Microphone","General"=>"Settings","Writing"=>"Writing tools",_=>name };
+        // Overview and onboarding carry their own headline; a second title above them only
+        // repeats the message and pushes the actual content down.
+        var showHeader = name is not ("Welcome" or "Overview");
+        if(pageHeader is not null)pageHeader.Visibility=showHeader?Visibility.Visible:Visibility.Collapsed;
+        subtitle.Text=name switch { "Overview"=>"Private, offline speech to text. Your words stay on this PC.","Files"=>"Turn recordings into searchable text.","Meetings"=>"Capture conversations and keep the important parts.","History"=>"Find and reuse previous dictations.","Models"=>"Manage the local engines behind your workflow.","Dictation"=>"Make speech recognition work your way.","General"=>"Make SineFlow yours, without losing focus.","Privacy"=>"Your data stays under your control.",_=>"Set up your private writing workspace." };
+        if(footerSave is not null)footerSave.Visibility=IsSettingsPage(name)?Visibility.Visible:Visibility.Collapsed;
         page.Content = name switch
         {
             "Welcome" => Welcome(), "Overview" => Overview(), "General" => General(), "Dictation" => Dictation(), "Writing" => WritingTools(), "Models" => Models(), "Languages" => LanguagePage(), "Audio" => AudioPage(), "Shortcuts" => Shortcuts(), "Custom Words" => CustomWords(), "Snippets" => Snippets(), "Applications" => Applications(), "History" => History(), "Statistics" => Statistics(), "Privacy" => Privacy(), "Advanced" => Advanced(), "Debug" => Debug(), "About" => About(), "Files" => Files(), "Meetings" => Meetings(), _ => Overview()
         };
         pageScroll.ScrollToTop();
+        UpdateFooter();
     }
     private UIElement Overview()
     {

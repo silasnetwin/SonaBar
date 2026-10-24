@@ -83,43 +83,47 @@ public sealed record Palette(
         OverlayAccent: "#6BA0F8",
         OverlayError: "#FF7B7B");
 
-    /// <summary>The light theme. Neutral greys with the same blue accent.</summary>
+    /// <summary>
+    /// The light theme follows the restrained macOS palette of WhisperBar: warm neutral
+    /// window surfaces, white cards, a saturated system blue for the record control and a
+    /// clear green for positive actions and checked boxes.
+    /// </summary>
     public static Palette Light { get; } = new(
-        AppBackground: "#F1F3F6",
-        WindowBackground: "#F1F3F6",
-        Surface: "#F6F7F9",
+        AppBackground: "#ECECEC",
+        WindowBackground: "#ECECEC",
+        Surface: "#F2F2F2",
         SurfaceElevated: "#FFFFFF",
         BackgroundElevated: "#FFFFFF",
         Card: "#FFFFFF",
-        Sidebar: "#EDEFF3",
-        SurfaceHover: "#E8EBF0",
-        Hover: "#E8EBF0",
-        SurfacePressed: "#DFE3EA",
-        SurfaceSelected: "#E4EDFC",
-        Border: "#DFE3E9",
-        Line: "#E4E7EC",
-        BorderStrong: "#C3C9D3",
-        TextPrimary: "#14171C",
-        Ink: "#14171C",
-        TextSecondary: "#57616F",
-        Muted: "#57616F",
-        TextTertiary: "#828C9A",
-        Accent: "#2E6AD6",
-        AccentHover: "#2559BC",
-        AccentPressed: "#1F4EA3",
+        Sidebar: "#E8E8E8",
+        SurfaceHover: "#E5E5E5",
+        Hover: "#E5E5E5",
+        SurfacePressed: "#DCDCDC",
+        SurfaceSelected: "#FFFFFF",
+        Border: "#D9D9D9",
+        Line: "#D9D9D9",
+        BorderStrong: "#C6C6C6",
+        TextPrimary: "#1D1D1F",
+        Ink: "#1D1D1F",
+        TextSecondary: "#6E6E73",
+        Muted: "#6E6E73",
+        TextTertiary: "#8E8E93",
+        Accent: "#0066CC",
+        AccentHover: "#0A6BD6",
+        AccentPressed: "#0052A3",
         AccentInk: "#FFFFFF",
-        AccentSoft: "#E4EDFC",
-        Action: "#2E6AD6",
-        ActionHover: "#2559BC",
+        AccentSoft: "#E5F1FF",
+        Action: "#2FA84F",
+        ActionHover: "#38B85A",
         ActionInk: "#FFFFFF",
-        Success: "#1F8F5F",
-        Danger: "#C4383C",
-        Error: "#C4383C",
-        Warning: "#8A6100",
-        OverlaySurface: "#FFFFFF",
-        OverlayInk: "#14171C",
-        OverlayAccent: "#2E6AD6",
-        OverlayError: "#C4383C");
+        Success: "#34C759",
+        Danger: "#FF3B30",
+        Error: "#FF3B30",
+        Warning: "#FF9500",
+        OverlaySurface: "#F7F7F7",
+        OverlayInk: "#1D1D1F",
+        OverlayAccent: "#0A84FF",
+        OverlayError: "#FF3B30");
 
     /// <summary>Every key with its value, so the application resources can be filled in one pass.</summary>
     public IEnumerable<(string Key, string Value)> Entries => new (string, string)[]

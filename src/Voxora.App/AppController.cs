@@ -88,11 +88,11 @@ public sealed partial class AppController : INotifyPropertyChanged, IDisposable
     private Task preparationTask=Task.CompletedTask;
     private RecordingOverlay? overlay;
     private string status = "Ready when you are", lastText = "";
-    private Readiness readiness = Readiness.Idle;
+    private Readiness readiness = new(ReadinessStage.Ready);
     /// <summary>The explicit state of the application, shown in the status bar.</summary>
     public Readiness Readiness { get => readiness; private set { readiness = value; Changed(); Changed(nameof(StageLabel)); Changed(nameof(PresenceLabel)); } }
-    /// <summary>The sidebar indicator: the current state with a leading status dot.</summary>
-    public string PresenceLabel => "●  " + readiness.Label;
+    /// <summary>The current state without decoration; the footer draws the coloured status dot.</summary>
+    public string PresenceLabel => readiness.Label;
     /// <summary>A short readiness label for the status bar.</summary>
     public string StageLabel => readiness.Label + (string.IsNullOrEmpty(readiness.Detail) ? "" : " · " + readiness.Detail);
     private TaskCompletionSource idleSignal = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -113,6 +113,8 @@ public sealed partial class AppController : INotifyPropertyChanged, IDisposable
     private int levelDispatchQueued;
     private bool audioReceived;
     public IReadOnlyDictionary<string,TimeSpan> LastDictationTimings=>dictationTimings;
+    /// <summary>The measured time from the end of speech to confirmed insertion. Empty until a dictation succeeds.</summary>
+    public string LastDictationLatency {get;private set;}="";
     public event PropertyChangedEventHandler? PropertyChanged;
     public AppController(AppSettings settings, SettingsStore settingsStore, HistoryRepository history, ModelManager models, AudioCaptureService audio, ITranscriptionEngine speech, IEnhancementEngine enhancement, ClipboardService clipboard, TextInsertionService insertion, GlobalHotkeyService hotkeys, AudioDucker ducker)
     {
@@ -155,6 +157,8 @@ public sealed partial class AppController : INotifyPropertyChanged, IDisposable
         dictationClock.Stop();
         string values;
         lock(timingGate)values=string.Join(" ",dictationTimings.OrderBy(x=>x.Key).Select(x=>$"{x.Key}={x.Value.TotalMilliseconds:F0}ms"));
+        LastDictationLatency = delivered && dictationTimings.TryGetValue("T11", out var deliveredAt) ? $"{deliveredAt.TotalSeconds:F1} s" : "";
+        Changed(nameof(LastDictationLatency));
         Debug.WriteLine($"SineFlow dictation delivered={delivered} {values}");
         if(Settings.DebugLogging)SafeLog.WriteTiming(values+$" audio_received={audioReceived}",delivered);
     }

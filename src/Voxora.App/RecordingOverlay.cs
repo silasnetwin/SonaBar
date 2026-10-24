@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Windows.Interop;
+using System.Windows.Media.Animation;
 using System.Windows.Threading;
 using Voxora.WindowsIntegration;
 namespace Voxora.App;
@@ -7,9 +8,12 @@ namespace Voxora.App;
 public sealed class RecordingOverlay : ThemedWindow
 {
     private readonly AppController controller;
-    private readonly TextBlock caption=new(){FontSize=13,FontWeight=FontWeights.Medium,VerticalAlignment=VerticalAlignment.Center,Width=112,TextTrimming=TextTrimming.CharacterEllipsis,TextWrapping=TextWrapping.NoWrap};
-    private readonly TextBlock indicator=new(){Text="●",FontSize=18,VerticalAlignment=VerticalAlignment.Center};
-    private readonly Waveform waveform=new();
+    private readonly TextBlock caption=new(){FontSize=14,FontWeight=FontWeights.SemiBold,VerticalAlignment=VerticalAlignment.Center,TextTrimming=TextTrimming.CharacterEllipsis,TextWrapping=TextWrapping.NoWrap};
+    private readonly TextBlock detail=new(){FontSize=11,VerticalAlignment=VerticalAlignment.Center,TextTrimming=TextTrimming.CharacterEllipsis,TextWrapping=TextWrapping.NoWrap};
+    private readonly Border recordCircle=new(){Width=44,Height=44,CornerRadius=new CornerRadius(22)};
+    private readonly Waveform waveform=new(){Width=100,Height=28};
+    private readonly Border pill;
+    private readonly TranslateTransform slide=new(0,8);
     private readonly Stopwatch clock=new();
     private readonly DispatcherTimer timer;
     private readonly DispatcherTimer dismiss;
@@ -19,23 +23,38 @@ public sealed class RecordingOverlay : ThemedWindow
     private OperationState state;
     public RecordingOverlay(AppController controller)
     {
-        this.controller=controller;Width=346;Height=62;WindowStyle=WindowStyle.None;ResizeMode=ResizeMode.NoResize;AllowsTransparency=false;Topmost=true;ShowActivated=false;ShowInTaskbar=false;
+        this.controller=controller;Width=430;Height=76;WindowStyle=WindowStyle.None;ResizeMode=ResizeMode.NoResize;AllowsTransparency=false;Topmost=true;ShowActivated=false;ShowInTaskbar=false;
         SetResourceReference(BackgroundProperty,"OverlaySurface");
-        caption.SetResourceReference(TextBlock.ForegroundProperty,"OverlayInk");indicator.SetResourceReference(TextBlock.ForegroundProperty,"OverlayAccent");
-        var row=new Grid{VerticalAlignment=VerticalAlignment.Center};row.ColumnDefinitions.Add(new ColumnDefinition{Width=new GridLength(20)});row.ColumnDefinitions.Add(new ColumnDefinition{Width=new GridLength(112)});row.ColumnDefinitions.Add(new ColumnDefinition{Width=new GridLength(94)});row.ColumnDefinitions.Add(new ColumnDefinition{Width=new GridLength(58)});row.ColumnDefinitions.Add(new ColumnDefinition{Width=new GridLength(30)});
-        row.Children.Add(indicator);Grid.SetColumn(caption,1);row.Children.Add(caption);Grid.SetColumn(waveform,2);row.Children.Add(waveform);
-        finish=Ui.Button("Stop",controller.ToggleDictation,true);finish.ToolTip="Finish dictation";finish.MinHeight=30;finish.Height=30;finish.Padding=new Thickness(9,3,9,3);finish.Margin=new Thickness(2,0,2,0);finish.Visibility=Visibility.Collapsed;Grid.SetColumn(finish,3);row.Children.Add(finish);
-        actions=Ui.Button("×",()=>{if(controller.Busy)controller.Cancel();else OpenActions();});actions.ToolTip="Cancel while recording · text actions when done";actions.Width=28;actions.MinHeight=28;actions.Height=28;actions.Padding=new Thickness(0);actions.Margin=new Thickness(2,0,0,0);actions.Background=Brushes.Transparent;actions.SetResourceReference(ForegroundProperty,"OverlayInk");actions.BorderThickness=new Thickness(0);
-        Grid.SetColumn(actions,4);row.Children.Add(actions);
-        var border=new Border{CornerRadius=new CornerRadius(20),Padding=new Thickness(16,10,10,10),Child=row,BorderThickness=new Thickness(1)};
-        border.SetResourceReference(Border.BackgroundProperty,"OverlaySurface");
-        border.SetResourceReference(Border.BorderBrushProperty,"BorderStrong");
-        Content=border;
+        caption.SetResourceReference(TextBlock.ForegroundProperty,"OverlayInk");
+        detail.SetResourceReference(TextBlock.ForegroundProperty,"TextSecondary");
+        recordCircle.SetResourceReference(Border.BackgroundProperty,"Accent");
+        recordCircle.HorizontalAlignment=HorizontalAlignment.Center;
+        recordCircle.VerticalAlignment=VerticalAlignment.Center;
+        recordCircle.Child=Ui.EarIcon(20);
+        waveform.HorizontalAlignment=HorizontalAlignment.Center;
+        waveform.VerticalAlignment=VerticalAlignment.Center;
+        waveform.Visibility=Visibility.Collapsed;
+        var row=new Grid{VerticalAlignment=VerticalAlignment.Center};
+        row.ColumnDefinitions.Add(new ColumnDefinition{Width=new GridLength(54)});
+        row.ColumnDefinitions.Add(new ColumnDefinition());
+        row.ColumnDefinitions.Add(new ColumnDefinition{Width=new GridLength(108)});
+        row.ColumnDefinitions.Add(new ColumnDefinition{Width=new GridLength(60)});
+        row.ColumnDefinitions.Add(new ColumnDefinition{Width=new GridLength(32)});
+        row.Children.Add(recordCircle);
+        var textStack=new StackPanel{VerticalAlignment=VerticalAlignment.Center,Margin=new Thickness(0,0,8,0)};
+        textStack.Children.Add(caption);textStack.Children.Add(detail);Grid.SetColumn(textStack,1);row.Children.Add(textStack);
+        Grid.SetColumn(waveform,2);row.Children.Add(waveform);
+        finish=Ui.Button("Stop",controller.ToggleDictation,true);finish.Style=(Style)FindResource("BlueButton");finish.ToolTip="Finish dictation";finish.MinWidth=54;finish.Width=54;finish.MinHeight=30;finish.Height=30;finish.Padding=new Thickness(0);finish.Margin=new Thickness(0);finish.FontSize=12;finish.HorizontalAlignment=HorizontalAlignment.Center;finish.Visibility=Visibility.Collapsed;Grid.SetColumn(finish,3);row.Children.Add(finish);
+        actions=Ui.Button("×",()=>{if(controller.Busy)controller.Cancel();else OpenActions();});actions.Style=(Style)FindResource("IconButton");actions.ToolTip="Cancel while recording · text actions when done";actions.Width=28;actions.Height=28;actions.Padding=new Thickness(0);actions.Margin=new Thickness(0);actions.HorizontalAlignment=HorizontalAlignment.Center;actions.SetResourceReference(ForegroundProperty,"TextSecondary");Grid.SetColumn(actions,4);row.Children.Add(actions);
+        pill=new Border{CornerRadius=new CornerRadius(24),Padding=new Thickness(10),Child=row,BorderThickness=new Thickness(1),RenderTransform=slide,Opacity=0};
+        pill.SetResourceReference(Border.BackgroundProperty,"OverlaySurface");
+        pill.SetResourceReference(Border.BorderBrushProperty,"Border");
+        Content=pill;
         SourceInitialized+=(_,_)=>{var handle=new WindowInteropHelper(this).Handle;WindowIntegration.MakeNonActivating(handle);ApplyShape();};
         SizeChanged+=(_,_)=>ApplyShape();
         DpiChanged+=(_,_)=>ApplyShape();
-        MouseLeftButtonDown+=(_,e)=>{if(e.OriginalSource==border||e.OriginalSource==caption){DragMove();var position=WindowIntegration.WindowPosition(new WindowInteropHelper(this).Handle);controller.Settings.OverlayPixelLeft=position.Left;controller.Settings.OverlayPixelTop=position.Top;controller.SettingsStore.Save(controller.Settings);}};
-        timer=new DispatcherTimer(TimeSpan.FromMilliseconds(100),DispatcherPriority.Render,(_,_)=>{if(state==OperationState.Recording)caption.Text=$"Listening  {clock.Elapsed:mm\\:ss}";},Dispatcher);timer.Stop();
+        MouseLeftButtonDown+=(_,e)=>{if(e.OriginalSource==pill||e.OriginalSource==caption||e.OriginalSource==detail){DragMove();var position=WindowIntegration.WindowPosition(new WindowInteropHelper(this).Handle);controller.Settings.OverlayPixelLeft=position.Left;controller.Settings.OverlayPixelTop=position.Top;controller.SettingsStore.Save(controller.Settings);}};
+        timer=new DispatcherTimer(TimeSpan.FromMilliseconds(100),DispatcherPriority.Render,(_,_)=>{if(state==OperationState.Recording)detail.Text=$"{clock.Elapsed:mm\\:ss}  ·  On this PC";},Dispatcher);timer.Stop();
         dismiss=new DispatcherTimer{Interval=TimeSpan.FromSeconds(7)};dismiss.Tick+=(_,_)=>{dismiss.Stop();notice=false;if(!controller.Busy)Hide();};
         Closed+=(_,_)=>{timer.Stop();dismiss.Stop();waveform.Stop();};
     }
@@ -47,30 +66,52 @@ public sealed class RecordingOverlay : ThemedWindow
         var dpi=VisualTreeHelper.GetDpi(this);
         var width=(int)Math.Round(ActualWidth*dpi.DpiScaleX);
         var height=(int)Math.Round(ActualHeight*dpi.DpiScaleY);
-        var radius=(int)Math.Round(20*dpi.DpiScaleX);
+        var radius=(int)Math.Round(24*dpi.DpiScaleX);
         WindowIntegration.ApplyRoundedRegion(handle,width,height,radius);
     }
-    public void AddLevel(float value){if(state==OperationState.Recording)waveform.Add(value);}    public void ShowPreparing(){dismiss.Stop();notice=false;caption.Text="Getting ready…";Reveal();}
+    public void AddLevel(float value){if(state==OperationState.Recording)waveform.Add(value);}
+    public void ShowPreparing(){dismiss.Stop();notice=false;Reveal();finish.Visibility=Visibility.Collapsed;waveform.Visibility=Visibility.Collapsed;actions.Content="×";SetCircle("Accent",Ui.EarIcon(20));caption.Text="Getting ready…";detail.Text="On this PC";}
     public void Dismiss(){dismiss.Stop();notice=false;Hide();}
     private void Reveal()
     {
         if(IsVisible)return;
-        Show();WindowIntegration.PositionOverlay(new WindowInteropHelper(this).Handle,346,62,controller.Settings.OverlayPixelLeft,controller.Settings.OverlayPixelTop);
+        Show();WindowIntegration.PositionOverlay(new WindowInteropHelper(this).Handle,430,76,controller.Settings.OverlayPixelLeft,controller.Settings.OverlayPixelTop);
+        pill.Opacity=0;slide.Y=8;
+        pill.BeginAnimation(OpacityProperty,new DoubleAnimation(0,1,TimeSpan.FromMilliseconds(160)));
+        slide.BeginAnimation(TranslateTransform.YProperty,new DoubleAnimation(8,0,TimeSpan.FromMilliseconds(200)){EasingFunction=new CubicEase{EasingMode=EasingMode.EaseOut}});
     }
     public void SetState(OperationState value)
     {
         state=value;
         if(value==OperationState.Idle){timer.Stop();if(!notice)Hide();return;}
-        dismiss.Stop();notice=false;Reveal();actions.Content="×";indicator.Text="●";indicator.SetResourceReference(TextBlock.ForegroundProperty,"OverlayAccent");finish.Visibility=value==OperationState.Recording?Visibility.Visible:Visibility.Collapsed;
-        if(value==OperationState.Recording){clock.Restart();waveform.BeginListening();timer.Start();}
-        else if(value is OperationState.Transcribing or OperationState.Enhancing or OperationState.Inserting){timer.Stop();waveform.BeginProcessing();}
-        else{timer.Stop();waveform.Stop();}
-        caption.Text=value switch{OperationState.Recording=>"Listening",OperationState.Enhancing=>"Polishing…",OperationState.Transcribing=>"Processing…",OperationState.Inserting=>"Inserting…",OperationState.Cancelled=>"Cancelled",_=>"Please try again"};
+        dismiss.Stop();notice=false;Reveal();actions.Content="×";finish.Visibility=value==OperationState.Recording?Visibility.Visible:Visibility.Collapsed;
+        waveform.Visibility=value is OperationState.Recording or OperationState.Transcribing or OperationState.Enhancing or OperationState.Inserting?Visibility.Visible:Visibility.Collapsed;
+        if(value==OperationState.Recording)
+        {
+            clock.Restart();waveform.BeginListening();timer.Start();SetCircle("Accent",Ui.EarIcon(20));caption.Text="Listening";detail.Text="00:00  ·  On this PC";
+        }
+        else if(value is OperationState.Transcribing or OperationState.Enhancing or OperationState.Inserting)
+        {
+            timer.Stop();waveform.BeginProcessing();SetCircle("Accent",Ui.EarIcon(20));
+            caption.Text=value switch{OperationState.Enhancing=>"Polishing…",OperationState.Inserting=>"Inserting…",_=>"Transcribing…"};detail.Text="Working locally";
+        }
+        else
+        {
+            timer.Stop();waveform.Stop();SetCircle("Accent",Ui.EarIcon(20));
+            caption.Text=value==OperationState.Cancelled?"Cancelled":"Please try again";detail.Text="On this PC";
+        }
     }
     public void ShowNotice(string text,bool error)
     {
-        notice=true;Reveal();timer.Stop();waveform.Stop();finish.Visibility=Visibility.Collapsed;caption.Text=text;caption.ToolTip=text;indicator.Text=error?"!":"✓";indicator.SetResourceReference(TextBlock.ForegroundProperty,error?"OverlayError":"OverlayAccent");actions.Content="···";
+        notice=true;Reveal();timer.Stop();waveform.Stop();waveform.Visibility=Visibility.Collapsed;finish.Visibility=Visibility.Collapsed;caption.Text=text;caption.ToolTip=text;detail.Text=error?"Needs attention":"Inserted  ·  Local & private";
+        SetCircle(error?"OverlayError":"Success",new TextBlock{Text=error?"!":"✓",FontSize=22,FontWeight=FontWeights.Bold,Foreground=Brushes.White,HorizontalAlignment=HorizontalAlignment.Center,VerticalAlignment=VerticalAlignment.Center});
+        actions.Content="···";
         dismiss.Stop();dismiss.Interval=TimeSpan.FromSeconds(error?10:controller.Settings.ShowQuickActions?8:1.5);dismiss.Start();
+    }
+    private void SetCircle(string resource,UIElement content)
+    {
+        recordCircle.SetResourceReference(Border.BackgroundProperty,resource);
+        recordCircle.Child=content;
     }
     private void OpenActions()
     {

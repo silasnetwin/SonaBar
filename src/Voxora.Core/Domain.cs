@@ -72,7 +72,7 @@ public sealed class AppSettings
     public int HistoryRetentionDays { get; set; } = 30;
     public List<VocabularyCorrection> VocabularyCorrections {get;set;} = [];
     public string EffectiveSpeechModel => UseCustomSpeechModel ? SpeechModel : SpeechProfiles.ModelFor(Quality);
-    public string Theme { get; set; } = "Dark";
+    public string Theme { get; set; } = "Light";
     public string Backend { get; set; } = "Automatic";
     public string? MicrophoneId { get; set; }
     public Hotkey PlainHotkey { get; set; } = new(6, 32);

@@ -106,11 +106,13 @@ public sealed class TextInsertionService(ClipboardService clipboard) : IDisposab
         try { using var process = Process.GetProcessById((int)pid); name = process.ProcessName + ".exe"; } catch { name = "Unknown"; }
         AutomationElement? element = null;
         try { element = AutomationElement.FocusedElement; } catch (ElementNotAvailableException) { }
-        // Some hosted editors report a generic focused pane. The OS caret can lead to
-        // the actual edit provider, but accept it only within the same process.
+        // Some hosted editors report a generic focused pane or an outer browser document.
+        // The OS caret can lead to the actual edit provider. Accept it only within the same
+        // process, and never let it replace a precise Edit provider with a broader Document.
         try
         {
-            if(element?.Current.ControlType!=ControlType.Edit)
+            var probeCaret = element is null || element.Current.ControlType != ControlType.Edit || IsBrowserChrome(element);
+            if(probeCaret)
             {
                 var info=new Native.GUITHREADINFO{Size=(uint)Marshal.SizeOf<Native.GUITHREADINFO>()};
                 if(Native.GetGUIThreadInfo(thread,ref info)&&info.Caret!=0)
@@ -120,7 +122,9 @@ public sealed class TextInsertionService(ClipboardService clipboard) : IDisposab
                     if(caretPid==pid&&Native.ClientToScreen(info.Caret,ref point))
                     {
                         var candidate=AutomationElement.FromPoint(new System.Windows.Point(point.X,point.Y));
-                        if(candidate.Current.ProcessId==pid&&candidate.Current.ControlType==ControlType.Edit&&candidate.Current.IsEnabled&&!candidate.Current.IsPassword)element=candidate;
+                        if(candidate.Current.ProcessId==pid&&IsEditableElement(candidate)&&
+                           (candidate.Current.ControlType==ControlType.Edit||element is null||!IsEditableElement(element)))
+                            element=candidate;
                     }
                 }
             }
@@ -152,16 +156,56 @@ public sealed class TextInsertionService(ClipboardService clipboard) : IDisposab
     public static void Guard(InsertionTarget target)
     {
         if (target.Element is null) throw new InvalidOperationException("Windows could not inspect this field safely. Focus an editable field and try again.");
-        if (target.Element.Current.IsPassword) throw new InvalidOperationException("SineFlow never reads or types into password fields.");
-        if(!target.Element.Current.IsEnabled)throw new InvalidOperationException("This text field is disabled.");
+        try
+        {
+            if (target.Element.Current.IsPassword) throw new InvalidOperationException("SineFlow never reads or types into password fields.");
+            if(!target.Element.Current.IsEnabled)throw new InvalidOperationException("This text field is disabled.");
+        }
+        catch(ElementNotAvailableException)
+        {
+            throw new InvalidOperationException("The original text field is no longer available. Your text is available in SineFlow.");
+        }
+    }
+    private static bool IsBrowserChrome(AutomationElement element)
+    {
+        try
+        {
+            return element.Current.ClassName.Contains("Omnibox",StringComparison.OrdinalIgnoreCase) ||
+                   element.Current.Name.Contains("Address and search bar",StringComparison.OrdinalIgnoreCase);
+        }
+        catch(ElementNotAvailableException) { return false; }
+    }
+    /// <summary>
+    /// Returns true for a field that can receive text. Browsers expose contenteditables as
+    /// Document or Edit providers with a TextPattern but no reliable ValuePattern, so a
+    /// missing ValuePattern is not evidence that the field is read-only.
+    /// </summary>
+    private static bool IsEditableElement(AutomationElement element)
+    {
+        try
+        {
+            if(element.Current.IsPassword||!element.Current.IsEnabled)return false;
+            var controlType=element.Current.ControlType;
+            if(controlType!=ControlType.Edit&&controlType!=ControlType.Document)return false;
+            if(element.TryGetCurrentPattern(ValuePattern.Pattern,out var value)&&value is ValuePattern field&&!field.Current.IsReadOnly)return true;
+            if(element.TryGetCurrentPattern(TextPattern.Pattern,out var pattern)&&pattern is TextPattern text)
+            {
+                var selection=text.GetSelection().FirstOrDefault();
+                if(selection?.GetAttributeValue(TextPattern.IsReadOnlyAttribute) is bool readOnly)return !readOnly;
+                // An empty contenteditable can have no selection range. Its TextPattern is
+                // still the provider used by Chrome and other browsers for inserted text.
+                return true;
+            }
+            return false;
+        }
+        catch(ElementNotAvailableException) { return false; }
+        catch(InvalidOperationException) { return false; }
     }
     public static bool IsEditable(InsertionTarget target)
     {
         Guard(target);
         if(target.NativeSelection is not null)return true;
-        if(target.Element!.TryGetCurrentPattern(ValuePattern.Pattern,out var value))return !((ValuePattern)value).Current.IsReadOnly;
-        if(target.Selection?.GetAttributeValue(TextPattern.IsReadOnlyAttribute) is bool readOnly)return !readOnly;
-        return false;
+        return IsEditableElement(target.Element!);
     }
     public SelectedPassage? SelectionFor(InsertionTarget target)
     {
@@ -220,6 +264,8 @@ public sealed class TextInsertionService(ClipboardService clipboard) : IDisposab
             diagnostic?.Invoke("delivery=failed;reason=focus_not_safe");
             throw new InvalidOperationException("Insertion stopped: the current field cannot be safely inspected.");
         }
+        target=RefineTarget(target);
+        Guard(target);
         var beforeText=InspectableText(target);
         // ValuePattern replaces the whole value, so only use it for an empty field.
         bool inserted=false,wholeEmptyField=false;
@@ -227,8 +273,27 @@ public sealed class TextInsertionService(ClipboardService clipboard) : IDisposab
         if(profile.Strategy==InsertionStrategy.Automatic&&target.NativeSelection is {} native)
         {
             diagnostic?.Invoke("backend=native_edit;attempted=true");
-            NativeTextControl.Replace(native,text);replaced=native.Selected;inserted=true;
-            diagnostic?.Invoke("backend=native_edit;result=verified_exact");
+            try
+            {
+                NativeTextControl.Replace(native,text);
+                replaced=native.Selected;
+                inserted=true;
+                diagnostic?.Invoke("backend=native_edit;result=verified_exact");
+            }
+            catch(Exception error) when (error is not OperationCanceledException)
+            {
+                // A native replacement can fail after the field changed or after the control
+                // rejected the message. Never abort delivery here; fall through to the UIA,
+                // Unicode and clipboard paths, but first check whether the text already landed.
+                diagnostic?.Invoke($"backend=native_edit;result=failed;exception={error.GetType().Name};fallback=continue");
+                var after=InspectableText(target);
+                if(after is not null&&ConfirmedChange(after,text,beforeText))
+                {
+                    replaced=native.Selected;
+                    inserted=true;
+                    diagnostic?.Invoke("backend=native_edit;result=confirmed_after_error");
+                }
+            }
         }
         if (!inserted&&profile.Strategy == InsertionStrategy.Automatic && target.Element!.TryGetCurrentPattern(ValuePattern.Pattern, out var value) && value is ValuePattern vp && !vp.Current.IsReadOnly && vp.Current.Value.Length == 0)
         {
@@ -240,30 +305,29 @@ public sealed class TextInsertionService(ClipboardService clipboard) : IDisposab
                 inserted=true;wholeEmptyField=true;
                 diagnostic?.Invoke("backend=uia_value;result=verified_exact");
             }
-            catch(InvalidOperationException)
+            catch(Exception error) when (error is not OperationCanceledException)
             {
-                diagnostic?.Invoke("backend=uia_value;result=not_confirmed;fallback=continue");
+                diagnostic?.Invoke($"backend=uia_value;result=not_confirmed;exception={error.GetType().Name};fallback=continue");
             }
         }
-        if (!inserted && (profile.Strategy == InsertionStrategy.Unicode||profile.Strategy==InsertionStrategy.Automatic&&text.Length<=2000&&target.Element!.Current.ControlType==ControlType.Edit&&IsEditable(target)))
+        if (!inserted && (profile.Strategy == InsertionStrategy.Unicode||profile.Strategy==InsertionStrategy.Automatic&&text.Length<=2000&&IsEditable(target)&&HasInspectableTextPattern(target)))
         {
-            if (!HasInspectableTextPattern(target))
+            diagnostic?.Invoke("backend=sendinput_unicode;attempted=true");
+            Native.Unicode(text);
+            var confirmation=await ConfirmDeliveryAsync(target,text,beforeText,token);
+            if(confirmation==DeliveryConfirmation.Confirmed)
             {
-                diagnostic?.Invoke("backend=sendinput_unicode;result=skipped;reason=not_verifiable");
+                inserted=true;
+                diagnostic?.Invoke("backend=sendinput_unicode;result=verified");
             }
             else
             {
-                diagnostic?.Invoke("backend=sendinput_unicode;attempted=true");
-                Native.Unicode(text);
-                try
+                diagnostic?.Invoke($"backend=sendinput_unicode;result={confirmation.ToString().ToLowerInvariant()};fallback=clipboard");
+                if(confirmation==DeliveryConfirmation.ChangedWithoutText)
                 {
-                    await ConfirmDeliveryIfInspectableAsync(target,text,beforeText,token);
-                    inserted=true;
-                    diagnostic?.Invoke("backend=sendinput_unicode;result=verified");
-                }
-                catch (InvalidOperationException) when (CanProveEmpty(target))
-                {
-                    diagnostic?.Invoke("backend=sendinput_unicode;result=not_confirmed;fallback=clipboard_safe_empty_field");
+                    var after=InspectableText(target);
+                    if(after is not null&&ContainsPartialInsertion(after,text,beforeText))
+                        throw new InvalidOperationException("SineFlow inserted part of the text but could not verify the complete result. Your text is available to copy.");
                 }
             }
         }
@@ -275,12 +339,25 @@ public sealed class TextInsertionService(ClipboardService clipboard) : IDisposab
             try
             {
                 Native.Chord(0x56);
-                if(!await ConfirmDeliveryIfInspectableAsync(target,text,beforeText,token))
+                var confirmation=await ConfirmDeliveryAsync(target,text,beforeText,token);
+                if(confirmation==DeliveryConfirmation.Confirmed)
                 {
-                    diagnostic?.Invoke("backend=clipboard_paste;result=not_confirmed;reason=opaque_target");
+                    inserted=true;
+                    diagnostic?.Invoke("backend=clipboard_paste;result=verified");
+                }
+                else if(confirmation==DeliveryConfirmation.Opaque&&IsEditable(target))
+                {
+                    // Some editors expose no readable text at all. The paste shortcut was
+                    // delivered to an editable field; failing here would only report a false
+                    // error after a successful paste.
+                    inserted=true;
+                    diagnostic?.Invoke("backend=clipboard_paste;result=assumed;reason=opaque_editable_target");
+                }
+                else
+                {
+                    diagnostic?.Invoke($"backend=clipboard_paste;result={confirmation.ToString().ToLowerInvariant()};reason=not_confirmed");
                     throw new InvalidOperationException("SineFlow could not confirm that the destination accepted the text. Your text is ready to copy.");
                 }
-                diagnostic?.Invoke("backend=clipboard_paste;result=verified");
             }
             finally { if (previous is not null) clipboard.RestoreIfUnchanged(previous, sequence); }
         }
@@ -332,11 +409,21 @@ public sealed class TextInsertionService(ClipboardService clipboard) : IDisposab
         for(var attempt=0;attempt<5&&Native.GetForegroundWindow()!=target.Window;attempt++)await Task.Delay(15);
         diagnostic?.Invoke($"focus=after_restore;foreground=0x{Native.GetForegroundWindow().ToInt64():X};set_foreground={activated}");
         if (Native.GetForegroundWindow() != target.Window) throw new InvalidOperationException("Windows prevented restoring focus. Your text is available in SineFlow.");
-        try { target.Element?.SetFocus(); } catch (InvalidOperationException) { }
-        try { target.Selection?.Select(); } catch (InvalidOperationException) { throw new InvalidOperationException("The original text selection is no longer available."); }
+        try { target.Element?.SetFocus(); }
+        catch (InvalidOperationException) { }
+        catch (ElementNotAvailableException) { }
+        try { target.Selection?.Select(); }
+        catch (InvalidOperationException) { throw new InvalidOperationException("The original text selection is no longer available."); }
+        catch (ElementNotAvailableException) { throw new InvalidOperationException("The original text selection is no longer available."); }
         if(target.NativeSelection is {} native)NativeTextControl.Select(native);
         var focused=AutomationElement.FocusedElement;
-        var matches=focused is not null&&target.Element is not null&&Automation.Compare(focused,target.Element);
+        var sameProcess=focused is not null&&focused.Current.ProcessId==target.ProcessId;
+        // Chrome exposes the focused contenteditable as a Document and may move focus to a
+        // child Edit after SetFocus. Both are the same editable target; exact UIA identity is
+        // too strict for those providers, but the process must still match.
+        var matches=focused is not null&&target.Element is not null&&
+            (Automation.Compare(focused,target.Element)||
+             (target.Element.Current.ControlType==ControlType.Document&&sameProcess&&IsEditableElement(focused)));
         diagnostic?.Invoke("focus=element;matches_target="+matches+";password="+(focused?.Current.IsPassword??true));
         if(focused is null||focused.Current.IsPassword||target.Element is null||!matches)throw new InvalidOperationException("The original text field could not be restored safely. Your text is available in SineFlow.");
         // Avoid shortcuts still held by the user modifying a paste or inserted text.
@@ -348,19 +435,26 @@ public sealed class TextInsertionService(ClipboardService clipboard) : IDisposab
         try { return target.Element?.TryGetCurrentPattern(ValuePattern.Pattern,out _) == true || target.Element?.TryGetCurrentPattern(TextPattern.Pattern,out _) == true; }
         catch (ElementNotAvailableException) { return false; }
     }
-    private static bool CanProveEmpty(InsertionTarget target)
-    {
-        try { return target.Element?.TryGetCurrentPattern(ValuePattern.Pattern,out var pattern) == true && pattern is ValuePattern value && value.Current.Value.Length == 0; }
-        catch (ElementNotAvailableException) { return false; }
-    }
     private static string? InspectableText(InsertionTarget target)
     {
         try
         {
-            if(target.Element?.TryGetCurrentPattern(ValuePattern.Pattern,out var value)==true && value is ValuePattern field)return field.Current.Value;
-            if(target.Element?.TryGetCurrentPattern(TextPattern.Pattern,out var pattern)==true && pattern is TextPattern document)
+            if(target.Element is null)return null;
+            // Chrome and other browser contenteditables expose a Document with a
+            // ValuePattern that describes the page (often its URL) and a TextPattern
+            // that contains the actual editable text. Prefer TextPattern there.
+            if(target.Element.Current.ControlType==ControlType.Document&&
+               target.Element.TryGetCurrentPattern(TextPattern.Pattern,out var documentPattern)&&
+               documentPattern is TextPattern document)
             {
                 var content=document.DocumentRange.GetText(100001);
+                if(content.Length<=100000)return content;
+            }
+            if(target.Element.TryGetCurrentPattern(ValuePattern.Pattern,out var valuePattern)&&valuePattern is ValuePattern value)
+                return value.Current.Value;
+            if(target.Element.TryGetCurrentPattern(TextPattern.Pattern,out var pattern)&&pattern is TextPattern text)
+            {
+                var content=text.DocumentRange.GetText(100001);
                 return content.Length<=100000?content:null;
             }
         }
@@ -369,38 +463,87 @@ public sealed class TextInsertionService(ClipboardService clipboard) : IDisposab
     }
     private static int Occurrences(string haystack,string needle)
     {
+        if(string.IsNullOrEmpty(needle))return 0;
         var count=0;var offset=0;
         while((offset=haystack.IndexOf(needle,offset,StringComparison.Ordinal))>=0){count++;offset+=needle.Length;}
         return count;
     }
-    private static async Task<bool> ConfirmDeliveryIfInspectableAsync(InsertionTarget target,string text,string? beforeText,CancellationToken token)
+    private static string NormalizeText(string value)=>value.Replace("\r\n","\n").Replace('\r','\n').Trim();
+    private static string CollapseWhitespace(string value)=>string.Join(' ',value.Split((char[]?)null,StringSplitOptions.RemoveEmptyEntries));
+    internal static bool ConfirmedChange(string after,string inserted,string? before)
     {
-        if(target.NativeSelection is not null)return true; // NativeTextControl already confirms exact replacement.
-        if(target.Element is null)return false;
+        if(string.IsNullOrEmpty(inserted))return false;
+        var normalizedAfter=NormalizeText(after);
+        var normalizedInserted=NormalizeText(inserted);
+        var normalizedBefore=before is null?null:NormalizeText(before);
+        if(Occurrences(normalizedAfter,normalizedInserted)>(normalizedBefore is null?0:Occurrences(normalizedBefore,normalizedInserted)))return true;
+        // Rich editors can normalize whitespace or line breaks. Compare once more with all
+        // whitespace collapsed before declaring that the insertion did not happen.
+        var compactAfter=CollapseWhitespace(normalizedAfter);
+        var compactInserted=CollapseWhitespace(normalizedInserted);
+        var compactBefore=normalizedBefore is null?null:CollapseWhitespace(normalizedBefore);
+        return compactInserted.Length>0&&Occurrences(compactAfter,compactInserted)>(compactBefore is null?0:Occurrences(compactBefore,compactInserted));
+    }
+    internal static bool ContainsPartialInsertion(string after,string inserted,string? before)
+    {
+        var normalizedAfter=NormalizeText(after);
+        var normalizedBefore=before is null?"":NormalizeText(before);
+        var normalizedInserted=NormalizeText(inserted);
+        if(normalizedInserted.Length==0)return false;
+        var minimum=Math.Min(12,Math.Max(4,normalizedInserted.Length/3));
+        for(var length=minimum;length<=normalizedInserted.Length;length++)
+        {
+            var prefix=normalizedInserted[..length];
+            if(Occurrences(normalizedAfter,prefix)>Occurrences(normalizedBefore,prefix))return true;
+        }
+        return false;
+    }
+    private enum DeliveryConfirmation { Confirmed, Unchanged, ChangedWithoutText, Opaque }
+    private static async Task<DeliveryConfirmation> ConfirmDeliveryAsync(InsertionTarget target,string text,string? beforeText,CancellationToken token)
+    {
+        if(target.NativeSelection is not null)return DeliveryConfirmation.Confirmed; // NativeTextControl already confirms exact replacement.
+        if(target.Element is null)return DeliveryConfirmation.Opaque;
         var inspectable=false;
-        for(var attempt=0;attempt<10;attempt++)
+        string? last=null;
+        for(var attempt=0;attempt<12;attempt++)
         {
             token.ThrowIfCancellationRequested();
             try
             {
-                if(target.Element.TryGetCurrentPattern(ValuePattern.Pattern,out var pattern)&&pattern is ValuePattern value)
+                var after=InspectableText(target);
+                if(after is not null)
                 {
-                    inspectable=true;
-                    if(ConfirmedChange(value.Current.Value,text,beforeText))return true;
-                }
-                else if(target.Element.TryGetCurrentPattern(TextPattern.Pattern,out var textPattern)&&textPattern is TextPattern document)
-                {
-                    inspectable=true;
-                    var after=InspectableText(target);
-                    if(after is not null&&ConfirmedChange(after,text,beforeText))return true;
+                    inspectable=true;last=after;
+                    if(ConfirmedChange(after,text,beforeText))return DeliveryConfirmation.Confirmed;
+                    if(beforeText is not null&&attempt>=5&&NormalizeText(after)==NormalizeText(beforeText))
+                        return DeliveryConfirmation.Unchanged;
                 }
             }
             catch(ElementNotAvailableException){throw new InvalidOperationException("The destination field disappeared before insertion could be verified.");}
-            if(attempt<9)await Task.Delay(20,token);
+            if(attempt<11)await Task.Delay(25,token);
         }
-        if(inspectable)throw new InvalidOperationException("The destination field did not confirm text insertion. Your text is available to copy.");
-        return false;
+        if(!inspectable)return DeliveryConfirmation.Opaque;
+        if(beforeText is not null&&last is not null&&NormalizeText(last)==NormalizeText(beforeText))return DeliveryConfirmation.Unchanged;
+        return DeliveryConfirmation.ChangedWithoutText;
     }
-    private static bool ConfirmedChange(string after,string inserted,string? before) => before is not null && Occurrences(after,inserted)>Occurrences(before,inserted);
+    private static InsertionTarget RefineTarget(InsertionTarget target)
+    {
+        try
+        {
+            var focused=AutomationElement.FocusedElement;
+            if(focused is null||focused.Current.IsPassword||focused.Current.ProcessId!=target.ProcessId)return target;
+            if(target.Element is not null&&Automation.Compare(focused,target.Element))return target;
+            if(!IsEditableElement(focused))return target;
+            TextPatternRange? selection=null;
+            try
+            {
+                if(focused.TryGetCurrentPattern(TextPattern.Pattern,out var pattern)&&pattern is TextPattern text)
+                    selection=text.GetSelection().FirstOrDefault()?.Clone();
+            }
+            catch(InvalidOperationException) { }
+            return target with { Element=focused, Selection=selection, NativeSelection=NativeTextControl.Capture(focused) };
+        }
+        catch(ElementNotAvailableException) { return target; }
+    }
     public void Dispose() => probe.Dispose();
 }

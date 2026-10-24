@@ -35,26 +35,29 @@ public class ThemeTests
                 var settings = new AppSettings(); using var models = new ModelManager(Path.Combine(root, "models")); using var audio = new AudioCaptureService(); using var speech = new WhisperEngine(); using var writing = new LocalEnhancementEngine(); using var hotkeys = new GlobalHotkeyService(); using var ducker = new AudioDucker(); var clipboard = new ClipboardService();
                 using var controller = new AppController(settings, new SettingsStore(root), new HistoryRepository(root), models, audio, speech, writing, clipboard, new TextInsertionService(clipboard), hotkeys, ducker);
                 var window = new MainWindow(controller); app.MainWindow = window; controller.SetResult("Morgen treffen wir uns um 11 Uhr. Bring bitte die Folien mit.");
-                // The main window keeps the native Windows frame: the system draws minimise,
-                // maximise and close, and the title bar only follows the theme colour.
-                Assert.Equal(WindowStyle.SingleBorderWindow, window.WindowStyle);
+                // The main window uses the WhisperBar-style utility chrome: a custom title bar
+                // with traffic lights replaces the native frame, while resizing stays native.
+                Assert.Equal(WindowStyle.None, window.WindowStyle);
                 Assert.True(window.ResizeMode is ResizeMode.CanResize);
-                Assert.Null(System.Windows.Shell.WindowChrome.GetWindowChrome(window));
-                // The sidebar pill and the footer both follow the readiness state, so a missing
-                // model cannot be labelled "Ready to listen" anywhere in the window.
-                Assert.Equal("●  " + controller.Readiness.Label, controller.PresenceLabel);
+                var chrome = System.Windows.Shell.WindowChrome.GetWindowChrome(window);
+                Assert.NotNull(chrome);
+                Assert.Equal(44, chrome.CaptionHeight);
+                Assert.Equal(new Thickness(0), chrome.GlassFrameThickness);
+                // The footer follows the readiness state, so a missing model cannot be labelled
+                // "Ready to listen" anywhere in the window.
+                Assert.Equal(controller.Readiness.Label, controller.PresenceLabel);
                 Assert.StartsWith(controller.Readiness.Label, controller.StageLabel);
                 foreach (var theme in new[] { "Light", "Dark" })
                 {
                     Theme.Apply(theme);
-                    var ink = ((SolidColorBrush)app.Resources["Ink"]).Color; var surface = ((SolidColorBrush)app.Resources["Surface"]).Color; var card = ((SolidColorBrush)app.Resources["Card"]).Color; var muted = ((SolidColorBrush)app.Resources["Muted"]).Color;
+                    var ink = ((SolidColorBrush)app.Resources["Ink"]).Color; var surface = ((SolidColorBrush)app.Resources["Surface"]).Color; var card = ((SolidColorBrush)app.Resources["Card"]).Color; var muted = ((SolidColorBrush)app.Resources["Muted"]).Color; var windowBackground = ((SolidColorBrush)app.Resources["WindowBackground"]).Color;
                     Assert.True(Contrast(ink, surface) >= 7); Assert.True(Contrast(ink, card) >= 7); Assert.True(Contrast(muted, card) >= 4.5); Assert.True(Contrast(((SolidColorBrush)app.Resources["Accent"]).Color, ((SolidColorBrush)app.Resources["AccentInk"]).Color) >= 4.5);
-                    window.BeginInit(); window.EndInit(); Assert.Equal(surface, ((SolidColorBrush)window.Background).Color);
+                    window.BeginInit(); window.EndInit(); Assert.Equal(windowBackground, ((SolidColorBrush)window.Background).Color);
                     foreach (var page in new[] { "Welcome", "Overview", "Dictation", "General", "Audio", "Shortcuts", "Custom Words", "Snippets", "Applications", "History", "Statistics", "Models", "Languages", "Privacy", "Advanced", "Debug", "About", "Files", "Meetings" })
                     {
                         window.Navigate(page); var content = (FrameworkElement)window.Content;
                         content.Measure(new System.Windows.Size(1060, 780)); content.Arrange(new Rect(0, 0, 1060, 780)); content.UpdateLayout();
-                        Assert.True(content.ActualWidth > 0);
+                        Assert.True(content.ActualWidth > 0, $"{theme}/{page}: width={content.ActualWidth}, height={content.ActualHeight}, type={content.GetType().Name}");
                         Assert.Equal(surface, ((SolidColorBrush)((System.Windows.Controls.Panel)content).Background).Color);
                         var artifactDirectory = Environment.GetEnvironmentVariable("VOXORA_UI_ARTIFACTS");
                         if (!string.IsNullOrWhiteSpace(artifactDirectory) && page is not ("Overview" or "Dictation" or "General"))
@@ -82,7 +85,7 @@ public class ThemeTests
                             }
                         }
                     }
-                    var rewrite = new RewriteWindow(controller, "Test text"); Assert.Equal(surface, ((SolidColorBrush)rewrite.Background).Color); rewrite.Close();
+                    var rewrite = new RewriteWindow(controller, "Test text"); Assert.Equal(windowBackground, ((SolidColorBrush)rewrite.Background).Color); rewrite.Close();
                     var selection = new SelectionActionsWindow(controller, new SelectedPassage(null!, "Test text"));
                     ((FrameworkElement)selection.Content).Measure(new System.Windows.Size(540, 530));
                     Assert.True(((FrameworkElement)selection.Content).DesiredSize.Height > 0);
@@ -93,9 +96,9 @@ public class ThemeTests
                     Assert.False(overlay.AllowsTransparency);
                     Assert.Equal(WindowStyle.None, overlay.WindowStyle);
                     Assert.True(overlay.Topmost);
-                    ((FrameworkElement)overlay.Content).Measure(new System.Windows.Size(346, 62));
+                    ((FrameworkElement)overlay.Content).Measure(new System.Windows.Size(430, 76));
                     Assert.True(((FrameworkElement)overlay.Content).DesiredSize.Width > 0);
-                    Assert.Equal(new CornerRadius(20), ((Border)overlay.Content).CornerRadius);
+                    Assert.Equal(new CornerRadius(24), ((Border)overlay.Content).CornerRadius);
                     overlay.Close();
                 }
                 app.Shutdown();

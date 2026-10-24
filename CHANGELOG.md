@@ -42,6 +42,24 @@ All notable changes to SineFlow are documented here. Versions follow
   opens a modal error box, and shutdown always reaches `Shutdown()` even if a
   cleanup step fails.
 
+### Changed
+
+- **WhisperBar-style interface.** The shell now uses a light macOS-inspired
+  palette by default, a custom 44 px title bar with traffic lights, segmented
+  top tabs, white cards, green positive actions and a blue record control.
+  Native resize, snap and per-monitor DPI are preserved.
+- **Dictation delivery is verified end to end.** Native edit, UI Automation,
+  Unicode and clipboard paths now confirm the text in the target; browser
+  contenteditables are inspected through `TextPattern`, partial insertions are
+  detected, and opaque editable targets no longer report a false failure.
+- **Two-second dictation.** Balanced (`small`) is the default profile for new
+  installations and the documented everyday choice; Maximum remains available
+  for difficult audio and file transcription. The footer reports the measured
+  time from the end of speech to confirmed insertion.
+- **CI build fix.** The Parakeet native build pins the release SentencePiece
+  archive so the Windows Release link no longer mixes the debug and release C
+  runtimes.
+
 ## [0.1.3] - 2026-10-22
 
 ### Fixed
