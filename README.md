@@ -75,6 +75,7 @@ SonaBar merkt sich das zuletzt aktive externe Fenster. Wenn du die Diktat-Schalt
 - Rückgängig und erneut versuchen, wo Windows den eingefügten Text prüfen kann.
 - Pro-App-Profile für Ton, Einfüge-Strategie, abschließendes Enter und Clipboard-Verhalten.
 - Die Fußzeile zeigt die gemessene Zeit vom Ende der Sprache bis zum bestätigten Einfügen.
+- Optionale dezente Feedback-Töne für Start, Ende und Fehler: **Off**, **Minimal** oder **Standard**. Die Töne werden von SonaBar erzeugt und ändern keine Windows-Soundeinstellungen.
 
 ### Text verfeinern
 

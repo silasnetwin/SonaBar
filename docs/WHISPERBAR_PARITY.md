@@ -8,7 +8,7 @@ Sources: [current product page](https://whisperbar.pro/) and [full public change
 | Default shortcut | ⌘⇧Space | Ctrl+Shift+Space | Existing default, custom value persisted | Unit | Windows equivalent |
 | Push to talk | Hold and release | Implemented | Global hotkey key-up path | Build | Real key timing remains manual |
 | Overlay and cancellation | Floating status; cancel through enhancement | Implemented | Nonactivating WPF pill and cancellation token | Build | Mixed-DPI and inference cancellation remain manual |
-| Optional sounds | Start, done, error | Gap | Setting exists but no bundled feedback player | No | Off is the only effective option |
+| Optional sounds | Start, done, error | Implemented | Original generated WAV cues, Off/Minimal/Standard, best-effort playback | Unit/build | Output-device failure is ignored by design |
 | Audio ducking | Lowers audio during recording | Implemented | Windows audio session/volume recovery | Unit | Device changes remain manual |
 | Speech engines | Qwen3-ASR, Parakeet, Whisper | Implemented | Local whisper.cpp, bundled NeMo-Speech.cpp Parakeet C ABI, and authenticated Qwen3-ASR Python sidecar | Native smoke (Whisper, Parakeet and Qwen) | No comparable accuracy or speed benchmark; Qwen end-to-end sidecar timing is measured on CPU |
 | Automatic language | Model-dependent detection | Implemented | Whisper auto language; Parakeet automatic decode; Qwen automatic language request | Native smoke | The bridge asked whisper.cpp to detect only, which returned before the transcription; corrected and covered by a native check. Parakeet accepts `auto` but the runtime returns no detected language code, so history keeps `auto`. Qwen returns a parsed language when automatic detection is used. |
@@ -34,6 +34,7 @@ Sources: [current product page](https://whisperbar.pro/) and [full public change
 ## This pass
 
 - Added an in-app Help page with quick start, delivery troubleshooting, privacy, free-software and diagnostics guidance. It is reachable under **About → Help** and is included in the page smoke test.
+- Added optional feedback sounds with original generated WAV cues. **Minimal** plays the finished tone; **Standard** adds start and error tones; **Off** remains the default. Playback is best-effort and never turns a missing output device into a dictation failure.
 - Confirmed that SonaBar remains free: no checkout, subscription, trial timer, licence server or fake purchase UI. Pricing, independent SonaBar branding and the Windows-native frame are intentional differences from WhisperBar.
 - Gemma 4 is not bundled yet. The public `unsloth/gemma-4-4b-it-GGUF` repository returns HTTP 401 without authenticated access, so SonaBar keeps its licensed Qwen writing models until an authorised, non-gated source is supplied.
 - Preserved the existing uncommitted insertion, waveform, selected-text, meeting and branding work.
@@ -55,4 +56,4 @@ Sources: [current product page](https://whisperbar.pro/) and [full public change
 
 ## Verification and remaining gaps
 
-After these edits, 204/204 automated tests pass. The full `./build.ps1 -Configuration Release` package command is the release gate; the .NET build reports 0 warnings and 0 errors. Package sizes are recorded in the release notes rather than in this audit, so they cannot drift from the shipped artifacts. Native smoke tests must be run against the packaged output; the commands and latest results are in the release notes. No direct WhisperBar binary comparison, physical microphone, browser/Office insertion, multi-monitor/DPI, multi-speaker meeting or clean-machine installer test is claimed. Optional sounds, typed snippet expansion, broader spoken intent, Gemma 4 packaging and measured parity remain open.
+After these edits, 215/215 automated tests pass. The full `./build.ps1 -Configuration Release` package command is the release gate; the .NET build reports 0 warnings and 0 errors. Package sizes are recorded in the release notes rather than in this audit, so they cannot drift from the shipped artifacts. Native smoke tests must be run against the packaged output; the commands and latest results are in the release notes. No direct WhisperBar binary comparison, physical microphone, browser/Office insertion, multi-monitor/DPI, multi-speaker meeting or clean-machine installer test is claimed. Typed snippet expansion, broader spoken intent, Gemma 4 packaging and measured parity remain open.

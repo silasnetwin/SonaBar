@@ -109,6 +109,7 @@ public sealed class AppSettings
         if (Language is null||!Languages.All.ContainsKey(Language)) throw new InvalidDataException("Choose a supported language.");
         if(PlainHotkey is null||EditHotkey is null||CustomWords is null||VocabularyCorrections is null||Snippets is null||Profiles is null)throw new InvalidDataException("Settings contain missing values.");
         if(!Enum.IsDefined(Clipboard)||Theme is not ("System" or "Light" or "Dark")||Backend is not ("Automatic" or "CPU" or "GPU / accelerated"))throw new InvalidDataException("Invalid app preferences.");
+        if(Sounds is not ("Off" or "Minimal" or "Standard"))Sounds="Off";
         if(!double.IsFinite(OverlayLeft)||!double.IsFinite(OverlayTop))throw new InvalidDataException("Invalid overlay position.");
         if(!Enum.IsDefined(Quality)||!Enum.IsDefined(OutputCasing))throw new InvalidDataException("Invalid transcription preferences.");
         if(HistoryRetentionDays is <0 or >3650)throw new InvalidDataException("Choose a history retention period between 0 and 3650 days.");

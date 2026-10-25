@@ -26,6 +26,7 @@ public sealed partial class AppController : INotifyPropertyChanged, IDisposable
     private readonly TextInsertionService insertion;
     private readonly GlobalHotkeyService hotkeys;
     private readonly AudioDucker ducker;
+    private readonly FeedbackSounds feedback = new();
     public OperationMachine Machine { get; } = new();
     private HardwareProfile? hardware;
     /// <summary>Capabilities of the computer SonaBar runs on. Detected once, then reused.</summary>
@@ -282,6 +283,7 @@ public sealed partial class AppController : INotifyPropertyChanged, IDisposable
             // A device that cannot be opened must not leave the program waiting forever.
             await recordingStart.WaitAsync(TimeSpan.FromSeconds(6));MarkTiming("T2");
             if(token.IsCancellationRequested||Machine.State!=OperationState.Recording)return;
+            feedback.Play(Settings.Sounds, FeedbackSound.Started);
             var warmModel=AvailableSpeechModels()[0];
             speechWarmup=Task.Run(async()=>{await Models.EnsureVerifiedAsync(warmModel,token);await Speech.WarmAsync(Models.PathFor(warmModel),token);},token);
             if (Settings.DuckAudio) ducker.Begin();
@@ -293,6 +295,7 @@ public sealed partial class AppController : INotifyPropertyChanged, IDisposable
         }
         catch (Exception error)
         {
+            feedback.Play(Settings.Sounds, FeedbackSound.Error);
             if(Settings.DebugLogging)SafeLog.WriteDiagnostic("Dictation",("stage","start_failed"),("exception",error.GetType().Name));
             insertion.CancelCaretRestore();
             CompleteTimings(false);
@@ -309,6 +312,7 @@ public sealed partial class AppController : INotifyPropertyChanged, IDisposable
         {
             MarkTiming("T3");Machine.Move(OperationState.Transcribing); Status = "Transcribing on your computer";Readiness=new(ReadinessStage.Transcribing);
             await recordingStart;await Audio.StopAsync(); ducker.Dispose();
+            feedback.Play(Settings.Sounds, FeedbackSound.Finished);
             try { await speechWarmup; } catch(OperationCanceledException) when(token.IsCancellationRequested) { throw; }
             catch(Exception error) { SafeLog.Write("SpeechWarmup",error); }
             var result = await TranscribeAsync(recording, token,() => MarkTiming("T4"),() => MarkTiming("T5")); MarkTiming("T6"); token.ThrowIfCancellationRequested();
@@ -333,7 +337,7 @@ public sealed partial class AppController : INotifyPropertyChanged, IDisposable
             Changed(nameof(CanUndo));
         }
         catch (OperationCanceledException) { CompleteTimings(false); Status = "Cancelled"; }
-        catch (Exception e) { CompleteTimings(false); SafeLog.Write("Dictation", e); Notify(e.Message); }
+        catch (Exception e) { feedback.Play(Settings.Sounds, FeedbackSound.Error); CompleteTimings(false); SafeLog.Write("Dictation", e); Notify(e.Message); }
         finally { insertion.CancelCaretRestore(); speechWarmup=Task.CompletedTask;ducker.Dispose(); DeleteRecording(); Reset(); Readiness=new(ReadinessStage.Ready); }
     }
     public async Task<TranscriptionResult> TranscribeAsync(string wave, CancellationToken token,Action? preprocessed=null,Action? recognitionStarted=null)
@@ -418,6 +422,7 @@ public sealed partial class AppController : INotifyPropertyChanged, IDisposable
         }
         catch (Exception e) when (e is not OperationCanceledException)
         {
+            feedback.Play(Settings.Sounds, FeedbackSound.Error);
             SafeLog.Write("Insertion", e);
             if(Settings.DebugLogging)SafeLog.WriteDiagnostic("Delivery",("stage","final"),("result","failed"),("exception",e.GetType().Name));
             Notify("Could not insert text: " + e.Message + " Your text is saved in the SonaBar window; use Copy when ready.");
@@ -468,8 +473,8 @@ public sealed partial class AppController : INotifyPropertyChanged, IDisposable
         var result = new { trayCreated, settingsOpened, modelCount = Models.Catalog.Count, microphoneCount = Audio.Microphones().Count, settingsValid = true, state = Machine.State.ToString(), pagesRendered = pagesRendered ?? [], pagesFailed = pagesFailed ?? [] };
         Settings.Validate(); return File.WriteAllTextAsync(Path.Combine(Brand.DataRoot, "smoke-test.json"), System.Text.Json.JsonSerializer.Serialize(result));
     }
-    public void Dispose() { operation?.Cancel(); preparation?.Cancel(); ducker.Dispose(); overlay?.Close(); }
-    public async Task StopSafelyAsync() { shuttingDown=true;preparation?.Cancel();operation?.Cancel();await startupSignal.Task;Cancel();await idleSignal.Task;await preparationTask;await Audio.StopAsync();ducker.Dispose(); }
+    public void Dispose() { operation?.Cancel(); preparation?.Cancel(); ducker.Dispose(); feedback.Dispose(); overlay?.Close(); }
+    public async Task StopSafelyAsync() { shuttingDown=true;preparation?.Cancel();operation?.Cancel();await startupSignal.Task;Cancel();await idleSignal.Task;await preparationTask;await Audio.StopAsync();ducker.Dispose();feedback.Dispose(); }
     public Task PrepareQualityAsync() => preparationTask=PrepareQualityCoreAsync();
     private async Task PrepareQualityCoreAsync()
     {
