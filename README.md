@@ -12,6 +12,7 @@
     <img alt="Windows 11 x64" src="https://img.shields.io/badge/platform-Windows%2011%20x64-0E1116?style=flat-square&logo=windows11&logoColor=white">
     <img alt="Lokal und offline" src="https://img.shields.io/badge/cloud-keine-171B21?style=flat-square">
     <img alt="Keine Telemetrie" src="https://img.shields.io/badge/telemetrie-keine-171B21?style=flat-square">
+    <img alt="Kostenlos" src="https://img.shields.io/badge/preis-kostenlos-2EA043?style=flat-square">
     <img alt="Proprietär" src="https://img.shields.io/badge/lizenz-propriet%C3%A4r-6B7280?style=flat-square">
   </p>
 
@@ -20,7 +21,7 @@
     <a href="https://github.com/silasnetwin/SonaBar/releases/latest/download/SonaBar-Portable-x64.zip"><img alt="SonaBar Portable herunterladen" src="https://img.shields.io/badge/Portable-ZIP%20(.zip)-171B21?style=for-the-badge&logo=windows&logoColor=white"></a>
   </p>
 
-  <sub>Windows 11 x64 · Early Access · kein Konto erforderlich</sub>
+  <sub>Windows 11 x64 · Early Access · kostenlos · kein Konto erforderlich</sub>
 </div>
 
 <p align="center">
@@ -240,7 +241,7 @@ Ja. Das Portable ZIP enthält denselben Build. Entpacken, `SonaBar.App.exe` star
 Nein. Oberfläche, Hotkeys und Einfüge-Schicht sind Windows-spezifisch.
 
 **Was kostet SonaBar?**
-Die aktuelle Early-Access-Version ist ein unsignierter Entwicklungsbuild. Es gibt noch keine veröffentlichte Preisliste. Preise und Signierung werden erst mit einem stabilen Release veröffentlicht.
+SonaBar ist kostenlos. Es gibt kein Abo, keine Testphase, keinen Checkout und keinen Lizenzserver. Die App bleibt ohne Konto nutzbar; optionale Modell-Downloads unterliegen den Lizenzen der jeweiligen Modelle. Die Signierung und der automatische Update-Feed werden unabhängig davon für einen stabilen Release fertiggestellt.
 
 **Steht SonaBar in Verbindung zu WhisperBar?**
 Nein. SonaBar ist ein unabhängiges Produkt von SilasNet. Es gibt keine Verbindung zu WhisperBar und keine gemeinsame Entwicklung.

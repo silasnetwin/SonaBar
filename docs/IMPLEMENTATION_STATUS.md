@@ -5,6 +5,8 @@ Last updated: 2026-10-25. This working tree is intentionally dirty; preserve eve
 ## Completed
 
 - Rebranded application, WPF shell, assets, installer, documentation, and release output as **SonaBar by SilasNet**.
+- Added the in-app **About → Help** page with quick start, delivery troubleshooting, privacy, diagnostics and free-software guidance. The page smoke test renders all 20 pages without failures.
+- Confirmed the free product policy: no checkout, subscription, trial timer, licence server or fake purchase UI.
 - Implemented the local dictation workflow, history, output processing, file and meeting flows, theme work, updater checks, installer update handoff, startup registration, and GitHub release scaffolding.
 - Replaced managed Whisper.net runtime packages with a direct `whisper.cpp` v1.9.4 C ABI bridge in `src/SonaBar.Transcription.Native/`.
 - Added pinned submodules: `third_party/whisper.cpp` at `927cfce` (`v1.9.4`) and `third_party/NeMo-Speech.cpp` at `4f96762` (`v0.1.0`).

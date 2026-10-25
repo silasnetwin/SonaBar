@@ -1,4 +1,4 @@
-# WhisperBar parity audit — 3 October 2026 (updated 23 October 2026)
+# WhisperBar parity audit — 3 October 2026 (updated 25 October 2026)
 
 Sources: [current product page](https://whisperbar.pro/) and [full public changelog through 1.20.1](https://whisperbar.pro/changelog.html), checked on 3 October 2026. WhisperBar descriptions below are public claims, not independently reproduced behavior. SonaBar status is based on repository inspection and the tests stated below. “Implemented” does not mean equal accuracy or polish.
 
@@ -25,13 +25,17 @@ Sources: [current product page](https://whisperbar.pro/) and [full public change
 | Opaque game windows | Paste-only compatibility | Implemented | Compatibility insertion profile, including a Roblox default | Unit/build | Paste cannot be read back; the game must show the result |
 | Clipboard | Configurable preservation | Implemented | Sequence-aware capture and restore | Unit | Rich target matrix manual |
 | Model downloads | Resume and fallback | Implemented | Partial download verification, installed model fallback | Unit/build | Interrupted network test manual |
+| Pricing | One-time purchase | Free | No checkout, subscription, trial timer or licence server | Code audit | Intentional difference: SonaBar stays free |
 | Privacy | Local core, no telemetry | Implemented | Local models, optional history, temporary audio cleanup | Code audit | Optional external integrations are absent |
-| Diagnostics/help | Local logs and support details | Partial | T0–T11, model and delivery logs, copy summary | Code audit | Dedicated Help page absent |
+| Diagnostics/help | Local logs and support details | Implemented | T0–T11, model and delivery logs, copy summary and in-app Help page | Build/smoke | Help is self-contained; no external documentation viewer |
 | Settings/tray/onboarding | Compact sidebar and utility surfaces | Partial | WPF sidebar, tray and onboarding | Build | Direct visual comparison not verified |
 | App icon | macOS app icon | Windows original | SonaBar multi-size ICO and PNG assets | Existing assets inspected | Windows integration requires clean install checks |
 
 ## This pass
 
+- Added an in-app Help page with quick start, delivery troubleshooting, privacy, free-software and diagnostics guidance. It is reachable under **About → Help** and is included in the page smoke test.
+- Confirmed that SonaBar remains free: no checkout, subscription, trial timer, licence server or fake purchase UI. Pricing is the one intentional parity difference from WhisperBar.
+- Gemma 4 is not bundled yet. The public `unsloth/gemma-4-4b-it-GGUF` repository returns HTTP 401 without authenticated access, so SonaBar keeps its licensed Qwen writing models until an authorised, non-gated source is supplied.
 - Preserved the existing uncommitted insertion, waveform, selected-text, meeting and branding work.
 - Bundled the Parakeet TDT 0.6B v3 native runtime and verified it end to end on CPU. `build.ps1` now builds the pinned NeMo-Speech.cpp ASR C ABI, links vcpkg's separate Abseil flag archives, adds NeMo's include directory explicitly, copies the required DLL closure, and packages the OpenMP runtime needed by ggml.
 - Added SentencePiece, Abseil and protobuf license texts to the packaged notices.
@@ -51,4 +55,4 @@ Sources: [current product page](https://whisperbar.pro/) and [full public change
 
 ## Verification and remaining gaps
 
-After these edits, 204/204 automated tests pass. The full `./build.ps1 -Configuration Release` package command is the release gate; the .NET build reports 0 warnings and 0 errors. Package sizes are recorded in the release notes rather than in this audit, so they cannot drift from the shipped artifacts. Native smoke tests must be run against the packaged output; the commands and latest results are in the release notes. No direct WhisperBar binary comparison, physical microphone, browser/Office insertion, multi-monitor/DPI, multi-speaker meeting or clean-machine installer test is claimed. Optional sounds, typed snippet expansion, a Help page, broader spoken intent and measured parity remain open.
+After these edits, 204/204 automated tests pass. The full `./build.ps1 -Configuration Release` package command is the release gate; the .NET build reports 0 warnings and 0 errors. Package sizes are recorded in the release notes rather than in this audit, so they cannot drift from the shipped artifacts. Native smoke tests must be run against the packaged output; the commands and latest results are in the release notes. No direct WhisperBar binary comparison, physical microphone, browser/Office insertion, multi-monitor/DPI, multi-speaker meeting or clean-machine installer test is claimed. Optional sounds, typed snippet expansion, broader spoken intent, Gemma 4 packaging and measured parity remain open.

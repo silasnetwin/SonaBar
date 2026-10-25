@@ -109,7 +109,7 @@ public partial class App : Application
             // Every page is built and laid out, so a broken page is found by the smoke test
             // instead of when a user opens it for the first time.
             var rendered=new List<string>();var failed=new List<string>();
-            foreach(var page in new[]{"Overview","General","Dictation","Writing","Models","Languages","Audio","Shortcuts","Custom Words","Snippets","Applications","History","Statistics","Privacy","Advanced","Debug","About","Files","Meetings"})
+            foreach(var page in new[]{"Overview","General","Dictation","Writing","Models","Languages","Audio","Shortcuts","Custom Words","Snippets","Applications","History","Statistics","Privacy","Advanced","Debug","About","Help","Files","Meetings"})
             {
                 try{window.Navigate(page);content.UpdateLayout();rendered.Add(page);}
                 catch(Exception error){failed.Add(page+":"+error.GetType().Name);}

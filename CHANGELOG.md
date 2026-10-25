@@ -7,6 +7,9 @@ All notable changes to SonaBar are documented here. Versions follow
 
 ### Added
 
+- **In-app Help page.** **About → Help** now covers the dictation workflow,
+  delivery troubleshooting for elevated and game windows, privacy, diagnostics
+  and the free-software policy. The page is built by the page smoke test.
 - **Parakeet TDT 0.6B v3 now runs from the release package.** The NeMo-Speech.cpp
   runtime and its required ggml, Abseil and protobuf DLLs are bundled, so the
   verified 25-language European model can run on CPU without a separate C++
