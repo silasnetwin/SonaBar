@@ -120,6 +120,12 @@ public sealed partial class AppController : INotifyPropertyChanged, IDisposable
     public AppController(AppSettings settings, SettingsStore settingsStore, HistoryRepository history, ModelManager models, AudioCaptureService audio, ITranscriptionEngine speech, IEnhancementEngine enhancement, ClipboardService clipboard, TextInsertionService insertion, GlobalHotkeyService hotkeys, AudioDucker ducker)
     {
         Settings = settings; SettingsStore = settingsStore; History = history; Models = models; Audio = audio; Speech = speech; Enhancement = enhancement; Clipboard = clipboard; this.insertion = insertion; this.hotkeys = hotkeys; this.ducker = ducker;
+        hotkeys.ExpandTypedSnippet = snippet =>
+        {
+            try { return TextProcessing.ExpandSnippet(snippet, DateTime.Now, Clipboard.Text); }
+            catch (Exception error) { SafeLog.Write("TypedSnippetClipboard", error); return TextProcessing.ExpandSnippet(snippet, DateTime.Now, () => ""); }
+        };
+        hotkeys.TypedExpansionBlocked = () => Paused || shuttingDown;
         idleSignal.TrySetResult();
         startupSignal.TrySetResult();
         Machine.Changed += state => { if(state==OperationState.Idle)idleSignal.TrySetResult();else if(idleSignal.Task.IsCompleted)idleSignal=new(TaskCreationOptions.RunContinuationsAsynchronously); Changed(nameof(Busy)); overlay?.SetState(state); };
@@ -244,6 +250,12 @@ public sealed partial class AppController : INotifyPropertyChanged, IDisposable
     public string TemporaryWave() => Path.Combine(Brand.DataRoot, "Temp", Guid.NewGuid() + ".wav");
     public void Notify(string text) { Status = text; overlay?.ShowNotice(text,true); }
     public void Inform(string text) { Status=text; }
+    /// <summary>Plays the selected feedback mode so the choice can be heard before saving.</summary>
+    public void PreviewFeedbackSound()
+    {
+        if (Settings.Sounds == "Off") { Inform("Choose Minimal or Standard to hear a preview."); return; }
+        feedback.Play(Settings.Sounds, FeedbackSound.Finished);
+    }
     public void RememberForegroundWindow() => insertion.RememberForegroundWindow();
     public async void ToggleDictation()
     {

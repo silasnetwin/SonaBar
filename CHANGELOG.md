@@ -13,7 +13,17 @@ All notable changes to SonaBar are documented here. Versions follow
 - **Optional feedback sounds.** Original generated WAV cues provide **Off**,
   **Minimal** and **Standard** modes. Minimal plays the finished tone only;
   Standard adds the start and error tones. Playback is best-effort and never
-  turns an unavailable output device into a dictation failure.
+  turns an unavailable output device into a dictation failure. The Audio page
+  can preview the finished tone and disables preview while sounds are off.
+- **Opt-in typed snippet expansion.** The same snippets used after dictation can
+  expand while typing in another application. A trigger followed by space,
+  Enter, Tab or punctuation is replaced with the snippet content, including
+  `{date}`, `{time}` and `{clipboard}` variables. Triggers may contain spaces
+  and punctuation, so `be right back` and `e.g.` work. Matching is
+  case-insensitive, requires a word boundary and prefers the longest
+  alternative. The setting is off by default, ignores injected input, skips
+  SonaBar's own window and password fields, clears the typed buffer on a mouse
+  click, and warns that games or elevated apps may reject injected text.
 - **Parakeet TDT 0.6B v3 now runs from the release package.** The NeMo-Speech.cpp
   runtime and its required ggml, Abseil and protobuf DLLs are bundled, so the
   verified 25-language European model can run on CPU without a separate C++
@@ -42,6 +52,9 @@ All notable changes to SonaBar are documented here. Versions follow
 
 ### Fixed
 
+- **Empty pages no longer show blank frames.** History, Statistics, Snippets and
+  Applications replace empty list boxes with short guidance. History offers a
+  direct link to Privacy when storage is off.
 - **Opaque game windows can receive dictation.** Target capture no longer
   requires a UI Automation element. The explicit **Compatibility** profile now
   pastes into the verified foreground window for games such as Roblox that
@@ -88,6 +101,10 @@ All notable changes to SonaBar are documented here. Versions follow
 
 ### Changed
 
+- **Workspace polish.** The General tab is a ten-destination hub for the main
+  workflows. Page headings and subtitles are clearer, the Snippets and
+  Applications subnav labels match their pages, and About shows the factual
+  build line `Version 0.1.3 · Windows x64 · unsigned`.
 - **WhisperBar-inspired interface.** The shell now uses a light palette by
   default, a custom 44 px title bar with Windows minimise, maximise/restore and
   close controls, segmented top tabs, white cards, green positive actions and a

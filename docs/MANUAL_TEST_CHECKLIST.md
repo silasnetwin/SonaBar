@@ -38,8 +38,13 @@ For **Notepad, Word, Chrome, Edge, Discord, VS Code, JetBrains IDE, and Windows 
 - [ ] 100%, 125%, 150%, 175% and 200% DPI, mixed-DPI monitors, monitor removal.
 - [ ] Overlay never takes focus; moving it persists a visible position after restart.
 - [ ] Custom words, snippet import/export, tabs/newlines and clipboard/date/time variables.
+- [ ] Typed snippets: off by default; enable in Snippets, then type a trigger plus space, Enter, Tab and punctuation in Notepad and a browser. Verify one replacement, no lost delimiter, longest-alternative matching and `{date}`, `{time}` and `{clipboard}` variables.
+- [ ] Multi-word and punctuation triggers such as `be right back` and `e.g.` expand; clicking elsewhere in the same field before the delimiter does not replace earlier text.
+- [ ] Typed snippets do not fire in SonaBar, password fields or elevated targets; disabling the option restores literal typing.
 - [ ] History search/filter/delete and disabled-history behavior; clear history retains lifetime totals.
-- [ ] Inspect logs: no audio, transcript, selected text or prompt content.
+- [ ] Empty History, Statistics, Snippets and Applications show useful guidance without a blank list frame; History links to Privacy when storage is off.
+- [ ] **About → Help** opens, internal links navigate, and Audio preview plays the finished tone only when feedback sounds are enabled.
+- [ ] Inspect logs: no audio, transcript, selected text, snippet content or prompt content.
 
 ## Files and meetings
 - [ ] Every supported media extension, corrupted/encrypted input, folders, queue pause/resume/cancel.

@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace SonaBar.WindowsIntegration;
 internal static class Native
@@ -44,7 +45,13 @@ internal static class Native
     [DllImport("user32.dll")] internal static extern bool UnhookWindowsHookEx(nint hook);
     [DllImport("user32.dll")] internal static extern nint CallNextHookEx(nint hook, int code, nint wParam, nint lParam);
     [DllImport("kernel32.dll", CharSet=CharSet.Unicode)] internal static extern nint GetModuleHandle(string? name);
+    [DllImport("user32.dll")] internal static extern bool GetKeyboardState(byte[] state);
+    [DllImport("user32.dll")] internal static extern nint GetKeyboardLayout(uint thread);
+    [DllImport("user32.dll")] internal static extern uint MapVirtualKey(uint code, uint mapType);
+    [DllImport("user32.dll", CharSet=CharSet.Unicode)]
+    internal static extern int ToUnicodeEx(uint key, uint scanCode, byte[] state, StringBuilder buffer, int count, uint flags, nint layout);
     internal delegate nint HookProc(int code, nint wParam, nint lParam);
+    [StructLayout(LayoutKind.Sequential)] internal struct KBDLLHOOKSTRUCT { internal uint VkCode, ScanCode, Flags, Time; internal nuint ExtraInfo; }
     [StructLayout(LayoutKind.Sequential)] internal struct INPUT { internal uint type; internal InputUnion data; }
     [StructLayout(LayoutKind.Explicit)] internal struct InputUnion { [FieldOffset(0)] internal KEYBDINPUT keyboard; [FieldOffset(0)] internal MOUSEINPUT mouse; }
     [StructLayout(LayoutKind.Sequential)] internal struct KEYBDINPUT { internal ushort key, scan; internal uint flags, time; internal nuint extra; }
@@ -120,6 +127,30 @@ internal static class Native
             list.Add(new INPUT { type = 1, data = new InputUnion { keyboard = new KEYBDINPUT { scan = c, flags = 6 } } });
         }
         Send(list.ToArray());
+    }
+    /// <summary>Sends the literal text, using Enter for line breaks so multi-line snippets work in edit controls.</summary>
+    internal static void Text(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return;
+        var start = 0;
+        for (var i = 0; i < text.Length; i++)
+        {
+            var character = text[i];
+            if (character is not ('\r' or '\n' or '\t')) continue;
+            if (i > start) Unicode(text[start..i]);
+            if (character == '\t') Unicode("\t");
+            else
+            {
+                SendKey(0x0D); SendKey(0x0D, true);
+                if (character == '\r' && i + 1 < text.Length && text[i + 1] == '\n') i++;
+            }
+            start = i + 1;
+        }
+        if (start < text.Length) Unicode(text[start..]);
+    }
+    internal static void Backspaces(int count)
+    {
+        for (var i = 0; i < count; i++) { SendKey(0x08); SendKey(0x08, true); }
     }
     private static void Send(INPUT[] inputs) { if (Native.SendInput((uint)inputs.Length, inputs, Marshal.SizeOf<INPUT>()) != inputs.Length) throw new InvalidOperationException("Windows blocked text input. Apps running as administrator cannot receive input from SonaBar."); }
 }

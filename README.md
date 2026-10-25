@@ -86,7 +86,7 @@ SonaBar merkt sich das zuletzt aktive externe Fenster. Wenn du die Diktat-Schalt
 - Übersetzen in Englisch, Deutsch, Französisch, Spanisch, Italienisch, Portugiesisch, Niederländisch, Polnisch, Chinesisch und weitere Sprachen.
 - Zahlen, Namen und Uhrzeiten werden beim Übersetzen geschützt. Verdächtige Ergebnisse werden verworfen, der Originaltext bleibt erhalten.
 - Persönliches Wörterbuch mit expliziten *gehört → gemeint*-Ersetzungen.
-- Snippets mit Variablen und exakten Auslösern.
+- Snippets mit Variablen und exakten Auslösern. Optional ersetzen sie den Auslöser auch beim Tippen – nach Leertaste, Enter, Tab oder Satzzeichen; standardmäßig deaktiviert.
 
 ### Mehr als Diktat
 
@@ -118,6 +118,7 @@ Windows kann in solchen Fenstern nicht zurücklesen, ob der Text angekommen ist.
 - Native Größenänderung, Snap und Per-Monitor-DPI.
 - Helle Oberfläche als Standard, Dark und „Windows folgen“ per Klick.
 - Tray-Icon, optionaler Start mit Windows und eine kompakte Aufnahme-Pille.
+- Hilfe direkt in der App unter **About → Help** – ohne externe Dokumentation.
 - Portable ZIP oder per-user Installation – beides ohne Administratorrechte.
 
 ### Deine Sprache
@@ -205,11 +206,21 @@ Nach dem ersten Start bietet SonaBar ein kurzes Onboarding an. Danach lebt die A
 
 Vollständige Änderungen: [CHANGELOG.md](CHANGELOG.md) · [Release v0.1.3](https://github.com/silasnetwin/SonaBar/releases/tag/v0.1.3)
 
+## Feinschliff im aktuellen Quellcode
+
+- **Hilfe in der App.** **About → Help** erklärt Diktat, Einfügeprobleme, Datenschutz, Diagnose und die kostenlose Produktpolitik.
+- **Snippets auch beim Tippen.** Der Auslöser wird optional direkt in der Ziel-App ersetzt – nach Leertaste, Enter, Tab oder Satzzeichen. Auch mehrwörtige Auslöser wie `be right back` und Auslöser mit Satzzeichen wie `e.g.` funktionieren; ein Mausklick setzt den Tipp-Puffer zurück. Die Funktion ist standardmäßig deaktiviert, überspringt das SonaBar-Fenster und Passwortfelder und weist auf Grenzen bei Spielen und Apps mit Administratorrechten hin.
+- **Klarere leere Seiten.** History, Statistik, Snippets und Anwendungen zeigen kurze Hinweise statt großer leerer Listen. Bei ausgeschalteter History führt ein direkter Weg zu den Datenschutzeinstellungen.
+- **Feedback-Töne mit Vorschau.** Die Audio-Seite kann den Abschlusston vorhören; bei **Off** bleibt die Vorschau deaktiviert.
+
+> Diese Verbesserungen sind im aktuellen Quellcode enthalten. Die bereits veröffentlichten v0.1.3-Pakete können älter sein, bis ein neues Paket gebaut und veröffentlicht wurde.
+
 ## Status
 
 | Bereich | Stand |
 | --- | --- |
 | Diktat, Einfügen, History, Snippets, Dateien | Early Access, im Alltag nutzbar |
+| Snippets beim Tippen | Optional, standardmäßig deaktiviert; Passwortfelder und das SonaBar-Fenster werden übersprungen |
 | Meetings, Sprechertrennung, PDF-Export | Early Access; Qualität hängt von der Aufnahme ab |
 | Parakeet TDT 0.6B v3 | Runtime enthalten; Modell auf Abruf; auf CPU verifiziert |
 | Qwen3-ASR 1.7B | Runtime enthalten; Modell auf Abruf; auf CPU verifiziert |
@@ -233,7 +244,10 @@ Balanced ist die Alltagsempfehlung und passt auf 8-GB-Rechner. Base ist die Wahl
 SonaBar ist für Browser, Office, Editoren, Chat-Clients und Terminals gebaut. Standard-Textfelder werden geprüft und anschließend befüllt. Bei Spielen wie Roblox, die Windows keine Textprüfung erlauben, sendet der Compatibility-Modus den Paste und meldet `Paste sent — check the app/target`; das Spiel muss den Text selbst anzeigen.
 
 **Werden Passwortfelder befüllt?**
-Nein. Passwortfelder werden erkannt und abgelehnt.
+Nein. Passwortfelder werden erkannt und abgelehnt. Das gilt auch für die optionale Snippet-Ersetzung beim Tippen.
+
+**Wo finde ich Hilfe?**
+In der App unter **About → Help**. Dort stehen Schnellstart, Einfügeprobleme, Datenschutz, Diagnose und die kostenlose Produktpolitik. Die Hilfe ist lokal und benötigt keine externe Website.
 
 **Kann ich SonaBar ohne Installation nutzen?**
 Ja. Das Portable ZIP enthält denselben Build. Entpacken, `SonaBar.App.exe` starten; Einstellungen und History liegen weiterhin unter `%LOCALAPPDATA%\SilasNet\SonaBar`.
@@ -306,6 +320,7 @@ docs/           Design, Verifikation und manuelle Testmatrix
 | --- | --- |
 | [CHANGELOG.md](CHANGELOG.md) | Versionshistorie und sichtbare Änderungen |
 | [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md) | Umgesetzte Funktionen und bekannte Lücken |
+| [docs/WHISPERBAR_PARITY.md](docs/WHISPERBAR_PARITY.md) | Funktionsabgleich und bewusste Unterschiede |
 | [docs/MANUAL_TEST_CHECKLIST.md](docs/MANUAL_TEST_CHECKLIST.md) | Geräte-, Installer- und App-Checks |
 | [SECURITY.md](SECURITY.md) | Privater Meldeweg für Sicherheitslücken |
 | [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) | Lizenzen der enthaltenen Komponenten |

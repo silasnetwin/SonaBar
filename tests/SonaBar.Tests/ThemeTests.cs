@@ -53,7 +53,7 @@ public class ThemeTests
                     var ink = ((SolidColorBrush)app.Resources["Ink"]).Color; var surface = ((SolidColorBrush)app.Resources["Surface"]).Color; var card = ((SolidColorBrush)app.Resources["Card"]).Color; var muted = ((SolidColorBrush)app.Resources["Muted"]).Color; var windowBackground = ((SolidColorBrush)app.Resources["WindowBackground"]).Color;
                     Assert.True(Contrast(ink, surface) >= 7); Assert.True(Contrast(ink, card) >= 7); Assert.True(Contrast(muted, card) >= 4.5); Assert.True(Contrast(((SolidColorBrush)app.Resources["Accent"]).Color, ((SolidColorBrush)app.Resources["AccentInk"]).Color) >= 4.5);
                     window.BeginInit(); window.EndInit(); Assert.Equal(windowBackground, ((SolidColorBrush)window.Background).Color);
-                    foreach (var page in new[] { "Welcome", "Overview", "Dictation", "General", "Audio", "Shortcuts", "Custom Words", "Snippets", "Applications", "History", "Statistics", "Models", "Languages", "Privacy", "Advanced", "Debug", "About", "Files", "Meetings" })
+                    foreach (var page in new[] { "Welcome", "Overview", "Dictation", "General", "Audio", "Shortcuts", "Custom Words", "Snippets", "Applications", "History", "Statistics", "Models", "Languages", "Privacy", "Advanced", "Debug", "About", "Help", "Files", "Meetings" })
                     {
                         window.Navigate(page); var content = (FrameworkElement)window.Content;
                         content.Measure(new System.Windows.Size(1060, 780)); content.Arrange(new Rect(0, 0, 1060, 780)); content.UpdateLayout();

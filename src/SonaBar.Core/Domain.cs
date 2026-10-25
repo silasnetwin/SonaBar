@@ -69,6 +69,8 @@ public sealed class AppSettings
     public bool StoreHistory { get; set; }
     public bool DuckAudio { get; set; }
     public string Sounds { get; set; } = "Off";
+    /// <summary>Opt-in: expand snippet triggers while typing in other applications.</summary>
+    public bool ExpandTypedSnippets { get; set; }
     public bool KeepSpeechLoaded { get; set; } = true;
     public bool KeepEnhancementLoaded { get; set; } = true;
     // SonaBar is designed to wait quietly in the tray so its global shortcut is
@@ -187,7 +189,13 @@ public static class TextProcessing
     public static string Expand(string text, IEnumerable<Snippet> snippets, DateTime now, Func<string> clipboard)
     {
         var snippet = snippets.FirstOrDefault(s => s.Trigger.Split('|', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries).Any(t => t.Equals(text.Trim().TrimEnd('.', '!', '?'), StringComparison.OrdinalIgnoreCase)));
-        return snippet is null ? text : snippet.Content.Replace("{date}", now.ToShortDateString()).Replace("{time}", now.ToShortTimeString()).Replace("{clipboard}", snippet.Content.Contains("{clipboard}") ? clipboard() : "");
+        return snippet is null ? text : ExpandSnippet(snippet, now, clipboard);
+    }
+    /// <summary>Expands one matched snippet without re-matching its trigger.</summary>
+    public static string ExpandSnippet(Snippet snippet, DateTime now, Func<string> clipboard)
+    {
+        var content = snippet.Content ?? "";
+        return content.Replace("{date}", now.ToShortDateString()).Replace("{time}", now.ToShortTimeString()).Replace("{clipboard}", content.Contains("{clipboard}") ? clipboard() : "");
     }
     public static string Subtitle(IEnumerable<TranscriptSegment> segments, bool vtt)
     {
