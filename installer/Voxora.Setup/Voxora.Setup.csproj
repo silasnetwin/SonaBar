@@ -1,4 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk">
- <PropertyGroup><OutputType>WinExe</OutputType><UseWPF>true</UseWPF><AssemblyName>SineFlow-Setup-x64</AssemblyName><ApplicationIcon>../../resources/SineFlow.ico</ApplicationIcon><ApplicationManifest>../../src/Voxora.App/app.manifest</ApplicationManifest></PropertyGroup>
- <ItemGroup Condition="Exists('../../dist/SineFlow-Portable-x64.zip')"><EmbeddedResource Include="../../dist/SineFlow-Portable-x64.zip" LogicalName="SineFlow.Payload.zip"/></ItemGroup>
-</Project>

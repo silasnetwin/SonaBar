@@ -1,10 +1,10 @@
 You are the lead engineer responsible for building a production-ready Windows desktop application.
 
 PROJECT NAME
-Voxora
+SonaBar
 
 PUBLISHER
-SNine Studios
+SilasNet
 
 TAGLINE
 Speech to Text.
@@ -19,13 +19,13 @@ https://whisperbar.pro/changelog.html
 
 The reference application is a private/offline speech-to-text utility that lives in the macOS menu bar.
 
-Voxora must provide essentially the same FUNCTIONAL EXPERIENCE on Windows, adapted correctly to Windows APIs and Windows UX.
+SonaBar must provide essentially the same FUNCTIONAL EXPERIENCE on Windows, adapted correctly to Windows APIs and Windows UX.
 
 Do NOT copy WhisperBar's proprietary source code, logo, trademark, icons, paid assets, bundled proprietary files, or application package.
 
 Do NOT call the product WhisperBar.
 
-We are implementing equivalent functionality independently under the Voxora / SNine Studios brand.
+We are implementing equivalent functionality independently under the SonaBar / SilasNet brand.
 
 The final result must feel like a finished commercial application, not a prototype.
 
@@ -67,7 +67,7 @@ Only stop if something genuinely requires information only I can provide, such a
 1. PRODUCT EXPERIENCE
 ==================================================
 
-Voxora should normally stay out of the user's way.
+SonaBar should normally stay out of the user's way.
 
 It is primarily:
 
@@ -78,7 +78,7 @@ It is primarily:
 - a file transcription tool
 - a meeting transcription tool
 
-The user should be able to install Voxora, launch it, configure it once and then use it in:
+The user should be able to install SonaBar, launch it, configure it once and then use it in:
 
 - Discord
 - Slack
@@ -111,13 +111,13 @@ The user must NOT need to separately install:
 - llama.cpp
 - another AI program
 
-Anything required by Voxora must either:
+Anything required by SonaBar must either:
 
-A. be bundled with Voxora
+A. be bundled with SonaBar
 
 or
 
-B. be automatically downloaded/configured from within Voxora.
+B. be automatically downloaded/configured from within SonaBar.
 
 There must never be a "go install this dependency manually" step for a normal user.
 
@@ -157,23 +157,23 @@ Create a maintainable solution similar to:
 
 src/
 
-Voxora.App
-Voxora.Core
-Voxora.Audio
-Voxora.Transcription
-Voxora.Enhancement
-Voxora.WindowsIntegration
-Voxora.Storage
-Voxora.Meetings
-Voxora.Models
-Voxora.Updater
+SonaBar.App
+SonaBar.Core
+SonaBar.Audio
+SonaBar.Transcription
+SonaBar.Enhancement
+SonaBar.WindowsIntegration
+SonaBar.Storage
+SonaBar.Meetings
+SonaBar.Models
+SonaBar.Updater
 
 tests/
 
-Voxora.Core.Tests
-Voxora.Transcription.Tests
-Voxora.Storage.Tests
-Voxora.Integration.Tests
+SonaBar.Core.Tests
+SonaBar.Transcription.Tests
+SonaBar.Storage.Tests
+SonaBar.Integration.Tests
 
 scripts/
 
@@ -215,11 +215,11 @@ ISpeakerDiarizationService
 4. SYSTEM TRAY APPLICATION
 ==================================================
 
-Voxora should start as a tray application.
+SonaBar should start as a tray application.
 
 Tray menu:
 
-Voxora
+SonaBar
 
 Start Dictation
 Enhanced Dictation
@@ -230,13 +230,13 @@ Meeting Mode
 History
 Settings
 
-Pause Voxora
+Pause SonaBar
 
 Quit
 
 Left click:
 
-open the main Voxora interface.
+open the main SonaBar interface.
 
 Right click:
 
@@ -257,7 +257,7 @@ Core workflow:
 
 1. user places cursor inside ANY editable text field
 2. user presses global shortcut
-3. Voxora starts recording
+3. SonaBar starts recording
 4. small floating recording overlay appears
 5. user speaks
 6. user presses shortcut again
@@ -294,7 +294,7 @@ release shortcut
 
 This is EXTREMELY IMPORTANT.
 
-Voxora must reliably insert text into applications across Windows.
+SonaBar must reliably insert text into applications across Windows.
 
 Create a robust multi-strategy insertion pipeline.
 
@@ -571,7 +571,7 @@ Create a beautiful onboarding flow.
 
 PAGE 1
 
-Welcome to Voxora
+Welcome to SonaBar
 
 "Your voice. Your words. Your computer."
 
@@ -613,7 +613,7 @@ PAGE 6
 
 Finished.
 
-Voxora minimizes to tray.
+SonaBar minimizes to tray.
 
 ==================================================
 15. AUTOMATIC LANGUAGE DETECTION
@@ -660,8 +660,8 @@ abbreviations
 
 Examples:
 
-Voxora
-SNine Studios
+SonaBar
+SilasNet
 Minecraft
 Fabric
 IntelliJ
@@ -736,7 +736,7 @@ Use a local lightweight model.
 
 Prefer llama.cpp-compatible inference when practical.
 
-Model downloads are managed automatically inside Voxora.
+Model downloads are managed automatically inside SonaBar.
 
 ==================================================
 19. TWO DICTATION MODES
@@ -792,10 +792,10 @@ Workflow:
 
 1. user selects text inside another application
 2. presses context-menu shortcut
-3. Voxora safely reads selected text
+3. SonaBar safely reads selected text
 4. a floating menu appears
 5. user chooses an action
-6. Voxora locally processes the text
+6. SonaBar locally processes the text
 7. original selected text is replaced
 
 Actions:
@@ -966,7 +966,7 @@ Deleting history should NOT accidentally destroy lifetime statistics unless user
 
 Allow:
 
-dragging an audio/video file onto Voxora
+dragging an audio/video file onto SonaBar
 
 or:
 
@@ -1243,7 +1243,7 @@ calm
 professional
 very little visual clutter
 
-But use Voxora's own identity.
+But use SonaBar's own identity.
 
 Brand palette:
 
@@ -1283,14 +1283,14 @@ Dark mode must also be supported.
 Follow Windows system theme by default.
 
 ==================================================
-36. VOXORA BRAND
+36. SONABAR BRAND
 ==================================================
 
 Use:
 
-Voxora
+SonaBar
 
-by SNine Studios
+by SilasNet
 
 Create an ORIGINAL simple icon.
 
@@ -1320,7 +1320,7 @@ Keep branding values centralized so I can rename the project later easily.
 
 Setting:
 
-Launch Voxora when Windows starts.
+Launch SonaBar when Windows starts.
 
 Implement using an appropriate Windows startup mechanism.
 
@@ -1330,7 +1330,7 @@ Do not require administrator privileges.
 38. SINGLE INSTANCE
 ==================================================
 
-Only one Voxora instance should normally run.
+Only one SonaBar instance should normally run.
 
 If a second instance starts:
 
@@ -1384,7 +1384,7 @@ Copy diagnostics
 
 Diagnostics can include:
 
-Voxora version
+SonaBar version
 Windows version
 CPU
 GPU
@@ -1519,17 +1519,17 @@ Build a proper installer.
 
 Installer name:
 
-Voxora-Setup-x64.exe
+SonaBar-Setup-x64.exe
 
 Installer should:
 
-install Voxora
+install SonaBar
 create Start Menu shortcut
 optionally create Desktop shortcut
 register uninstall entry
 install required native libraries
 install the self-contained .NET runtime
-launch Voxora
+launch SonaBar
 
 No admin rights unless genuinely required.
 
@@ -1545,11 +1545,11 @@ The important rule is:
 
 THE USER MUST NOT MANUALLY INSTALL THEM.
 
-Voxora itself downloads and manages them.
+SonaBar itself downloads and manages them.
 
 Example:
 
-"Preparing Voxora"
+"Preparing SonaBar"
 
 Downloading Balanced Speech Model
 
@@ -1567,7 +1567,7 @@ After this, dictation works offline.
 
 If model redistribution licenses permit it, also provide:
 
-Voxora-Full-Offline-x64.exe
+SonaBar-Full-Offline-x64.exe
 
 containing the default speech model.
 
@@ -1729,9 +1729,9 @@ Output:
 
 dist/
 
-Voxora/
-Voxora-Portable-x64.zip
-Voxora-Setup-x64.exe
+SonaBar/
+SonaBar-Portable-x64.zip
+SonaBar-Setup-x64.exe
 SHA256SUMS.txt
 
 Do not require me to manually copy files around.
@@ -1760,7 +1760,7 @@ Do not require private credentials for ordinary unsigned builds.
 
 Create a useful README containing:
 
-What Voxora is
+What SonaBar is
 
 Features
 
@@ -2017,13 +2017,13 @@ Treat this list as a feature-parity checklist.
 
 Ask yourself:
 
-"Would I be comfortable sending Voxora-Setup-x64.exe to someone who has never used a developer tool?"
+"Would I be comfortable sending SonaBar-Setup-x64.exe to someone who has never used a developer tool?"
 
 If not, keep improving it.
 
 The user should only have to:
 
-1. download Voxora-Setup-x64.exe
+1. download SonaBar-Setup-x64.exe
 2. install
 3. launch
 4. finish onboarding
@@ -2093,4 +2093,4 @@ START NOW.
 
 First inspect the entire repository, current git status and existing architecture.
 
-Then begin implementing Voxora systematically and continue until a releasable Windows build exists.
+Then begin implementing SonaBar systematically and continue until a releasable Windows build exists.

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-labelledby="sonabar-mark-title sonabar-mark-desc">
+  <title id="sonabar-mark-title">SonaBar</title>
+  <desc id="sonabar-mark-desc">Seven rounded white waveform bars on a transparent background.</desc>
+  <g fill="#F7F5F1">
+    <rect x="256" y="474" width="44" height="76" rx="22"/>
+    <rect x="336" y="386" width="44" height="250" rx="22"/>
+    <rect x="412" y="256" width="44" height="510" rx="22"/>
+    <rect x="488" y="344" width="44" height="336" rx="22"/>
+    <rect x="568" y="430" width="44" height="162" rx="22"/>
+    <rect x="644" y="344" width="44" height="336" rx="22"/>
+    <rect x="724" y="474" width="44" height="76" rx="22"/>
+  </g>
+</svg>

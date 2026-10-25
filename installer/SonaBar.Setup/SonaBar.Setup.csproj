@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+ <PropertyGroup><OutputType>WinExe</OutputType><UseWPF>true</UseWPF><AssemblyName>SonaBar-Setup-x64</AssemblyName><ApplicationIcon>../../resources/SonaBar.ico</ApplicationIcon><ApplicationManifest>../../src/SonaBar.App/app.manifest</ApplicationManifest></PropertyGroup>
+ <ItemGroup Condition="Exists('../../dist/SonaBar-Portable-x64.zip')"><EmbeddedResource Include="../../dist/SonaBar-Portable-x64.zip" LogicalName="SonaBar.Payload.zip"/></ItemGroup>
+</Project>

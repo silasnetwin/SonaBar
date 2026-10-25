@@ -42,7 +42,7 @@ if (Test-Path -LiteralPath $Destination) { Remove-Item -LiteralPath $Destination
 New-Item -ItemType Directory -Force $Destination | Out-Null
 & robocopy $runtime $Destination /E /R:2 /W:1 /NFL /NDL /NJH /NJS /NP | Out-Null
 if ($LASTEXITCODE -ge 8) { throw "The embedded Qwen runtime could not be copied (robocopy exit code $LASTEXITCODE)." }
-Copy-Item -LiteralPath (Join-Path $root 'src/Voxora.Transcription/Qwen/qwen_sidecar.py') -Destination (Join-Path $Destination 'qwen_sidecar.py') -Force
+Copy-Item -LiteralPath (Join-Path $root 'src/SonaBar.Transcription/Qwen/qwen_sidecar.py') -Destination (Join-Path $Destination 'qwen_sidecar.py') -Force
 $licenseSource = Join-Path $root 'resources/licenses/qwen'
 if (Test-Path -LiteralPath $licenseSource) {
     $licenseTarget = Join-Path (Join-Path $Destination 'licenses') 'qwen'

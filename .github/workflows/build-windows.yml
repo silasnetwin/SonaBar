@@ -19,9 +19,9 @@ jobs:
         run: ./build.ps1 -Configuration Release
       - uses: actions/upload-artifact@v4
         with:
-          name: SineFlow-Windows-x64
+          name: SonaBar-Windows-x64
           path: |
-            dist/SineFlow-Setup-x64.exe
-            dist/SineFlow-Portable-x64.zip
+            dist/SonaBar-Setup-x64.exe
+            dist/SonaBar-Portable-x64.zip
             dist/SHA256SUMS.txt
             artifacts/tests.trx

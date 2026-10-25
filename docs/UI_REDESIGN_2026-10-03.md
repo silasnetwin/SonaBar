@@ -1,12 +1,12 @@
-# SineFlow UI and reliability pass — 3 October 2026
+# SonaBar UI and reliability pass — 3 October 2026
 
 ## Reference and design
 
-The [WhisperBar product site](https://whisperbar.pro/) informed the visual direction: generous whitespace, strong headings, quiet green accents, clear primary actions and short explanations. SineFlow keeps its own identity, copy, icon and native Windows layout. No WhisperBar assets or source code were copied.
+The [WhisperBar product site](https://whisperbar.pro/) informed the visual direction: generous whitespace, strong headings, quiet green accents, clear primary actions and short explanations. SonaBar keeps its own identity, copy, icon and native Windows layout. No WhisperBar assets or source code were copied.
 
 The WPF window now has a task-first sidebar, a clear page header, a focused home screen, consistent panels and controls, a visible status area and a persistent save action on settings pages. Rarely used pages sit under More. Light and dark themes use the same hierarchy. The selection editor has a scrollable, resizable layout; the separate writing assistant now has a clear input, instruction and result flow.
 
-The sidebar now uses the owner's original SineFlow logo instead of a placeholder glyph. `resources/SineFlow-Original.png` is the preserved input. `scripts/update-sineflow-logo.ps1` changes only the outer corners of the canvas, then creates the app and installer icon sizes from that source.
+The title bar and installer now use the SonaBar waveform mark. `resources/SonaBar.svg` is the vector master; `resources/SonaBar-mark.svg` is the transparent variant. `scripts/update-sonabar-logo.ps1` renders the seven PNG sizes and the multi-size ICO from that vector, so the app, taskbar and installer icons stay in sync. The earlier raster `SonaBar-Original.png` is no longer part of the source tree.
 
 ## Bugs found and fixed
 
@@ -21,6 +21,6 @@ The sidebar now uses the owner's original SineFlow logo instead of a placeholder
 
 The full test suite passes (105 tests). Release build reports no warnings or errors. Theme tests construct every page in light and dark mode, check contrast, and render screenshots in `artifacts/ui-review/`; the main pages are also rendered at 100%, 125%, 150% and 200% scale. Home, Dictation and Files were inspected at the 780 × 580 minimum window size. The file-export regression test checks that an existing export survives and a cancelled draft is removed.
 
-The portable package passed its isolated smoke test: tray created, settings rendered, ten catalog models found, four microphones detected, settings valid and controller idle. Portable ZIP and installer hashes match `dist/SHA256SUMS.txt`. Device-level checks still require hands-on verification: global shortcuts and text insertion in third-party apps, real microphone and meeting capture, mixed monitor DPI, and clean-machine installer behavior. The release remains unsigned until SNine Studios provides a signing certificate.
+The portable package passed its isolated smoke test: tray created, settings rendered, ten catalog models found, four microphones detected, settings valid and controller idle. Portable ZIP and installer hashes match `dist/SHA256SUMS.txt`. Device-level checks still require hands-on verification: global shortcuts and text insertion in third-party apps, real microphone and meeting capture, mixed monitor DPI, and clean-machine installer behavior. The release remains unsigned until SilasNet provides a signing certificate.
 
 The native inference smoke test also passed with reference audio, local speech recognition, local writing and translation, speaker embeddings, and PDF export. Its report is `artifacts/native-smoke-redesign.json`.

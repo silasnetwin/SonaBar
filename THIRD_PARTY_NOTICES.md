@@ -1,8 +1,8 @@
-# SineFlow third-party notices
+# SonaBar third-party notices
 
-SineFlow is an independent Windows application by SNine Studios. No WhisperBar code, branding, icons, or assets are included.
+SonaBar is an independent Windows application by SilasNet. It is not affiliated with, endorsed by, or connected to WhisperBar or its developer. The SonaBar name, icon and interface are original assets. No WhisperBar source code, application package or asset files are redistributed; the interface is inspired by the compact dictation-bar category, not a copy of WhisperBar.
 
-The `licenses` directory in the distribution contains upstream license texts. Native libraries remain separate and replaceable. SineFlow imposes no restriction on reverse engineering or replacing LGPL components for debugging modifications to those components.
+The `licenses` directory in the distribution contains upstream license texts. Native libraries remain separate and replaceable. SonaBar imposes no restriction on reverse engineering or replacing LGPL components for debugging modifications to those components.
 
 | Component | Purpose | License / source |
 |---|---|---|
@@ -34,14 +34,14 @@ The `licenses` directory in the distribution contains upstream license texts. Na
 
 ## FFmpeg source and replacement
 
-SineFlow invokes FFmpeg as a separate process. The `native` directory contains the LGPL shared build, not a GPL/nonfree build. Its DLLs can be replaced by compatible builds. The exact binary hash is pinned in `scripts/dependencies.json`. The full upstream build recipe and dependency source locations are available at https://github.com/BtbN/FFmpeg-Builds and https://github.com/BtbN/FFmpeg-Builds/tree/master/scripts.d. FFmpeg source revision: https://github.com/FFmpeg/FFmpeg/tree/330caae0c1. FFmpeg licensing documentation: https://ffmpeg.org/legal.html.
+SonaBar invokes FFmpeg as a separate process. The `native` directory contains the LGPL shared build, not a GPL/nonfree build. Its DLLs can be replaced by compatible builds. The exact binary hash is pinned in `scripts/dependencies.json`. The full upstream build recipe and dependency source locations are available at https://github.com/BtbN/FFmpeg-Builds and https://github.com/BtbN/FFmpeg-Builds/tree/master/scripts.d. FFmpeg source revision: https://github.com/FFmpeg/FFmpeg/tree/330caae0c1. FFmpeg licensing documentation: https://ffmpeg.org/legal.html.
 
 Before public distribution, retain the corresponding source and build recipes for this exact FFmpeg build alongside the release download, including enabled external library sources. This repository's development artifacts are unsigned; no public hosting or release publication is performed by the build script.
 
 ## Models
 
-Models are not embedded in the standard installer. Downloads use HTTPS and must match the byte size and SHA-256 digest in `src/Voxora.Models/catalog.json`. The model manager retains no Hugging Face account credentials. Model license texts are included even when model weights are downloaded later. The Qwen3-ASR bundle includes its embedded Python runtime, but its model weights are downloaded separately and are never committed to this repository.
+Models are not embedded in the standard installer. Downloads use HTTPS and must match the byte size and SHA-256 digest in `src/SonaBar.Models/catalog.json`. The model manager retains no Hugging Face account credentials. Model license texts are included even when model weights are downloaded later. The Qwen3-ASR bundle includes its embedded Python runtime, but its model weights are downloaded separately and are never committed to this repository.
 
 ## Build-only dependencies
 
-xUnit.net (Apache-2.0), Microsoft.NET.Test.Sdk (MIT), and the .NET SDK are used for building/testing and are not requirements for end users. Exact restored dependencies can be audited with `dotnet list Voxora.slnx package --include-transitive`.
+xUnit.net (Apache-2.0), Microsoft.NET.Test.Sdk (MIT), and the .NET SDK are used for building/testing and are not requirements for end users. Exact restored dependencies can be audited with `dotnet list SonaBar.slnx package --include-transitive`.

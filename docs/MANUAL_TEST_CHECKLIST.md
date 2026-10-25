@@ -22,6 +22,8 @@ For **Notepad, Word, Chrome, Edge, Discord, VS Code, JetBrains IDE, and Windows 
 - [ ] Closed target preserves the transcription; elevated app reports blocked insertion.
 - [ ] Per-app Enter is off by default. Enable only for the intended app, then verify it sends exactly once.
 - [ ] Switch fields and apps while inference runs; ensure original target handling is safe.
+- [ ] Roblox compatibility insertion: focus stays in the Roblox text field, no false failure is reported, and the result message is `Paste sent — check the app/target`. Record the speech-stop-to-paste latency.
+- [ ] Start a dictation with the button in the SonaBar window while a browser or editor is behind it. The app must restore that external window, insert there, and must not target SonaBar's own button.
 
 ## Audio and shortcuts
 - [ ] Toggle and push-to-talk, including a very short key press.

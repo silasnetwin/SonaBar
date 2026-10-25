@@ -19,7 +19,7 @@ if (params.detect_language) {
 ```
 
 The native bridge set `detect_language` whenever no language was chosen, so the request
-finished after the detection and `whisper_full_n_segments` stayed at zero. SineFlow's
+finished after the detection and `whisper_full_n_segments` stayed at zero. SonaBar's
 default setting is `Language = "auto"`, so a fresh installation recognised the language and
 then inserted nothing.
 
@@ -30,7 +30,7 @@ detected code and continues into the transcription.
 * Before: `{"language":"de","segments":[]}`
 * After: `{"language":"de","segments":[{"startMs":0,"endMs":4820,"text":" Ich magte am Montag …"}]}`
 
-`tests/Voxora.NativeSmoke` now transcribes the reference audio twice, once with a fixed
+`tests/SonaBar.NativeSmoke` now transcribes the reference audio twice, once with a fixed
 language and once with `auto`, and fails if the automatic run loses the text or reports a
 different language.
 
@@ -42,15 +42,15 @@ The trimmed dictation would have been played back as noise.
 
 The recorder itself was never affected, because it writes the raw device bytes and merges the
 result through `WaveFileWriter.CreateWaveFile16`. The new voice activity pass now uses the
-same `CreateWaveFile16` path, and `tests/Voxora.Tests/HardwareAndVoiceTests.cs` compares
+same `CreateWaveFile16` path, and `tests/SonaBar.Tests/HardwareAndVoiceTests.cs` compares
 every sample of a trimmed file with the source recording.
 
 ## What was added
 
 ### Automatic language, hardware and model profile
 
-`Voxora.Core/HardwareProfile.cs` holds the measured machine and the rules that act on it.
-`Voxora.WindowsIntegration/HardwareDetector.cs` reads it with real system calls: total and
+`SonaBar.Core/HardwareProfile.cs` holds the measured machine and the rules that act on it.
+`SonaBar.WindowsIntegration/HardwareDetector.cs` reads it with real system calls: total and
 free memory through `GlobalMemoryStatusEx`, the graphics adapter and its dedicated memory
 through DXGI, the acceleration runtimes by loading `vulkan-1.dll` and `nvcuda.dll`, and the
 free disk space of the data drive.
@@ -78,7 +78,7 @@ start with the automatic choice.
 
 ### Voice activity detection
 
-`Voxora.Core/SilenceTrim.cs` removes the leading and trailing silence of a finished
+`SonaBar.Core/SilenceTrim.cs` removes the leading and trailing silence of a finished
 recording. Only the outer edges are touched, a pause inside a sentence stays exactly where it
 was, and a recording is never shortened below 30 % of its length or by more than 90 %. The
 decision happens after the user stops talking, so a short silence never ends a recording.
@@ -118,13 +118,14 @@ edit still has to keep every number, name and time.
 
 ### The brand mark
 
-`resources/SineFlow.svg` is now the master of the icon set, together with
-`resources/SineFlow-mark.svg` for the transparent version. Both are hand written vector
-graphics with a `0 0 256 256` view box. `scripts/update-sineflow-logo.ps1` validates the
-markup, renders the vector with a headless Chromium browser and writes the seven PNG sizes
-and the multi size `.ico` that the application, the task bar and the installer use. The
-committed PNG and ICO files are generated from the vector, so the shapes can never drift
-apart.
+`resources/SonaBar.svg` is now the master of the icon set, together with
+`resources/SonaBar-mark.svg` for the transparent version. Both are hand written vector
+graphics with a `0 0 1024 1024` view box. The master uses seven rounded white waveform
+bars on a near-black-to-plum gradient; the mark keeps the bars transparent for use on dark
+surfaces. `scripts/update-sonabar-logo.ps1` validates the markup, renders the vector with a
+headless Chromium browser and writes the seven PNG sizes and the multi size `.ico` that the
+application, the task bar and the installer use. The committed PNG and ICO files are
+generated from the vector, so the shapes can never drift apart.
 
 The application ships both vector files next to the executable.
 
@@ -162,15 +163,15 @@ trained on. A dictation on a real microphone is still part of the manual test ch
 
 | Check | Result |
 |---|---|
-| `dotnet build Voxora.slnx -c Release` | passed, 0 warnings, 0 errors |
-| `dotnet test Voxora.slnx -c Release` | passed, 193 of 193 |
-| `tests/Voxora.NativeSmoke` | passed: speech, automatic language, writing model, translation into English, French and Chinese, German prompt, speaker embeddings, PDF export |
+| `dotnet build SonaBar.slnx -c Release` | passed, 0 warnings, 0 errors |
+| `dotnet test SonaBar.slnx -c Release` | passed, 193 of 193 |
+| `tests/SonaBar.NativeSmoke` | passed: speech, automatic language, writing model, translation into English, French and Chinese, German prompt, speaker embeddings, PDF export |
 | Application smoke test | passed: tray, settings, 12 catalogue models, 4 microphones, all 19 pages built and laid out without an error, then clean shutdown with exit code 0 |
 
 ## Open items
 
 * The processor topology API of Windows reports an inconsistent layout on this machine and
-  faults on the extended variant, so SineFlow reports the logical processor count and not
+  faults on the extended variant, so SonaBar reports the logical processor count and not
   the number of physical cores.
 * The language of a dictation is detected on every request. Remembering the detected
   language would remove the extra encoder pass, but it was left out because a wrong guess

@@ -8,7 +8,7 @@
 
 ## Tests
 
-- [ ] `dotnet test Voxora.slnx -c Release`
+- [ ] `dotnet test SonaBar.slnx -c Release`
 - [ ] `./build.ps1 -Configuration Release`
 - [ ] Native smoke test (only when audio, models or packaging changed)
 

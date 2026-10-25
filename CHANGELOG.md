@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to SineFlow are documented here. Versions follow
+All notable changes to SonaBar are documented here. Versions follow
 [Semantic Versioning](https://semver.org/); dates use ISO 8601.
 
 ## [Unreleased]
@@ -16,7 +16,7 @@ All notable changes to SineFlow are documented here. Versions follow
   downloads a pinned seven-file model bundle, verifies every file, and runs it in
   an isolated Python sidecar over a random per-launch Windows named pipe with
   mutual HMAC authentication. It supports 30 languages plus automatic detection,
-  uses no network listener, and maps SineFlow's `tl` code to the model's `fil`
+  uses no network listener, and maps SonaBar's `tl` code to the model's `fil`
   code. Native smoke and lifecycle probes now pass on CPU with the packaged
   runtime, including automatic detection, cancellation and sidecar restart.
 - **The Qwen runtime ships with the app.** `build.ps1` packages a pinned
@@ -35,7 +35,44 @@ All notable changes to SineFlow are documented here. Versions follow
 
 ### Fixed
 
-- **SineFlow now exits cleanly after the application smoke test.** The service
+- **Opaque game windows can receive dictation.** Target capture no longer
+  requires a UI Automation element. The explicit **Compatibility** profile now
+  pastes into the verified foreground window for games such as Roblox that
+  expose no text provider, instead of stopping with "Windows could not inspect
+  this field safely." Selection editing still requires an inspectable field.
+- **The Start button now targets the app behind SonaBar.** SonaBar remembers the
+  last external foreground window and restores it before capture when dictation
+  or selection editing starts from its own window. Starting a dictation from the
+  app no longer targets its own button and reports a false insertion failure.
+- **Chromium keeps its caret after the Start button.** Reactivating a browser
+  contenteditable can leave UI Automation focus on the editor while the DOM
+  focus falls back to the page body. When dictation starts from SonaBar, the
+  insertion service now clicks the stored caret (or the middle of an empty
+  field) and verifies foreground and keyboard focus again immediately before
+  SendInput, so Chrome and Claude receive the text instead of a SonaBar field.
+- **Browser page selections are not field selections.** Chromium can expose the
+  page-level selection through a contenteditable's TextPattern. SonaBar now
+  requires the selected text to occur inside the field's own content, so
+  selecting page text no longer opens the selection editor instead of starting
+  dictation.
+- **Browser editors receive the focused composer.** Target discovery now searches
+  the foreground window's own UI Automation tree for the focused `Edit` or
+  `Document` instead of trusting a stale global focus element. Claude and other
+  Chromium contenteditables are found reliably, and a delayed UI Automation value
+  update no longer causes a duplicate SendInput insertion.
+- **Focus restore survives Windows' foreground lock.** Before delivery SonaBar
+  attaches to the foreground thread and retries activation, with a window-switch
+  fallback. A browser or game behind SonaBar or its overlay no longer fails with
+  "Windows prevented restoring focus."
+- **Tray status updates no longer throw.** The tooltip now measures the full
+  `SonaBar · ` prefix before applying the 63-character Windows limit. The old
+  hard-coded prefix length was one character too long, so changing the status
+  could raise `ArgumentOutOfRangeException` and show a spurious error notice.
+- **Autostart is registered on first launch.** The per-user `Run` value is now
+  written during initialization as well as when settings are saved, so a fresh
+  install starts with the tray entry when "Launch at login" is enabled. Registry
+  errors are logged without preventing the app from starting.
+- **SonaBar now exits cleanly after the application smoke test.** The service
   container and the speech router both disposed the Qwen engine; the second
   disposal waited on an already disposed semaphore and could leave a hidden
   process behind. Engine disposal is now idempotent, the smoke test no longer
@@ -44,14 +81,21 @@ All notable changes to SineFlow are documented here. Versions follow
 
 ### Changed
 
-- **WhisperBar-style interface.** The shell now uses a light macOS-inspired
-  palette by default, a custom 44 px title bar with traffic lights, segmented
-  top tabs, white cards, green positive actions and a blue record control.
-  Native resize, snap and per-monitor DPI are preserved.
+- **WhisperBar-inspired interface.** The shell now uses a light palette by
+  default, a custom 44 px title bar with Windows minimise, maximise/restore and
+  close controls, segmented top tabs, white cards, green positive actions and a
+  blue record control. SonaBar is an independent SilasNet application and is
+  not affiliated with WhisperBar. Native resize, snap and per-monitor DPI are
+  preserved.
 - **Dictation delivery is verified end to end.** Native edit, UI Automation,
   Unicode and clipboard paths now confirm the text in the target; browser
   contenteditables are inspected through `TextPattern`, partial insertions are
   detected, and opaque editable targets no longer report a false failure.
+- **Game-window compatibility.** Applications such as Roblox that expose no
+  Windows text provider use the new **Compatibility** insertion profile. The
+  paste is sent to the focused game window and reported as “Paste sent — check
+  the app/target” instead of a false “could not insert” error; Windows still
+  offers no read-back there, so the game itself must show the result.
 - **Two-second dictation.** Balanced (`small`) is the default profile for new
   installations and the documented everyday choice; Maximum remains available
   for difficult audio and file transcription. The footer reports the measured
@@ -65,7 +109,7 @@ All notable changes to SineFlow are documented here. Versions follow
 ### Fixed
 
 - **The window no longer freezes while a dictation starts.** Inspecting the focused field
-  inside SineFlow itself made the automation thread and the interface thread wait for each
+  inside SonaBar itself made the automation thread and the interface thread wait for each
   other. A field that belongs to the program is now inspected on the interface thread;
   every other application is inspected on the dedicated automation thread with a hard
   timeout.
@@ -83,7 +127,7 @@ All notable changes to SineFlow are documented here. Versions follow
 
 - Native Windows title bar with a themed caption, border and window corner preference;
   the custom traffic-light controls were removed.
-- One palette for the whole program in `src/Voxora.App/Palette.cs`; dark is the default for
+- One palette for the whole program in `src/SonaBar.App/Palette.cs`; dark is the default for
   new installations, and an existing choice is preserved.
 - Blue brand mark instead of the previous green gradients.
 - Overview, Models and Settings pages compacted: no duplicate headline, equal-width entry
@@ -115,5 +159,5 @@ All notable changes to SineFlow are documented here. Versions follow
 
 ## [0.1.0] – 2026-09-28
 
-- First internal build of the SineFlow shell: dictation, history, models, meeting capture,
+- First internal build of the SonaBar shell: dictation, history, models, meeting capture,
   local rewriting, updater scaffolding.

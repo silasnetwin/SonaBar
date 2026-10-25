@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping make SineFlow better. This repository is private, so all work happens
+Thanks for helping make SonaBar better. This repository is private, so all work happens
 through the issue tracker and pull requests here.
 
 ## Before you start
@@ -14,8 +14,8 @@ through the issue tracker and pull requests here.
 ## Set up
 
 ```powershell
-git clone https://github.com/silasnetwin/SineFlow.git
-cd SineFlow
+git clone https://github.com/silasnetwin/SonaBar.git
+cd SonaBar
 git submodule update --init --recursive
 ./build.ps1 -Configuration Release
 ```
@@ -26,9 +26,9 @@ and CMake for `whisper.cpp` and `llama.cpp`.
 ## Making a change
 
 1. Describe the user-visible problem in an issue first. A reproduction beats a guess.
-2. Add a focused xUnit test next to the affected behaviour in `tests/Voxora.Tests`.
-3. Keep changes inside the owning module; platform code stays in `Voxora.WindowsIntegration`.
-4. Run `dotnet test Voxora.slnx -c Release` before opening the pull request.
+2. Add a focused xUnit test next to the affected behaviour in `tests/SonaBar.Tests`.
+3. Keep changes inside the owning module; platform code stays in `SonaBar.WindowsIntegration`.
+4. Run `dotnet test SonaBar.slnx -c Release` before opening the pull request.
 5. If you touched audio, models or packaging, run the native smoke test as well.
 
 ## Code style
@@ -36,7 +36,7 @@ and CMake for `whisper.cpp` and `llama.cpp`.
 - C# with nullable reference types, file-scoped namespaces, four spaces.
 - `PascalCase` for types and public members, `camelCase` for locals and private fields,
   `Async` suffix for asynchronous methods.
-- Colours only from `src/Voxora.App/Palette.cs`; styles use `DynamicResource`, never a
+- Colours only from `src/SonaBar.App/Palette.cs`; styles use `DynamicResource`, never a
   hard-coded brush.
 - User-facing text is plain English: short sentences, no jargon, no exclamation marks.
 

@@ -1,12 +1,12 @@
 name: Feature request
-description: Suggest a capability or an improvement for SineFlow.
+description: Suggest a capability or an improvement for SonaBar.
 title: "[Feature] "
 labels: ["enhancement"]
 body:
   - type: markdown
     attributes:
       value: |
-        SineFlow stays local, private and quiet. Please describe the problem before the solution.
+        SonaBar stays local, private and quiet. Please describe the problem before the solution.
   - type: textarea
     id: problem
     attributes:
@@ -17,7 +17,7 @@ body:
   - type: textarea
     id: idea
     attributes:
-      label: What would you like SineFlow to do?
+      label: What would you like SonaBar to do?
     validations:
       required: true
   - type: dropdown

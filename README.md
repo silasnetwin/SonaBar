@@ -1,282 +1,326 @@
-<p align="center">
-  <img src="docs/media/logo.png" width="88" height="88" alt="SineFlow">
-</p>
+<div align="center">
+  <a href="https://sonabar.silasnet.win"><img src="docs/media/logo.png" width="96" height="96" alt="SonaBar"></a>
 
-<h1 align="center">SineFlow</h1>
+  <h1>SonaBar</h1>
 
-<p align="center">
-  <strong>Speak naturally. Text follows.</strong><br>
-  Private, offline speech-to-text for Windows.
-</p>
+  <p><strong>Sprache zu Text. Privat. Offline.</strong></p>
 
-<p align="center">
-  <a href="../../releases/latest"><img alt="Latest release" src="https://img.shields.io/badge/release-0.1.3%20early%20access-5C93F0"></a>
-  <img alt="Platform" src="https://img.shields.io/badge/platform-Windows%2011%20x64-0E1116?logo=windows11&logoColor=white">
-  <img alt=".NET" src="https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white">
-  <img alt="Engine" src="https://img.shields.io/badge/speech-whisper.cpp%20%7C%20Parakeet%20%7C%20Qwen-5C93F0">
-  <img alt="Offline" src="https://img.shields.io/badge/cloud-none-171B21">
-  <img alt="Telemetry" src="https://img.shields.io/badge/telemetry-none-171B21">
-  <img alt="License" src="https://img.shields.io/badge/license-proprietary-6B7280">
-</p>
+  <p>Diktiere direkt in deine Windows-Apps – lokal auf deinem PC, ohne Cloud.</p>
 
-<p align="center">
-  <a href="../../releases/latest/download/SineFlow-Setup-x64.exe"><img alt="Download for Windows" src="https://img.shields.io/badge/Download-Installer%20(.exe)-5C93F0?style=for-the-badge&logo=windows&logoColor=white"></a>
-  <a href="../../releases/latest/download/SineFlow-Portable-x64.zip"><img alt="Portable ZIP" src="https://img.shields.io/badge/Portable-ZIP%20(.zip)-171B21?style=for-the-badge&logo=windows&logoColor=white"></a>
-</p>
+  <p>
+    <a href="https://github.com/silasnetwin/SonaBar/releases/latest"><img alt="Version 0.1.3 Early Access" src="https://img.shields.io/badge/version-0.1.3%20Early%20Access-5C93F0?style=flat-square"></a>
+    <img alt="Windows 11 x64" src="https://img.shields.io/badge/platform-Windows%2011%20x64-0E1116?style=flat-square&logo=windows11&logoColor=white">
+    <img alt="Lokal und offline" src="https://img.shields.io/badge/cloud-keine-171B21?style=flat-square">
+    <img alt="Keine Telemetrie" src="https://img.shields.io/badge/telemetrie-keine-171B21?style=flat-square">
+    <img alt="Proprietär" src="https://img.shields.io/badge/lizenz-propriet%C3%A4r-6B7280?style=flat-square">
+  </p>
 
-<p align="center">
-  <sub>Windows 11 x64 · no account required</sub>
-</p>
+  <p>
+    <a href="https://github.com/silasnetwin/SonaBar/releases/latest/download/SonaBar-Setup-x64.exe"><img alt="SonaBar für Windows herunterladen" src="https://img.shields.io/badge/Download-Installer%20(.exe)-5C93F0?style=for-the-badge&logo=windows&logoColor=white"></a>
+    <a href="https://github.com/silasnetwin/SonaBar/releases/latest/download/SonaBar-Portable-x64.zip"><img alt="SonaBar Portable herunterladen" src="https://img.shields.io/badge/Portable-ZIP%20(.zip)-171B21?style=for-the-badge&logo=windows&logoColor=white"></a>
+  </p>
+
+  <sub>Windows 11 x64 · Early Access · kein Konto erforderlich</sub>
+</div>
 
 <p align="center">
+  <a href="#funktionen">Funktionen</a> ·
+  <a href="#so-funktioniert-es">So funktioniert’s</a> ·
+  <a href="#datenschutz">Datenschutz</a> ·
+  <a href="#deine-sprache">Sprachen</a> ·
   <a href="#download">Download</a> ·
-  <a href="#features">Features</a> ·
-  <a href="#screenshots">Screenshots</a> ·
-  <a href="#how-it-works">How it works</a> ·
-  <a href="#build-from-source">Build</a> ·
   <a href="#faq">FAQ</a>
 </p>
 
+<a href="docs/media/overview.png"><img src="docs/media/overview.png" alt="SonaBar auf Windows 11" width="920"></a>
+
+<p align="center"><sub>SonaBar verwandelt Sprache in Text – dort, wo du gerade schreibst.</sub></p>
+
 ---
 
-SineFlow turns speech into text in any Windows application. Hold one shortcut, speak, and the words appear where your cursor is — transcribed on your own machine with [whisper.cpp](https://github.com/ggml-org/whisper.cpp), NVIDIA Parakeet through NeMo-Speech.cpp, or Qwen3-ASR. No account, no cloud, no telemetry, no network listener.
+SonaBar ist eine lokale Diktier-App für Windows. Du drückst einen Shortcut, sprichst einen Satz und der Text erscheint im aktiven Feld – in deinem Browser, in Office, im Editor, im Chat oder im Terminal. Die Spracherkennung läuft auf deinem Computer. Kein Konto, keine Cloud, keine Telemetrie.
 
 <p align="center">
-  <img src="docs/media/overview.png" alt="SineFlow running on Windows 11" width="900">
+  <a href="#diktat"><strong>Diktat</strong></a> ·
+  <a href="#text-verfeinern"><strong>Text verfeinern</strong></a> ·
+  <a href="#mehr-als-diktat"><strong>Mehr als Diktat</strong></a>
 </p>
 
-## Why SineFlow
+## So funktioniert es
 
-- **Offline by design.** Audio never leaves the computer. Models are downloaded once, verified against SHA-256 and reused.
-- **Native, not a web view.** A .NET 10 WPF shell with a macOS-style utility title bar, native resize and snap, per-monitor DPI handling and a non-activating overlay that never steals focus.
-- **One shortcut, everywhere.** Works in browsers, Office, editors, chat clients and terminals through UI Automation, clipboard fallback and Unicode input.
-- **Quiet.** A tray icon, a compact recording pill and nothing else until you need it.
+**Ein Shortcut. Drei Schritte.**
 
-## Download
-
-| | Package | Size | Notes |
-| --- | --- | --- | --- |
-| **Installer** | [`SineFlow-Setup-x64.exe`](../../releases/latest/download/SineFlow-Setup-x64.exe) | ~493 MB | Per-user install, Start Menu entry, uninstaller, optional autostart |
-| **Portable** | [`SineFlow-Portable-x64.zip`](../../releases/latest/download/SineFlow-Portable-x64.zip) | ~360 MB | Extract and run `SineFlow.App.exe`, no installation |
-| **Checksums** | [`SHA256SUMS.txt`](../../releases/latest/download/SHA256SUMS.txt) | 1 KB | Verify every download before running it |
-
-Both packages are self-contained: .NET, the native inference libraries and the Qwen Python runtime are included. Speech models are downloaded inside the app, not with the installer.
-
-> These links resolve to assets in this private repository, so downloading them requires an account with access.
-
-> **Early access.** 0.1.3 is an unsigned development build. Signed releases and automatic update verification are prepared but not yet published.
-
-### Requirements
-
-| | |
-| --- | --- |
-| Operating system | Windows 11 x64. Windows 10 22H2 is best effort and not part of the test matrix. |
-| Memory | 4 GB for Base, 8 GB for Balanced or Qwen3-ASR-1.7B, 16 GB for the largest Whisper model |
-| Storage | ~1.1 GB for the app (including the 607 MB embedded Qwen runtime) plus 140 MB - 4.1 GB per speech model |
-| Microphone | Any WASAPI input device |
-| Internet | Only for the initial model download and optional updates |
-
-## Install and first run
-
-Run `SineFlow-Setup-x64.exe` for a per-user installation, or extract `SineFlow-Portable-x64.zip` and start `SineFlow.App.exe`. Neither needs administrator rights.
-
-1. **Choose a microphone.** SineFlow lists the available inputs and plays back a short test recording.
-2. **Pick a starting profile.** Fast, Balanced or Maximum. Balanced is the everyday choice; the hardware screen explains what your computer can handle.
-3. **Download one speech model.** The Models page shows size, license and acceleration for every entry, with resumable downloads and SHA-256 verification.
-4. **Press `Ctrl + Shift + Space`** in any text field and start speaking. Press it again to stop.
-
-First you will be offered a short onboarding; afterwards SineFlow lives in the tray.
+| 1. Starten | 2. Sprechen | 3. Text erscheint |
+| --- | --- | --- |
+| Drücke <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Space</kbd> in der App, in die du schreiben willst. | Sprich in deinem normalen Tempo. Die Aufnahme-Pille zeigt Dauer und Pegel. | Drücke den Shortcut erneut. SonaBar setzt den Text an die Cursorposition. |
 
 <p align="center">
-  <img src="docs/media/overlay.png" alt="Recording overlay" width="430">
+  <img src="docs/media/overlay.png" alt="SonaBar Aufnahme-Overlay" width="430">
 </p>
 
-## What's new in 0.1.3
+SonaBar merkt sich das zuletzt aktive externe Fenster. Wenn du die Diktat-Schaltfläche im SonaBar-Fenster benutzt, kehrt SonaBar vor der Aufnahme dorthin zurück – statt in sein eigenes Fenster zu schreiben.
 
-- **Window first.** The shell is visible in about 0.6 seconds; engine and model work starts afterwards.
-- **No silent download.** Start-up no longer pulls a large model in the background. A missing model is an explicit state with a direct link to Models.
-- **WhisperBar-style utility frame.** Traffic lights, segmented tabs and one palette, with native resize and snap and light as the default for new installations.
+## Funktionen
 
-Full details: [CHANGELOG.md](CHANGELOG.md) · [v0.1.3 release notes](../../releases/tag/v0.1.3).
+### Diktat
 
-## Features
+**Sprechen. Loslassen. Fertig.**
 
-### Dictation
-- Global hotkey with optional push-to-talk, configurable in Shortcuts.
-- Live recording overlay with elapsed time, microphone waveform and a stop button.
-- Verified insertion: the target field is inspected first, the text is delivered, then read back where Windows allows it. Password fields are refused, never filled.
-- Safe undo and retry from the completion menu, limited to text ranges SineFlow can verify.
-- Clipboard fallback that restores your previous clipboard contents.
+- Globaler Shortcut für jede Windows-App, optional als Push-to-Talk.
+- Nicht aktivierendes Aufnahme-Overlay mit Dauer, Wellenform und Stop-Schaltfläche.
+- Geprüfte Einfügewege: UI Automation, nativer Text, Unicode und Clipboard-Fallback.
+- Passwortfelder werden erkannt und abgelehnt – dort wird nie Text eingefügt.
+- Clipboard-Fallback stellt den vorherigen Inhalt wieder her.
+- Rückgängig und erneut versuchen, wo Windows den eingefügten Text prüfen kann.
+- Pro-App-Profile für Ton, Einfüge-Strategie, abschließendes Enter und Clipboard-Verhalten.
+- Die Fußzeile zeigt die gemessene Zeit vom Ende der Sprache bis zum bestätigten Einfügen.
 
-### Local writing
-- Optional local model for punctuation clean-up, conservative corrections and rewrites.
-- Spoken commands at the end of a dictation: bullet points, professional email, friendlier tone, spelling only, remove filler words, summary, lowercase, uppercase.
-- Translate into English, German, French, Spanish, Italian, Portuguese, Dutch, Polish, Chinese and more.
-- Numbers, names and clock times are protected during translation; suspicious results are discarded and the original text is kept.
+### Text verfeinern
 
-### Vocabulary and workflows
-- Personal dictionary with explicit *heard → intended* replacements.
-- Snippets with variables and exact triggers.
-- Per-application profiles: tone, insertion strategy, trailing Enter, clipboard mode.
-- Statistics for dictations, words, recorded time and average speed.
+**Deine Worte. Aufgeräumt.**
 
-### Files and meetings
-- Transcribe audio and video files in batches; export TXT, SRT and VTT.
-- Record meetings from microphone, system audio or both with incremental transcripts.
-- Optional local speaker separation, renaming and PDF/Markdown export.
+- Optionales lokales Schreibmodell für Zeichensetzung, vorsichtige Korrekturen und Umformulierungen.
+- Gesprochene Befehle am Ende eines Diktats: Aufzählung, professionelle E-Mail, freundlicherer Ton, nur Rechtschreibung, Füllwörter entfernen, Zusammenfassung, Klein- oder Großschreibung.
+- Übersetzen in Englisch, Deutsch, Französisch, Spanisch, Italienisch, Portugiesisch, Niederländisch, Polnisch, Chinesisch und weitere Sprachen.
+- Zahlen, Namen und Uhrzeiten werden beim Übersetzen geschützt. Verdächtige Ergebnisse werden verworfen, der Originaltext bleibt erhalten.
+- Persönliches Wörterbuch mit expliziten *gehört → gemeint*-Ersetzungen.
+- Snippets mit Variablen und exakten Auslösern.
 
-### Privacy
-- No account, no telemetry, no advertising identifiers, no cloud transcription.
-- No listening socket: the application never opens a local or remote port.
-- History is opt-in and can be disabled and securely cleared.
-- Every model download is pinned to a SHA-256 digest.
+### Mehr als Diktat
+
+**Nicht nur ein Satz.**
+
+- Audiodateien und Videos in Stapeln transkribieren und als TXT, SRT oder VTT exportieren.
+- Meetings über Mikrofon, Systemaudio oder beides aufnehmen, mit laufendem Transkript.
+- Optionale lokale Sprechertrennung, Umbenennung und Export als PDF oder Markdown.
+- History mit Suche, Aufbewahrungsregeln und optionalem Speichern.
+- Statistik über Diktate, Wörter, Aufnahmezeit und durchschnittliches Tempo.
+
+### Überall einsetzbar
+
+**Dein Text gehört dorthin, wo du schreibst.**
+
+SonaBar ist für Browser, Office, Editoren, Chat-Clients und Terminals gebaut. Standard-Textfelder werden zuerst über Windows UI Automation geprüft, danach über Clipboard oder Unicode eingefügt.
+
+Für Spiele und Oberflächen, die Windows keine Textprüfung erlauben – zum Beispiel **Roblox** – gibt es den **Compatibility**-Modus. SonaBar sendet den Paste an das verifizierte Vordergrundfenster und meldet exakt:
+
+> `Paste sent — check the app/target`
+
+Windows kann in solchen Fenstern nicht zurücklesen, ob der Text angekommen ist. Deshalb ist das eine ehrliche Bestätigung des Paste-Vorgangs und keine erfundene Erfolgsmeldung.
+
+### Für Windows gebaut
+
+**Nativ statt Web-View.**
+
+- .NET 10 WPF mit eigenem Windows-Rahmen, nativen Minimieren-, Maximieren- und Schließen-Schaltflächen.
+- Native Größenänderung, Snap und Per-Monitor-DPI.
+- Helle Oberfläche als Standard, Dark und „Windows folgen“ per Klick.
+- Tray-Icon, optionaler Start mit Windows und eine kompakte Aufnahme-Pille.
+- Portable ZIP oder per-user Installation – beides ohne Administratorrechte.
+
+### Deine Sprache
+
+**Mehrsprachig, je nach Modell.**
+
+| Engine | Sprachen | Hinweis |
+| --- | --- | --- |
+| **whisper.cpp** | breite Sprachabdeckung | lokal, CPU oder GPU je nach Build |
+| **Parakeet TDT 0.6B v3** | 25 europäische Sprachen | NeMo-Speech.cpp, CPU-verifiziert |
+| **Qwen3-ASR 1.7B** | 30 Sprachen + automatische Erkennung | lokaler Python-Sidecar über benannte Pipe |
+
+Die Sprachliste im Einstellungsfenster folgt dem gewählten Modell. Eine ältere, nicht unterstützte Sprache fällt automatisch auf die Spracherkennung zurück, statt ein Diktat scheitern zu lassen.
+
+## Datenschutz
+
+<div align="center">
+  <h3>Deine Stimme bleibt bei dir.</h3>
+  <p>Audio verlässt deinen Computer nicht. Die Transkription und das optionale Schreibmodell laufen lokal.</p>
+</div>
+
+- **Keine Cloud-Transkription.** Kein Konto, keine Telemetrie, keine Werbe-IDs.
+- **Kein Listening-Socket.** SonaBar öffnet keinen lokalen oder entfernten Port.
+- **Qwen bleibt isoliert.** Der Qwen-Sidecar läuft über eine zufällige, authentifizierte Windows Named Pipe und wird beim Beenden geschlossen.
+- **Modelle sind geprüft.** Jeder Download ist an einen SHA-256-Digest gebunden und wird vor dem Laden verifiziert.
+- **History ist optional.** Aufbewahrung und Löschen liegen bei dir.
+- **Passwortfelder bleiben leer.** SonaBar erkennt sie und verweigert das Einfügen.
 
 ## Screenshots
 
-| Dictation settings | Models |
+| Diktat-Einstellungen | Modelle |
 | --- | --- |
-| <img src="docs/media/dictation.png" width="460" alt="Dictation settings"> | <img src="docs/media/models.png" width="460" alt="Model manager"> |
+| <img src="docs/media/dictation.png" width="460" alt="Diktat-Einstellungen"> | <img src="docs/media/models.png" width="460" alt="Modellverwaltung"> |
 
-| Preferences | Light theme |
+| Einstellungen | Heller Modus |
 | --- | --- |
-| <img src="docs/media/settings.png" width="460" alt="Preferences"> | <img src="docs/media/light-mode.png" width="460" alt="Light theme"> |
+| <img src="docs/media/settings.png" width="460" alt="Einstellungen"> | <img src="docs/media/light-mode.png" width="460" alt="Heller Modus"> |
 
-Light is the default. Dark and *follow Windows* are one click away, and both palettes share the same contrast rules.
+## Download
 
-## How it works
+<p align="center">
+  <a href="https://github.com/silasnetwin/SonaBar/releases/latest/download/SonaBar-Setup-x64.exe"><img alt="Installer herunterladen" src="https://img.shields.io/badge/Installer-SonaBar--Setup--x64.exe-5C93F0?style=for-the-badge&logo=windows&logoColor=white"></a>
+  <a href="https://github.com/silasnetwin/SonaBar/releases/latest/download/SonaBar-Portable-x64.zip"><img alt="Portable ZIP herunterladen" src="https://img.shields.io/badge/Portable-SonaBar--Portable--x64.zip-171B21?style=for-the-badge&logo=windows&logoColor=white"></a>
+</p>
 
-```
-Microphone ──► WASAPI capture ──► silence trim ──► local speech engine
-                                                   (whisper.cpp / Parakeet / Qwen)
-                                                        │
-                                   text pipeline ◄──────┘
-                    (dictionary, commands, translation, casing)
-                                                        │
-                     UI Automation ──► clipboard / Unicode insertion
-```
+| Paket | Inhalt | Größe |
+| --- | --- | --- |
+| **Installer** | [`SonaBar-Setup-x64.exe`](https://github.com/silasnetwin/SonaBar/releases/latest/download/SonaBar-Setup-x64.exe) | ca. 493 MB |
+| **Portable** | [`SonaBar-Portable-x64.zip`](https://github.com/silasnetwin/SonaBar/releases/latest/download/SonaBar-Portable-x64.zip) | ca. 360 MB |
+| **Prüfsummen** | [`SHA256SUMS.txt`](https://github.com/silasnetwin/SonaBar/releases/latest/download/SHA256SUMS.txt) | wenige KB |
 
-| Layer | Responsibility |
+Beide Pakete sind self-contained: .NET, die nativen Inferenz-Bibliotheken und die Qwen-Python-Laufzeit sind enthalten. Sprachmodelle werden erst in der App heruntergeladen, nicht mit dem Installer ausgeliefert.
+
+> **Early Access.** 0.1.3 ist ein unsignierter Entwicklungsbuild. Signierte Releases und die automatische Update-Verifizierung sind vorbereitet, aber noch nicht veröffentlicht.
+>
+> **Hinweis zum Repository.** Das Repository ist derzeit privat. Die Release-Downloads sind für GitHub-Konten mit Zugriff erreichbar. Für eine öffentliche Produktseite müssen Repository oder Download-Host freigegeben werden.
+
+### Systemvoraussetzungen
+
+| | |
 | --- | --- |
-| `Voxora.Core` | Settings, readiness states, text pipeline, hardware profiles |
-| `Voxora.Audio` | WASAPI capture, resampling, ducking |
-| `Voxora.Transcription` | whisper.cpp bridge, Parakeet C ABI adapter, authenticated Qwen Python sidecar, engine routing |
-| `Voxora.Enhancement` | Local writing model (llama.cpp) |
-| `Voxora.Models` | Catalogue, verified downloads, integrity |
-| `Voxora.WindowsIntegration` | Hotkeys, focus and field inspection, insertion, tray |
-| `Voxora.Storage` | SQLite history, atomic settings |
-| `Voxora.App` | WPF shell, overlay, pages, updates |
+| Betriebssystem | Windows 11 x64. Windows 10 22H2 ist Best Effort und nicht Teil der Testmatrix. |
+| Arbeitsspeicher | 4 GB für Base, 8 GB für Balanced oder Qwen3-ASR-1.7B, 16 GB für das größte Whisper-Modell |
+| Speicherplatz | ca. 1,1 GB für die App inklusive Qwen-Laufzeit, plus 140 MB bis 4,1 GB pro Sprachmodell |
+| Mikrofon | jedes WASAPI-Eingabegerät |
+| Internet | nur für den ersten Modell-Download und optionale Updates |
 
-The UI never waits on another application: field inspection runs on a dedicated automation thread with a hard timeout, and a field inside SineFlow is inspected on the interface thread instead, so a busy target can neither freeze the window nor stall a dictation.
+### Installation und erster Start
 
-## Build from source
+1. **Installer starten** oder das Portable ZIP entpacken und `SonaBar.App.exe` öffnen. Administratorrechte sind nicht nötig.
+2. **Mikrofon wählen.** SonaBar listet die Eingänge und bietet eine kurze Testaufnahme an.
+3. **Profil wählen.** Fast, Balanced oder Maximum. Balanced ist die Alltagsempfehlung; die Hardware-Seite erklärt, was dein Rechner leistet.
+4. **Modell herunterladen.** Die Modellseite zeigt Größe, Lizenz und Beschleunigung. Downloads sind fortsetzbar und werden per SHA-256 geprüft.
+5. **Shortcut drücken.** <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Space</kbd> in einem Textfeld, sprechen, nochmal drücken.
 
-Requirements: .NET 10 SDK, Visual Studio 2022 with the C++ desktop workload and CMake for the native inference libraries.
+Nach dem ersten Start bietet SonaBar ein kurzes Onboarding an. Danach lebt die App im Tray.
 
-```powershell
-git clone https://github.com/silasnetwin/SineFlow.git
-cd SineFlow
-git submodule update --init --recursive
+## Was ist neu in 0.1.3
 
-# Build, test, publish and package (portable ZIP + installer)
-./build.ps1 -Configuration Release
+- **Fenster zuerst.** Die Oberfläche erscheint nach etwa 0,6 Sekunden; Engine- und Modellarbeit startet danach.
+- **Kein stiller Download.** Ein fehlendes Modell ist ein sichtbarer Zustand mit direktem Link zur Modellseite.
+- **Compatibility-Modus für Spiele.** Roblox und andere nicht inspizierbare Fenster erhalten den Paste, ohne falschen „Could not insert“-Fehler.
+- **Windows-Rahmen und helle Oberfläche.** Eigene Titelleiste, segmentierte Tabs und eine gemeinsame Farbwelt für Light, Dark und hohen Kontrast.
+- **Fokus-Rückgabe.** SonaBar merkt sich das zuletzt aktive externe Fenster, damit Diktate aus dem App-Fenster im richtigen Ziel landen.
 
-# Or step by step
-.tools/dotnet/dotnet build Voxora.slnx -c Release
-.tools/dotnet/dotnet test  Voxora.slnx -c Release
-```
-
-The release build writes `dist/SineFlow-Portable-x64.zip`, `dist/SineFlow-Setup-x64.exe` and `dist/SHA256SUMS.txt`. It also downloads and installs the pinned embedded CPython runtime and Qwen Python dependencies into `dist/SineFlow/qwen`; the Qwen model weights remain a separate verified download.
-
-### Native inference check
-
-The smoke test transcribes public reference audio with the real models and prints a JSON report:
-
-```powershell
-.tools/dotnet/dotnet run --project tests/Voxora.NativeSmoke -c Release -- .tools/jfk.wav artifacts/native-smoke.json
-```
-
-Parakeet and Qwen use the same harness:
-
-```powershell
-.tools/dotnet/dotnet run --project tests/Voxora.NativeSmoke -c Release -- .tools/jfk.wav artifacts/parakeet-smoke.json --model=parakeet-tdt-0.6b-v3 --speech-only
-
-$env:SINEFLOW_QWEN_PYTHON="$PWD/dist/SineFlow/qwen/python.exe"
-$env:SINEFLOW_QWEN_SIDECAR="$PWD/dist/SineFlow/qwen/qwen_sidecar.py"
-.tools/dotnet/dotnet run --project tests/Voxora.NativeSmoke -c Release -- .tools/jfk.wav artifacts/qwen-smoke.json --model=qwen3-asr-1.7b --speech-only
-```
-
-The Qwen sidecar is launched with a random per-process named pipe and mutual HMAC authentication. It has no listening socket, loads the model with `local_files_only=True`, and is terminated when the app exits.
-
-### Repository layout
-
-```
-src/            application and modules
-tests/          xUnit suite and native smoke test
-installer/      per-user installer
-resources/      icons, brand vectors, third-party licenses
-scripts/        asset and dependency tooling
-docs/           design notes, verification and manual test matrix
-```
+Vollständige Änderungen: [CHANGELOG.md](CHANGELOG.md) · [Release v0.1.3](https://github.com/silasnetwin/SonaBar/releases/tag/v0.1.3)
 
 ## Status
 
-| Area | State |
+| Bereich | Stand |
 | --- | --- |
-| Dictation, insertion, history, snippets, file transcription | Stable |
-| Meeting capture, speaker separation, PDF export | Stable |
-| Local writing models, translation, spoken commands | Stable |
-| Parakeet (NeMo-Speech.cpp) | Runtime bundled; model downloads on demand; verified on CPU (25 European languages) |
-| Qwen3-ASR 1.7B | Runtime bundled; model downloads on demand; verified on CPU with 30 languages plus automatic detection |
-| Code signing, update feed | Prepared, not published |
+| Diktat, Einfügen, History, Snippets, Dateien | Early Access, im Alltag nutzbar |
+| Meetings, Sprechertrennung, PDF-Export | Early Access; Qualität hängt von der Aufnahme ab |
+| Parakeet TDT 0.6B v3 | Runtime enthalten; Modell auf Abruf; auf CPU verifiziert |
+| Qwen3-ASR 1.7B | Runtime enthalten; Modell auf Abruf; auf CPU verifiziert |
+| Roblox und undurchsichtige Fenster | Compatibility-Paste ohne Rücklesen; das Spiel muss das Ergebnis zeigen |
+| Signierung und Update-Feed | vorbereitet, nicht veröffentlicht |
 
-Known limits are documented in [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md). Device and application checks live in [docs/MANUAL_TEST_CHECKLIST.md](docs/MANUAL_TEST_CHECKLIST.md).
+Bekannte Grenzen stehen in [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md). Geräte- und App-Checks stehen in [docs/MANUAL_TEST_CHECKLIST.md](docs/MANUAL_TEST_CHECKLIST.md).
 
 ## FAQ
 
-**Does audio leave the computer?**
-No. Capture, transcription and the optional writing model run on the local machine. There is no account system, no telemetry and no listening socket.
+**Verlässt mein Audio den Computer?**
+Nein. Aufnahme, Transkription und das optionale Schreibmodell laufen lokal. Es gibt kein Konto, keine Telemetrie und keinen Listening-Socket.
 
-**Which model should I start with?**
-Balanced. It pairs Whisper small with the everyday profile and fits 8 GB machines. Base is the choice for 4 GB systems and slower hardware; large-v3 is for maximum accuracy on 16 GB machines.
+**Brauche ich Internet?**
+Nur für den ersten Modell-Download und optionale Updates. Danach funktioniert das Diktat offline.
 
-**Does SineFlow type into password fields?**
-No. Password fields are recognised and refused; no text is inserted there.
+**Welches Modell soll ich nehmen?**
+Balanced ist die Alltagsempfehlung und passt auf 8-GB-Rechner. Base ist die Wahl für 4 GB und langsamere Hardware; large-v3 ist für maximale Genauigkeit auf 16-GB-Rechnern gedacht.
 
-**Can I run it without installing?**
-Yes. The portable ZIP contains the same build. Extract it and run `SineFlow.App.exe`; settings and history still live under `%LOCALAPPDATA%`.
+**Funktioniert SonaBar in Claude, Roblox und anderen Apps?**
+SonaBar ist für Browser, Office, Editoren, Chat-Clients und Terminals gebaut. Standard-Textfelder werden geprüft und anschließend befüllt. Bei Spielen wie Roblox, die Windows keine Textprüfung erlauben, sendet der Compatibility-Modus den Paste und meldet `Paste sent — check the app/target`; das Spiel muss den Text selbst anzeigen.
 
-**Which applications are supported?**
-Any Windows application with a standard text field: browsers, Office, editors, chat clients and terminals. Insertion uses UI Automation first, then clipboard and Unicode input where a field cannot be inspected.
+**Werden Passwortfelder befüllt?**
+Nein. Passwortfelder werden erkannt und abgelehnt.
 
-**Is there a Mac or Linux version?**
-No. The shell, hotkeys and insertion layer are Windows-specific.
+**Kann ich SonaBar ohne Installation nutzen?**
+Ja. Das Portable ZIP enthält denselben Build. Entpacken, `SonaBar.App.exe` starten; Einstellungen und History liegen weiterhin unter `%LOCALAPPDATA%\SilasNet\SonaBar`.
 
-## Documentation
+**Gibt es eine Mac- oder Linux-Version?**
+Nein. Oberfläche, Hotkeys und Einfüge-Schicht sind Windows-spezifisch.
 
-| Document | What it covers |
+**Was kostet SonaBar?**
+Die aktuelle Early-Access-Version ist ein unsignierter Entwicklungsbuild. Es gibt noch keine veröffentlichte Preisliste. Preise und Signierung werden erst mit einem stabilen Release veröffentlicht.
+
+**Steht SonaBar in Verbindung zu WhisperBar?**
+Nein. SonaBar ist ein unabhängiges Produkt von SilasNet. Es gibt keine Verbindung zu WhisperBar und keine gemeinsame Entwicklung.
+
+## Für Entwickler
+
+<details>
+<summary><strong>Aus dem Quellcode bauen</strong></summary>
+
+Voraussetzungen: .NET 10 SDK, Visual Studio 2022 mit C++-Desktop-Workload und CMake für die nativen Inferenz-Bibliotheken.
+
+```powershell
+git clone https://github.com/silasnetwin/SonaBar.git
+cd SonaBar
+git submodule update --init --recursive
+
+# Bauen, testen, veröffentlichen und packen (Portable ZIP + Installer)
+./build.ps1 -Configuration Release
+
+# Oder Schritt für Schritt
+.tools/dotnet/dotnet build SonaBar.slnx -c Release
+.tools/dotnet/dotnet test  SonaBar.slnx -c Release
+```
+
+Der Release-Build schreibt `dist/SonaBar-Portable-x64.zip`, `dist/SonaBar-Setup-x64.exe` und `dist/SHA256SUMS.txt`. Er lädt außerdem die gepinnte CPython-Laufzeit und die Qwen-Python-Abhängigkeiten nach `dist/SonaBar/qwen`; die Qwen-Modellgewichte bleiben ein separater, geprüfter Download.
+
+### Nativer Inferenz-Check
+
+```powershell
+.tools/dotnet/dotnet run --project tests/SonaBar.NativeSmoke -c Release -- .tools/jfk.wav artifacts/native-smoke.json
+```
+
+Parakeet und Qwen nutzen denselben Harness:
+
+```powershell
+.tools/dotnet/dotnet run --project tests/SonaBar.NativeSmoke -c Release -- .tools/jfk.wav artifacts/parakeet-smoke.json --model=parakeet-tdt-0.6b-v3 --speech-only
+
+$env:SONABAR_QWEN_PYTHON="$PWD/dist/SonaBar/qwen/python.exe"
+$env:SONABAR_QWEN_SIDECAR="$PWD/dist/SonaBar/qwen/qwen_sidecar.py"
+.tools/dotnet/dotnet run --project tests/SonaBar.NativeSmoke -c Release -- .tools/jfk.wav artifacts/qwen-smoke.json --model=qwen3-asr-1.7b --speech-only
+```
+
+Der Qwen-Sidecar wird mit einer zufälligen Named Pipe pro Prozess und gegenseitiger HMAC-Authentifizierung gestartet. Er hat keinen Listening-Socket, lädt das Modell mit `local_files_only=True` und wird beim Beenden der App beendet.
+
+### Repository-Aufbau
+
+```text
+src/            Anwendung und Module
+tests/          xUnit-Suite und nativer Smoke-Test
+installer/      per-user Installer
+resources/      Icons, Markenvektoren, Lizenzen
+scripts/        Asset- und Dependency-Tooling
+docs/           Design, Verifikation und manuelle Testmatrix
+```
+
+</details>
+
+## Dokumentation
+
+| Dokument | Inhalt |
 | --- | --- |
-| [CHANGELOG.md](CHANGELOG.md) | Release history and user-visible changes |
-| [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md) | Implemented features and known gaps |
-| [docs/MANUAL_TEST_CHECKLIST.md](docs/MANUAL_TEST_CHECKLIST.md) | Device, installer and application checks |
-| [SECURITY.md](SECURITY.md) | Private vulnerability reporting |
-| [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) | Licenses of bundled components |
+| [CHANGELOG.md](CHANGELOG.md) | Versionshistorie und sichtbare Änderungen |
+| [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md) | Umgesetzte Funktionen und bekannte Lücken |
+| [docs/MANUAL_TEST_CHECKLIST.md](docs/MANUAL_TEST_CHECKLIST.md) | Geräte-, Installer- und App-Checks |
+| [SECURITY.md](SECURITY.md) | Privater Meldeweg für Sicherheitslücken |
+| [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) | Lizenzen der enthaltenen Komponenten |
 
-## Contributing
+## Sicherheit
 
-This repository is private. Bug reports and suggestions belong in the issue tracker; please read [CONTRIBUTING.md](CONTRIBUTING.md) first.
+Bitte öffne für ein Sicherheitsproblem kein öffentliches Issue. Der private Meldeweg steht in [SECURITY.md](SECURITY.md).
 
-## Security
+## Lizenz
 
-Please do not open a public issue for a security problem. See [SECURITY.md](SECURITY.md) for the private reporting route.
+SonaBar ist proprietäre Software von SilasNet. Alle Rechte vorbehalten. Siehe [LICENSE](LICENSE).
 
-## License
-
-SineFlow is proprietary software by SNine Studios. All rights reserved. See [LICENSE](LICENSE).
-
-Bundled third-party components keep their own licenses: whisper.cpp, NeMo-Speech.cpp, llama.cpp, .NET, NAudio, SQLite, PDFsharp, sherpa-onnx, WeSpeaker, CPython, PyTorch and Transformers. The full attribution list is in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and `resources/licenses/`.
+Enthaltene Drittanbieter-Komponenten behalten ihre eigenen Lizenzen: whisper.cpp, NeMo-Speech.cpp, llama.cpp, .NET, NAudio, SQLite, PDFsharp, sherpa-onnx, WeSpeaker, CPython, PyTorch und Transformers. Die vollständige Attribution steht in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) und unter `resources/licenses/`.
 
 ---
 
-<p align="center">
-  <sub>Built for Windows · Made by SNine Studios</sub>
-</p>
+<div align="center">
+  <p><strong>SonaBar</strong> · ein Produkt von <a href="https://sonabar.silasnet.win">SilasNet</a></p>
+  <p><sub>Für Windows gebaut · Early Access 0.1.3 · kein Konto · keine Cloud · keine Telemetrie</sub></p>
+</div>

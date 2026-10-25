@@ -1,0 +1,1 @@
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><AssemblyName>SonaBar.Updater</AssemblyName></PropertyGroup><ItemGroup><ProjectReference Include="../SonaBar.Core/SonaBar.Core.csproj" /></ItemGroup><ItemGroup></ItemGroup></Project>

@@ -1,19 +1,19 @@
 # Repository Guidelines
 
-SineFlow is the product name and SNine Studios is the publisher. Ship production behavior only: no fake models, progress, settings, or UI controls. Keep core workflows local first, private by default, telemetry-free, and compatible with existing settings whenever possible. Whisper inference uses direct `whisper.cpp` v1.9.4; Parakeet uses the official direct NeMo-Speech.cpp C ABI; Qwen ASR must remain in an authenticated Windows named-pipe sidecar with no network listener. Never commit downloaded model binaries. Add tests for critical behavior and never silently remove an existing feature.
+SonaBar is the product name and SilasNet is the publisher. Ship production behavior only: no fake models, progress, settings, or UI controls. Keep core workflows local first, private by default, telemetry-free, and compatible with existing settings whenever possible. Whisper inference uses direct `whisper.cpp` v1.9.4; Parakeet uses the official direct NeMo-Speech.cpp C ABI; Qwen ASR must remain in an authenticated Windows named-pipe sidecar with no network listener. Never commit downloaded model binaries. Add tests for critical behavior and never silently remove an existing feature.
 
 ## Project Structure & Module Organization
 
-SineFlow is a native Windows application targeting .NET 10. Source projects live in `src/`: `Voxora.App` contains the WPF shell and pages; `Voxora.Core` contains contracts, settings, and text processing; the remaining projects isolate audio capture, transcription, enhancement, storage, Windows integration, models, meetings, and updates. Keep platform specific code in its owning module.
+SonaBar is a native Windows application targeting .NET 10. Source projects live in `src/`: `SonaBar.App` contains the WPF shell and pages; `SonaBar.Core` contains contracts, settings, and text processing; the remaining projects isolate audio capture, transcription, enhancement, storage, Windows integration, models, meetings, and updates. Keep platform specific code in its owning module.
 
-Tests are in `tests/Voxora.Tests` (xUnit) and `tests/Voxora.NativeSmoke` (real local inference smoke test). Installer code is in `installer/Voxora.Setup`; icons and licenses are under `resources/`. Release outputs belong in `dist/` and temporary verification artifacts in `artifacts/`.
+Tests are in `tests/SonaBar.Tests` (xUnit) and `tests/SonaBar.NativeSmoke` (real local inference smoke test). Installer code is in `installer/SonaBar.Setup`; icons and licenses are under `resources/`. Release outputs belong in `dist/` and temporary verification artifacts in `artifacts/`.
 
 ## Build, Test, and Development Commands
 
 - `./build.ps1 -Configuration Release` restores, builds, tests, publishes, and packages the portable ZIP and installer.
 - `./build.ps1 -Configuration Release -UpdateFeed https://updates.example.com/releases.json` also embeds the production update feed in the release package.
-- `.tools/dotnet/dotnet test Voxora.slnx` runs the xUnit suite after the local .NET 10 SDK is available.
-- `.tools/dotnet/dotnet run --project tests/Voxora.NativeSmoke -c Release -- .tools/jfk.wav artifacts/native-smoke.json` verifies bundled native inference with reference audio.
+- `.tools/dotnet/dotnet test SonaBar.slnx` runs the xUnit suite after the local .NET 10 SDK is available.
+- `.tools/dotnet/dotnet run --project tests/SonaBar.NativeSmoke -c Release -- .tools/jfk.wav artifacts/native-smoke.json` verifies bundled native inference with reference audio.
 
 ## Coding Style & Naming Conventions
 

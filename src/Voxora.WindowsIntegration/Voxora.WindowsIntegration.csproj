@@ -1,1 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><AssemblyName>SineFlow.WindowsIntegration</AssemblyName><UseWPF>true</UseWPF><UseWindowsForms>true</UseWindowsForms></PropertyGroup><ItemGroup><InternalsVisibleTo Include="Voxora.Tests" /></ItemGroup><ItemGroup><ProjectReference Include="../Voxora.Core/Voxora.Core.csproj" /></ItemGroup><ItemGroup></ItemGroup></Project>

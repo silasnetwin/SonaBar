@@ -1,6 +1,6 @@
 # Security policy
 
-SineFlow records speech locally and types into other applications, so a security report
+SonaBar records speech locally and types into other applications, so a security report
 is always taken seriously.
 
 ## Reporting a vulnerability
@@ -18,10 +18,10 @@ GitHub and ask for a private channel.
 
 Please include:
 
-- the SineFlow version from **Settings → About**,
+- the SonaBar version from **Settings → About**,
 - the Windows version and build,
 - whether the problem needs a specific application in the foreground,
-- any log excerpt from `%LOCALAPPDATA%\SNine Studios\SineFlow\Logs`, with personal text removed.
+- any log excerpt from `%LOCALAPPDATA%\SilasNet\SonaBar\Logs`, with personal text removed.
 
 ## What to expect
 
@@ -35,7 +35,7 @@ In scope:
 
 - insertion into the wrong window or into password fields,
 - clipboard handling that leaves content behind,
-- data written outside `%LOCALAPPDATA%\SNine Studios\SineFlow`,
+- data written outside `%LOCALAPPDATA%\SilasNet\SonaBar`,
 - network traffic the application is not supposed to make,
 - privilege escalation through the installer or the updater.
 

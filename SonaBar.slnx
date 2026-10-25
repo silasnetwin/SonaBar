@@ -1,0 +1,19 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/SonaBar.App/SonaBar.App.csproj" />
+    <Project Path="src/SonaBar.Audio/SonaBar.Audio.csproj" />
+    <Project Path="src/SonaBar.Core/SonaBar.Core.csproj" />
+    <Project Path="src/SonaBar.Enhancement/SonaBar.Enhancement.csproj" />
+    <Project Path="src/SonaBar.Meetings/SonaBar.Meetings.csproj" />
+    <Project Path="src/SonaBar.Models/SonaBar.Models.csproj" />
+    <Project Path="src/SonaBar.Storage/SonaBar.Storage.csproj" />
+    <Project Path="src/SonaBar.Transcription/SonaBar.Transcription.csproj" />
+    <Project Path="src/SonaBar.Updater/SonaBar.Updater.csproj" />
+    <Project Path="src/SonaBar.WindowsIntegration/SonaBar.WindowsIntegration.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SonaBar.Tests/SonaBar.Tests.csproj">
+      <Platform Project="x64" />
+    </Project>
+  </Folder>
+</Solution>

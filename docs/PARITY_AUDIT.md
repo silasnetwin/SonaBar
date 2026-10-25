@@ -1,10 +1,10 @@
-# SineFlow / WhisperBar – Funktions- und Qualitätsaudit
+# SonaBar / WhisperBar – Funktions- und Qualitätsaudit
 
-Stand: 3. Oktober 2026. Quellen: [WhisperBar](https://whisperbar.pro/), [Changelog 1.20.1 / 1.19.0](https://whisperbar.pro/changelog.html), vorhandener SineFlow-Code und beigefügter Screenshot. Anbieterangaben sind keine unabhängigen Qualitätsmessungen. Kein WhisperBar-Code oder Asset wird übernommen.
+Stand: 3. Oktober 2026. Quellen: [WhisperBar](https://whisperbar.pro/), [Changelog 1.20.1 / 1.19.0](https://whisperbar.pro/changelog.html), vorhandener SonaBar-Code und beigefügter Screenshot. Anbieterangaben sind keine unabhängigen Qualitätsmessungen. Kein WhisperBar-Code oder Asset wird übernommen.
 
 ## Ausgangszustand, vor diesem Pass
 
-| Bereich | WhisperBar laut offizieller Dokumentation | Voxora vor Änderungen | Entscheidung |
+| Bereich | WhisperBar laut offizieller Dokumentation | SonaBar vor Änderungen | Entscheidung |
 |---|---|---|---|
 | Global Dictation | Hotkey-Diktat | Vorhanden, Fehler vor Aufnahmestart teilweise stumm | Fehlerfluss und schnelle Rückmeldung korrigieren |
 | Live Recording Feedback | Kompakte Waveform | Echte WASAPI-Level, nichtaktivierende Pill | Behalten, Zugriff und Zustände verbessern |
@@ -30,7 +30,7 @@ Stand: 3. Oktober 2026. Quellen: [WhisperBar](https://whisperbar.pro/), [Changel
 
 ## UI-Befund
 
-Der Screenshot priorisiert zwei Abläufe: Diktieren und Auswahl verändern. Voxora besitzt die meisten Nebenfunktionen bereits, zeigt jedoch zu viele gleichrangige Settings und technische Modellinformationen. Die Änderung konzentriert sich auf eine kleine Auswahloberfläche, nutzerbezogene Einstellungen und kurzes Onboarding. Bestehende Themes, Qualitätsmodi, Casing und Sicherheitsprüfungen bleiben erhalten.
+Der Screenshot priorisiert zwei Abläufe: Diktieren und Auswahl verändern. SonaBar besitzt die meisten Nebenfunktionen bereits, zeigt jedoch zu viele gleichrangige Settings und technische Modellinformationen. Die Änderung konzentriert sich auf eine kleine Auswahloberfläche, nutzerbezogene Einstellungen und kurzes Onboarding. Bestehende Themes, Qualitätsmodi, Casing und Sicherheitsprüfungen bleiben erhalten.
 
 ## Engine-Prüfung
 
@@ -44,7 +44,7 @@ Der Abschlussvergleich wird nach der Implementierung unten ergänzt.
 
 ## Abschlussvergleich – tatsächlich implementierter Stand
 
-| Bereich | WhisperBar | Voxora nach diesem Pass | Nachweis / Einschränkung |
+| Bereich | WhisperBar | SonaBar nach diesem Pass | Nachweis / Einschränkung |
 |---|---|---|---|
 | Global Dictation | Ja | Ja | Nichtaktivierende Aufnahme-Pill, globaler Hotkey und Push-to-talk bleiben erhalten. |
 | Live Recording Feedback | Ja | Ja | Echte WASAPI-Pegelwerte steuern die Waveform; Preparing, Listening, Processing, Done und Error sind getrennte Zustände. |

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-labelledby="sonabar-title sonabar-desc">
+  <title id="sonabar-title">SonaBar</title>
+  <desc id="sonabar-desc">Seven rounded white waveform bars on a near-black to plum gradient.</desc>
+  <defs>
+    <linearGradient id="sonabarSurface" x1="0" y1="0" x2="0.92" y2="1">
+      <stop offset="0" stop-color="#050506"/>
+      <stop offset="0.52" stop-color="#0B0A0D"/>
+      <stop offset="0.78" stop-color="#1A1018"/>
+      <stop offset="1" stop-color="#321A2A"/>
+    </linearGradient>
+    <radialGradient id="sonabarGlow" cx="0.72" cy="0.88" r="0.72">
+      <stop offset="0" stop-color="#4A2338" stop-opacity="0.52"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#sonabarSurface)"/>
+  <rect width="1024" height="1024" fill="url(#sonabarGlow)"/>
+  <g fill="#F7F5F1">
+    <rect x="256" y="474" width="44" height="76" rx="22"/>
+    <rect x="336" y="386" width="44" height="250" rx="22"/>
+    <rect x="412" y="256" width="44" height="510" rx="22"/>
+    <rect x="488" y="344" width="44" height="336" rx="22"/>
+    <rect x="568" y="430" width="44" height="162" rx="22"/>
+    <rect x="644" y="344" width="44" height="336" rx="22"/>
+    <rect x="724" y="474" width="44" height="76" rx="22"/>
+  </g>
+</svg>

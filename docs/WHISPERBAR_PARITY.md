@@ -1,8 +1,8 @@
 # WhisperBar parity audit — 3 October 2026 (updated 23 October 2026)
 
-Sources: [current product page](https://whisperbar.pro/) and [full public changelog through 1.20.1](https://whisperbar.pro/changelog.html), checked on 3 October 2026. WhisperBar descriptions below are public claims, not independently reproduced behavior. SineFlow status is based on repository inspection and the tests stated below. “Implemented” does not mean equal accuracy or polish.
+Sources: [current product page](https://whisperbar.pro/) and [full public changelog through 1.20.1](https://whisperbar.pro/changelog.html), checked on 3 October 2026. WhisperBar descriptions below are public claims, not independently reproduced behavior. SonaBar status is based on repository inspection and the tests stated below. “Implemented” does not mean equal accuracy or polish.
 
-| Feature | WhisperBar | SineFlow | Implementation | Tested | Notes |
+| Feature | WhisperBar | SonaBar | Implementation | Tested | Notes |
 |---|---|---|---|---|---|
 | Global dictation | Shortcut, waveform, cursor insertion | Implemented | Windows hotkey, WASAPI, whisper.cpp, guarded insertion | Unit and build | Physical microphone and external apps remain manual |
 | Default shortcut | ⌘⇧Space | Ctrl+Shift+Space | Existing default, custom value persisted | Unit | Windows equivalent |
@@ -22,12 +22,13 @@ Sources: [current product page](https://whisperbar.pro/) and [full public change
 | Files and folders | Audio/video and background batch | Implemented | FFmpeg-backed queue, picker/drop, TXT/SRT/VTT | Unit/build | Real long-file priority and all codecs untested |
 | Meetings | Mic/system/both, live text, speakers, notes, PDF | Partial | WASAPI loopback, segments, ONNX speaker embeddings, exports | Native smoke in prior pass | Multi-speaker quality and long meetings untested |
 | Per-app Return | Optional | Implemented | Application profile | Unit/build | Real target apps manual |
+| Opaque game windows | Paste-only compatibility | Implemented | Compatibility insertion profile, including a Roblox default | Unit/build | Paste cannot be read back; the game must show the result |
 | Clipboard | Configurable preservation | Implemented | Sequence-aware capture and restore | Unit | Rich target matrix manual |
 | Model downloads | Resume and fallback | Implemented | Partial download verification, installed model fallback | Unit/build | Interrupted network test manual |
 | Privacy | Local core, no telemetry | Implemented | Local models, optional history, temporary audio cleanup | Code audit | Optional external integrations are absent |
 | Diagnostics/help | Local logs and support details | Partial | T0–T11, model and delivery logs, copy summary | Code audit | Dedicated Help page absent |
 | Settings/tray/onboarding | Compact sidebar and utility surfaces | Partial | WPF sidebar, tray and onboarding | Build | Direct visual comparison not verified |
-| App icon | macOS app icon | Windows original | SineFlow multi-size ICO and PNG assets | Existing assets inspected | Windows integration requires clean install checks |
+| App icon | macOS app icon | Windows original | SonaBar multi-size ICO and PNG assets | Existing assets inspected | Windows integration requires clean install checks |
 
 ## This pass
 
@@ -37,11 +38,12 @@ Sources: [current product page](https://whisperbar.pro/) and [full public change
 - Added the Qwen3-ASR 1.7B engine as a pinned seven-file model bundle and an authenticated named-pipe Python sidecar. The model is loaded offline, the app maps `tl` to `fil`, and the sidecar supports warm, transcribe, cancel and unload requests.
 - Added the embedded CPython 3.12.15 runtime packaging step with exact PyTorch 2.14.1 CPU and Transformers 5.20.2 versions, runtime guards, and upstream license texts.
 - The language picker now follows the selected engine's capabilities, and a saved unsupported code falls back to automatic detection before dictation.
-- Fixed the automatic language setting. The native bridge asked whisper.cpp to detect the language only, and whisper.cpp returns right after the detection. With the default setting SineFlow recognised the language and then inserted nothing. The bridge now detects and transcribes in one call, and the native smoke test checks it.
+- Fixed the automatic language setting. The native bridge asked whisper.cpp to detect the language only, and whisper.cpp returns right after the detection. With the default setting SonaBar recognised the language and then inserted nothing. The bridge now detects and transcribes in one call, and the native smoke test checks it.
 - Added hardware detection and an automatic speech profile with the measured machine explained in plain words.
+- Added a foreground tracker and last-external-window restore so the Start button in SonaBar returns to the app behind it before target capture instead of targeting SonaBar's own button.
 - Added voice activity detection for the leading and trailing silence of a recording, without touching a pause inside a sentence.
 - Added the spoken formatting commands with examples in the settings. Casing runs without the writing model.
-- Rewrote the icon pipeline around a vector master in `resources/SineFlow.svg`.
+- Rewrote the icon pipeline around a vector master in `resources/SonaBar.svg`.
 - Fixed a settings file that was reset in full when it contained a readable enum name.
 - Changed the recording gate and recognition path to accept an installed compatible Whisper model when the preferred one is absent.
 - Silent or accidental recordings now dismiss quietly.
@@ -49,4 +51,4 @@ Sources: [current product page](https://whisperbar.pro/) and [full public change
 
 ## Verification and remaining gaps
 
-After these edits, 193/193 automated tests pass. The full `./build.ps1 -Configuration Release` package command completed; the .NET build reported 0 warnings and 0 errors: `dist/SineFlow` is 1,064.6 MiB, the portable ZIP is 359.62 MiB and the installer is 492.95 MiB. The Parakeet native smoke test passed against the real model: the 11-second JFK clip transcribed in 1.11 seconds on CPU with the expected text, and the same run passed with the DLLs copied from the packaged `dist/SineFlow` output. Qwen3-ASR native smoke passed with the final `dist/SineFlow/qwen` runtime, including forced English and automatic detection (`en`) and two sidecar starts; the Qwen lifecycle probe passed warm, transcribe, cancel, reuse, unload and restart. No direct WhisperBar binary comparison, physical microphone, browser/Office insertion, multi-monitor/DPI, multi-speaker meeting or clean-machine installer test is claimed. Optional sounds, typed snippet expansion, a Help page, broader spoken intent and measured parity remain open.
+After these edits, 204/204 automated tests pass. The full `./build.ps1 -Configuration Release` package command is the release gate; the .NET build reports 0 warnings and 0 errors. Package sizes are recorded in the release notes rather than in this audit, so they cannot drift from the shipped artifacts. Native smoke tests must be run against the packaged output; the commands and latest results are in the release notes. No direct WhisperBar binary comparison, physical microphone, browser/Office insertion, multi-monitor/DPI, multi-speaker meeting or clean-machine installer test is claimed. Optional sounds, typed snippet expansion, a Help page, broader spoken intent and measured parity remain open.

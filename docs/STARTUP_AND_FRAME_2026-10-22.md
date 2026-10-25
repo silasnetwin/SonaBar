@@ -18,15 +18,15 @@ the readiness message.
 
 ### Fix
 
-- `src/Voxora.WindowsIntegration/AutomationProbe.cs` owns one dedicated STA thread with its own
+- `src/SonaBar.WindowsIntegration/AutomationProbe.cs` owns one dedicated STA thread with its own
   message pump. `TryRun<T>` executes the capture there with a hard timeout and abandons the
   worker if the target refuses to answer.
-- **A field inside SineFlow itself is inspected on the interface thread.** When the focused
+- **A field inside SonaBar itself is inspected on the interface thread.** When the focused
   window belongs to the running program, Windows describes it from this same process: the
   helper thread waits for the interface thread while the interface thread waits for the helper
   thread, and the window stops painting. `TextInsertionService.IsOwnWindow` detects that case and
   runs the inspection through `Dispatcher.Invoke`; every other application still goes through the
-  probe with its timeout. Reproduced by pressing the shortcut with the SineFlow window focused:
+  probe with its timeout. Reproduced by pressing the shortcut with the SonaBar window focused:
   before the fix the program stopped answering for the whole recording, afterwards the capture
   completes in ~30 ms and the window keeps responding.
 - `TextInsertionService` uses the probe with `CaptureTimeout = 900 ms` and reports a plain
@@ -50,7 +50,7 @@ an update looked like a hang. The download was not visible anywhere in the UI.
 - A missing model is now an explicit state (`ReadinessStage.NeedsModel`) with the label
   "No speech model yet" and the detail "Download a model." The Models page offers the download
   with its own progress, and nothing downloads by itself.
-- Stage timings are written to `%LOCALAPPDATA%\SNine Studios\SineFlow\Logs\diagnostics.log` as
+- Stage timings are written to `%LOCALAPPDATA%\SilasNet\SonaBar\Logs\diagnostics.log` as
   `event=Startup stage=<stage> elapsed_ms=<n>`.
 
 ### Measured (release build, 1240x820, models present)
@@ -66,7 +66,7 @@ an update looked like a hang. The download was not visible anywhere in the UI.
 
 ## 3. Readiness states
 
-`src/Voxora.Core/Readiness.cs` defines `ReadinessStage` (`Starting`, `Loading`, `NeedsModel`,
+`src/SonaBar.Core/Readiness.cs` defines `ReadinessStage` (`Starting`, `Loading`, `NeedsModel`,
 `Ready`, `Recording`, `Transcribing`, `ApplyingCommand`, `Inserting`, `Error`) with a label and
 an optional explanation. `AppController.Readiness` publishes it; the sidebar pill and the status
 line bind to it. The controller raises the change for `StageLabel` as well, so the footer text
@@ -77,12 +77,13 @@ stays usable.
 
 ## 4. Native window frame
 
-`ThemedWindow.UseNativeChrome()` keeps `WindowStyle.SingleBorderWindow`, so Windows draws
-minimise, maximise, close, resizing and the correct DPI behaviour. `WindowIntegration.ApplyTitleBar`
-colours the caption and the border through DWM (`DWMWA_USE_IMMERSIVE_DARK_MODE`,
-`DWMWA_CAPTION_COLOR`, `DWMWA_BORDER_COLOR`, `DWMWA_WINDOW_CORNER_PREFERENCE`) whenever the
-theme changes. The custom macOS-style traffic lights (`BuildChrome`) were deleted; the window
-title is a plain "SineFlow".
+`ThemedWindow.UseUtilityChrome()` uses a borderless `WindowChrome` with a 44 px caption and a
+7 px resize border, so Windows resize and snap stay native. The title bar is drawn in WPF:
+the SonaBar mark and wordmark sit on the left, followed by a settings button and Windows
+minimise, maximise/restore and close controls on the right. The earlier macOS-style traffic
+lights are gone. `WindowIntegration.ApplyTitleBar` still colours the DWM border and window
+corners (`DWMWA_USE_IMMERSIVE_DARK_MODE`, `DWMWA_CAPTION_COLOR`, `DWMWA_BORDER_COLOR`,
+`DWMWA_WINDOW_CORNER_PREFERENCE`) whenever the theme changes.
 
 ## 5. Overlay corners
 
@@ -94,16 +95,12 @@ clean in every state and the desktop shows through the corners.
 
 ## 6. Colour system
 
-`src/Voxora.App/Palette.cs` is the only place with colour values. `Palette.Dark` and
+`src/SonaBar.App/Palette.cs` is the only place with colour values. `Palette.Dark` and
 `Palette.Light` define the same keys; `PaletteService.Apply` writes them into the application
 resources and hands the window colour to the title bar. `Themes/Controls.xaml` contains geometry
-and styles only and refers to colours with `DynamicResource`. New installs start in the dark
+and styles only and refers to colours with `DynamicResource`. New installs start in the light
 palette; an existing choice (`Light`, `Dark`, `System`) is preserved. High contrast is applied on
-top of either palette.
-
-Dark values: canvas `#0E1116`, sidebar `#121519`, elevated card `#171B21`, line `#2A2F37`,
-primary text `#EDF1F7`, secondary text `#A4ADBA`, accent `#5C93F0`, accent text on light `#8FB9FF`.
-Green is gone from surfaces; the only strong colour is the accent.
+top of either palette. The current values in `Palette.cs` are authoritative.
 
 ## 7. Overview and settings layout
 
@@ -114,7 +111,7 @@ Green is gone from surfaces; the only strong colour is the accent.
 
 ## 8. Tests
 
-`tests/Voxora.Tests/StartupAndThemeTests.cs` covers the readiness states, the capture timeout,
+`tests/SonaBar.Tests/StartupAndThemeTests.cs` covers the readiness states, the capture timeout,
 the probe timeout and recovery, the palette contrast and key coverage, and the overlay window
 properties. `ThemeTests` now asserts the native frame instead of the old borderless window and
 the opaque overlay instead of a layered one.

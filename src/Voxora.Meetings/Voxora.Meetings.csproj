@@ -1,2 +1,0 @@
-<Project Sdk="Microsoft.NET.Sdk"><ItemGroup><ProjectReference Include="../Voxora.Core/Voxora.Core.csproj" /><ProjectReference Include="../Voxora.Audio/Voxora.Audio.csproj" /><ProjectReference Include="../Voxora.Transcription/Voxora.Transcription.csproj" /></ItemGroup><ItemGroup></ItemGroup><PropertyGroup><AssemblyName>SineFlow.Meetings</AssemblyName><UseWPF>true</UseWPF></PropertyGroup><ItemGroup><PackageReference Include="org.k2fsa.sherpa.onnx" Version="1.13.8"/><PackageReference Include="PDFsharp-WPF" Version="6.2.2"/></ItemGroup></Project>
-

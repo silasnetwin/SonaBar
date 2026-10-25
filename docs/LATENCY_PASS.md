@@ -1,6 +1,6 @@
 # Dictation latency pass — 3 October 2026
 
-The user's local timing log showed approximately 9 seconds from recognition start (T5) to transcript (T6) for a 41-second dictation using a custom `large-v3` model. The captured target was `ChatGPT.exe` with a generic UI Automation pane; SineFlow refused to claim insertion when focus could not be verified.
+The user's local timing log showed approximately 9 seconds from recognition start (T5) to transcript (T6) for a 41-second dictation using a custom `large-v3` model. The captured target was `ChatGPT.exe` with a generic UI Automation pane; SonaBar refused to claim insertion when focus could not be verified.
 
 Changes: start speech-model loading while recording; make CPU the default speech backend for `Automatic`; retain explicit GPU selection; attempt an OS-caret-based edit-provider lookup when UI Automation reports a generic pane; and require a measurable increase in inserted text occurrences before confirming clipboard or Unicode delivery. The original HWND/process and focus guards remain.
 
