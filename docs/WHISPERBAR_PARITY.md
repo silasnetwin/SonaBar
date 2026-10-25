@@ -34,7 +34,7 @@ Sources: [current product page](https://whisperbar.pro/) and [full public change
 ## This pass
 
 - Added an in-app Help page with quick start, delivery troubleshooting, privacy, free-software and diagnostics guidance. It is reachable under **About → Help** and is included in the page smoke test.
-- Confirmed that SonaBar remains free: no checkout, subscription, trial timer, licence server or fake purchase UI. Pricing is the one intentional parity difference from WhisperBar.
+- Confirmed that SonaBar remains free: no checkout, subscription, trial timer, licence server or fake purchase UI. Pricing, independent SonaBar branding and the Windows-native frame are intentional differences from WhisperBar.
 - Gemma 4 is not bundled yet. The public `unsloth/gemma-4-4b-it-GGUF` repository returns HTTP 401 without authenticated access, so SonaBar keeps its licensed Qwen writing models until an authorised, non-gated source is supplied.
 - Preserved the existing uncommitted insertion, waveform, selected-text, meeting and branding work.
 - Bundled the Parakeet TDT 0.6B v3 native runtime and verified it end to end on CPU. `build.ps1` now builds the pinned NeMo-Speech.cpp ASR C ABI, links vcpkg's separate Abseil flag archives, adds NeMo's include directory explicitly, copies the required DLL closure, and packages the OpenMP runtime needed by ggml.
