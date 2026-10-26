@@ -76,7 +76,7 @@ Last updated: 2026-10-26. This file describes the current release candidate; pre
 
 ## Unfinished / Known Issues
 
-- Live verification of the compact-first flow is still pending: normal startup, settings save/reload, workspace link, onboarding handoff, tray actions, close-to-tray, dark/high-contrast rendering, minimum-hold discard on a real key press, CPU-thread application and GPU-fallback display.
+- A temporary onboarded profile verified normal startup in the compact window at 430 x 660 and close-to-tray (the window hid and the process stayed alive). Settings save/reload, the workspace link, onboarding handoff, tray actions, dark/high-contrast rendering, minimum-hold discard on a real key press, CPU-thread application and GPU-fallback display still need manual verification.
 - Parakeet TDT currently ignores native speech contexts without a Flashlight decoder, so custom words do not improve Parakeet accuracy. The ABI path is exercised but no boosting effect is claimed; a decoder/lexicon integration would be required to change this.
 - Parakeet is batch-only and does not expose a detected language code through NeMo-Speech.cpp, so the history language remains `auto` when automatic selection is used.
 - German was verified with locally synthesised speech. A dictation on a real microphone is still part of the manual checklist.
