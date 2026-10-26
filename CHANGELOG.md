@@ -78,6 +78,11 @@ All notable changes to SonaBar are documented here. Versions follow
 
 ### Fixed
 
+- **Starting SonaBar again returns the compact window.** A second launch now
+  signals the running instance and exits silently instead of showing a blocking
+  "already running" message box. The warning remains only when the existing
+  process is a different build path, and the decision is covered by focused
+  tests.
 - **Short push-to-talk presses stay short.** The key-up timestamp is captured
   immediately, so a slow microphone or model start cannot turn an accidental tap
   into a valid hold. The compact button also stops and inserts while recording

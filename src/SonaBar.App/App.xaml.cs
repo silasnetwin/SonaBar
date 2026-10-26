@@ -43,7 +43,10 @@ public partial class App : Application
             var existingPath=ExistingSonaBarPath(currentPath);
             SafeLog.WriteDiagnostic("SecondInstance",("requested_executable",currentPath),("existing_executable",existingPath ?? "unknown"));
             activation.Set();
-            if(!smoke)MessageBox.Show("SonaBar is already running"+(existingPath is null ? "." : " from:\n"+existingPath)+"\n\nQuit the existing instance before starting a different build.","SonaBar",MessageBoxButton.OK,MessageBoxImage.Information);
+            // Starting the installed app again is a normal way to bring the compact
+            // window back. Only warn when a second, different build is already running.
+            if(!smoke&&ShouldWarnAboutOtherInstance(existingPath,currentPath))
+                MessageBox.Show("SonaBar is already running from:\n"+existingPath+"\n\nQuit the existing instance before starting a different build.","SonaBar",MessageBoxButton.OK,MessageBoxImage.Information);
             Shutdown();
             return;
         }
@@ -160,6 +163,9 @@ public partial class App : Application
             Quit();
         }
     }
+    internal static bool ShouldWarnAboutOtherInstance(string? existingPath, string currentPath) =>
+        existingPath is not null && !string.Equals(existingPath, currentPath, StringComparison.OrdinalIgnoreCase);
+
     private static string? ExistingSonaBarPath(string currentPath)
     {
         try

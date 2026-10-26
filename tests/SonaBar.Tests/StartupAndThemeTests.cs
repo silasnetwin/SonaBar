@@ -60,6 +60,14 @@ public sealed class StartupAndThemeTests
         Assert.Equal("", new Readiness(ReadinessStage.Ready).Detail);
     }
 
+    [Theory]
+    [InlineData(@"C:\Apps\SonaBar\SonaBar.App.exe", @"C:\Apps\SonaBar\SonaBar.App.exe", false)]
+    [InlineData(@"C:\Apps\SonaBar\SonaBar.App.exe", @"c:\apps\sonabar\sonabar.app.exe", false)]
+    [InlineData(@"C:\Apps\SonaBar\SonaBar.App.exe", @"C:\Other\SonaBar.App.exe", true)]
+    [InlineData(null, @"C:\Apps\SonaBar\SonaBar.App.exe", false)]
+    public void OnlyDifferentBuildsWarnWhenSonaBarIsAlreadyRunning(string? existingPath, string currentPath, bool warn) =>
+        Assert.Equal(warn, global::SonaBar.App.App.ShouldWarnAboutOtherInstance(existingPath, currentPath));
+
     [Fact]
     public void FocusedFieldInspectionHasAHardLimit()
     {

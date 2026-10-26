@@ -659,7 +659,7 @@
             <tr><td><strong>Min Hold</strong></td><td>Nicht vorhanden.</td><td>0–2 s, Default 0 (bestehende Nutzer) / Vorschlag 0,3 s.</td><td>Verhindert versehentliche Modifier-Diktate.</td></tr>
             <tr><td><strong>Tiefe Features</strong></td><td>Files, Meetings, History, Snippets, Writing, Apps, Privacy, Help.</td><td>Unverändert über „Open workspace“ erreichbar.</td><td>Kein Feature entfernen; Tests bleiben.</td></tr>
             <tr><td><strong>Barrierefreiheit</strong></td><td>WPF, AutomationProperties, Themes.</td><td>Im Compact-Fenster genauso: Fokus, Namen, High Contrast, DPI.</td><td>Nicht dem Tkinter-Look opfern.</td></tr>
-            <tr><td><strong>Tests</strong></td><td>236/236, Package-Smoke 20/20.</td><td>Plus Settings-Migration, Backend-Matrix, Thread-Clamp, Compact-State, Hotword-Pfad.</td><td>Build/Test/Package/Smoke bleiben Gate.</td></tr>
+            <tr><td><strong>Tests</strong></td><td>240/240, Package-Smoke 20/20.</td><td>Plus Settings-Migration, Backend-Matrix, Thread-Clamp, Compact-State, Hotword-Pfad.</td><td>Build/Test/Package/Smoke bleiben Gate.</td></tr>
           </tbody>
         </table>
       </div>
@@ -688,7 +688,7 @@
         <div class="phase"><div class="num">1</div><div><h3>CPU, Threads, Hotwords, Min Hold</h3><p><code>ProcessingDevice</code> (Auto/CPU/GPU), <code>CpuThreads</code> (0=Auto), <code>MinHoldMs</code>. Backend-Matrix pro Engine. Parakeet-C-ABI prüfen: Threads nur anbieten, wenn die Runtime sie wirklich setzt; sonst effektiven Wert read-only zeigen. <code>CustomWords</code> als <code>speech_context</code> an Parakeet geben. Tests.</p><div class="exit">Exit: CPU ist sichtbar, ehrlich und getestet; der Speech-Context-Pfad ist geprüft, aber TDT-Boosting bleibt ohne Flashlight-Decoder als nicht unterstützt dokumentiert.</div></div></div>
         <div class="phase"><div class="num">2</div><div><h3>Compact-Shell + Settings-Dialog</h3><p>Neue <code>CompactWindow</code>-Ansicht mit Status, Metadaten, letzter Transkription, Aktionen. <code>SettingsDialog</code> mit Provider/Engine, Modell, Processing, Threads, Sprache, Modus, Hotkey, Min Hold, Modell-Download. „Open workspace“ öffnet die bestehende App. Keine Seite entfernen.</p><div class="exit">Exit: Standardstart ist kompakt; alle Features erreichbar; Themes/Accessibility grün.</div></div></div>
         <div class="phase"><div class="num">3</div><div><h3>Deutsches Parakeet evaluieren</h3><p>Spike für sherpa-onnx/ONNX int8 (<code>flozen1981/parakeet-primeline-onnx</code>, ~640 MB, CC-BY-4.0). Nur wenn Runtime, Lizenz, Paketgröße und Windows x64 passen: 30 deutsche Diktate gegen Parakeet v3, WER/Eigennamen/Latenz/RAM. Nur bei messbarem Gewinn als optionaler Download; nie bundlen.</p><div class="exit">Exit: belegte Entscheidung „nehmen“ oder „nicht nehmen“ — kein Bauchgefühl.</div></div></div>
-        <div class="phase"><div class="num">4</div><div><h3>Politur &amp; Release-Gate</h3><p>Settings-Migration, leere Zustände, echte Fehlermeldungen, Tray, Update-Manifest, Doku/Changelog. Build, 236 Tests, Package, Smoke, manuelle Checkliste (Notepad, Browser, Passwortfeld, Elevated, Spiel, Roblox-String).</p><div class="exit">Exit: Release-Paket mit nachvollziehbaren Hashes und ohne Regression.</div></div></div>
+        <div class="phase"><div class="num">4</div><div><h3>Politur &amp; Release-Gate</h3><p>Settings-Migration, leere Zustände, echte Fehlermeldungen, Tray, Update-Manifest, Doku/Changelog. Build, 240 Tests, Package, Smoke, manuelle Checkliste (Notepad, Browser, Passwortfeld, Elevated, Spiel, Roblox-String).</p><div class="exit">Exit: Release-Paket mit nachvollziehbaren Hashes und ohne Regression.</div></div></div>
       </div>
 
       <div class="grid g2" style="margin-top:18px;align-items:start">
@@ -884,7 +884,7 @@ Liefere zuerst einen kurzen Plan mit den betroffenen Dateien und Tests, dann die
           <h3>Technik &amp; Release</h3>
           <ul class="checklist">
             <li><input type="checkbox"> <span><b>Build</b> ./build.ps1 -Configuration Release ohne Warnungen/Fehler.</span></li>
-            <li><input type="checkbox"> <span><b>Tests</b> 236 / 236 grün; neue Tests für Migration, Matrix, Threads, CompactState, Hotword-Pfad.</span></li>
+            <li><input type="checkbox"> <span><b>Tests</b> 240 / 240 grün; neue Tests für Migration, Matrix, Threads, CompactState, Hotword-Pfad.</span></li>
             <li><input type="checkbox"> <span><b>Package-Smoke</b> 20/20 Seiten; pagesFailed leer.</span></li>
             <li><input type="checkbox"> <span><b>Native Smoke</b> für Whisper, Parakeet und Qwen ASR.</span></li>
             <li><input type="checkbox"> <span><b>Manuell</b>: Notepad, Browser, Passwortfeld, Elevated, Spiel, Roblox-String.</span></li>
