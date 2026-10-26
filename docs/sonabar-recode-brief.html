@@ -496,8 +496,8 @@
           <div class="chips"><span class="chip red">@egonotto4172</span><span class="chip red">@Kommentar_Roboter</span><span class="chip red">@petera.4707</span></div>
         </div>
         <div class="card blue">
-          <h4>Hotwords sind Pflicht</h4>
-          <p class="small">@maikschmitz3518 misst 95 s Testaudio mit 25 Eigennamen: Parakeet 12/25 ohne, 17/25 mit Hotwords; Whisper small 14/25 → 19/25. Parakeet bleibt am schnellsten, verliert aber ohne Wortliste deutlich.</p>
+          <h4>Hotwords sind Pflicht – TDT-Boosting fehlt noch</h4>
+          <p class="small">@maikschmitz3518 misst 95 s Testaudio mit 25 Eigennamen: Parakeet 12/25 ohne, 17/25 mit Hotwords; Whisper small 14/25 → 19/25. Parakeet bleibt am schnellsten, verliert aber ohne Wortliste deutlich. SonaBar übergibt den Speech-Context, die aktuelle TDT-Runtime ignoriert ihn jedoch ohne Flashlight-Decoder; daraus wird kein Genauigkeitsgewinn abgeleitet.</p>
           <div class="chips"><span class="chip blue">Namen</span><span class="chip blue">Fachbegriffe</span><span class="chip blue">WER</span></div>
         </div>
         <div class="card green">
@@ -654,12 +654,12 @@
             <tr><td><strong>Status</strong></td><td>Fußzeile, klein.</td><td>Große Statuskarte: Ready / Listening / Transcribing / Error.</td><td>An <code>OperationMachine</code> binden, keine Fake-States.</td></tr>
             <tr><td><strong>Letzte Transkription</strong></td><td>Overview-Karte; nach Navigation weg.</td><td>Immer sichtbar im Compact-Fenster; Copy/Reuse.</td><td>Bestehendes <code>LastText</code> wiederverwenden.</td></tr>
             <tr><td><strong>Backend / CPU</strong></td><td>Advanced: Automatic / CPU / GPU; Parakeet hart CPU; keine Threads.</td><td>Settings: Processing (Auto/CPU/GPU), CPU threads, effektiver Backend-Hinweis.</td><td>Parakeet-C-ABI hat aktuell kein Thread-Feld; nicht faken.</td></tr>
-            <tr><td><strong>Modell</strong></td><td>Models-Seite; Parakeet TDT v3 q8 GGUF, 25 Sprachen.</td><td>„Fast CPU“ = Parakeet; optional deutscher Fine-Tune nach Spike; Hotwords.</td><td>ONNX-Modell braucht sherpa-onnx, nicht nur Katalog-Eintrag.</td></tr>
+            <tr><td><strong>Modell</strong></td><td>Models-Seite; Parakeet TDT v3 q8 GGUF, 25 Sprachen.</td><td>„Fast CPU“ = Parakeet; optional deutscher Fine-Tune nach Spike; Hotword-Pfad (TDT ignoriert Boosting ohne Flashlight-Decoder).</td><td>ONNX-Modell braucht sherpa-onnx, nicht nur Katalog-Eintrag.</td></tr>
             <tr><td><strong>Hotkey / Modus</strong></td><td>Shortcuts-Seite; Push-to-talk vorhanden.</td><td>Im Settings-Dialog sichtbar; Min Hold optional.</td><td>Keine bestehenden Defaults still ändern.</td></tr>
             <tr><td><strong>Min Hold</strong></td><td>Nicht vorhanden.</td><td>0–2 s, Default 0 (bestehende Nutzer) / Vorschlag 0,3 s.</td><td>Verhindert versehentliche Modifier-Diktate.</td></tr>
             <tr><td><strong>Tiefe Features</strong></td><td>Files, Meetings, History, Snippets, Writing, Apps, Privacy, Help.</td><td>Unverändert über „Open workspace“ erreichbar.</td><td>Kein Feature entfernen; Tests bleiben.</td></tr>
             <tr><td><strong>Barrierefreiheit</strong></td><td>WPF, AutomationProperties, Themes.</td><td>Im Compact-Fenster genauso: Fokus, Namen, High Contrast, DPI.</td><td>Nicht dem Tkinter-Look opfern.</td></tr>
-            <tr><td><strong>Tests</strong></td><td>223/223, Package-Smoke 20/20.</td><td>Plus Settings-Migration, Backend-Matrix, Thread-Clamp, Compact-State, Hotwords.</td><td>Build/Test/Package/Smoke bleiben Gate.</td></tr>
+            <tr><td><strong>Tests</strong></td><td>236/236, Package-Smoke 20/20.</td><td>Plus Settings-Migration, Backend-Matrix, Thread-Clamp, Compact-State, Hotword-Pfad.</td><td>Build/Test/Package/Smoke bleiben Gate.</td></tr>
           </tbody>
         </table>
       </div>
@@ -685,10 +685,10 @@
 
       <div class="card">
         <div class="phase"><div class="num">0</div><div><h3>Baseline messen &amp; guardrails</h3><p>Fixierte WAVs (2 s, 5 s, 10 s, 30 s), drei Runs, P50/P95 für Key-Release → Insert. Whisper small/turbo, Parakeet v3, Qwen ASR. RAM, VRAM, Threads, Modell-Ladezeit. Keine UI-Änderung.</p><div class="exit">Exit: reproduzierbare Zahlen + dokumentierte Messlücke.</div></div></div>
-        <div class="phase"><div class="num">1</div><div><h3>CPU, Threads, Hotwords, Min Hold</h3><p><code>ProcessingDevice</code> (Auto/CPU/GPU), <code>CpuThreads</code> (0=Auto), <code>MinHoldMs</code>. Backend-Matrix pro Engine. Parakeet-C-ABI prüfen: Threads nur anbieten, wenn die Runtime sie wirklich setzt; sonst effektiven Wert read-only zeigen. <code>CustomWords</code> als <code>speech_context</code> an Parakeet geben. Tests.</p><div class="exit">Exit: CPU ist sichtbar, ehrlich und getestet; Hotwords verbessern Namen.</div></div></div>
+        <div class="phase"><div class="num">1</div><div><h3>CPU, Threads, Hotwords, Min Hold</h3><p><code>ProcessingDevice</code> (Auto/CPU/GPU), <code>CpuThreads</code> (0=Auto), <code>MinHoldMs</code>. Backend-Matrix pro Engine. Parakeet-C-ABI prüfen: Threads nur anbieten, wenn die Runtime sie wirklich setzt; sonst effektiven Wert read-only zeigen. <code>CustomWords</code> als <code>speech_context</code> an Parakeet geben. Tests.</p><div class="exit">Exit: CPU ist sichtbar, ehrlich und getestet; der Speech-Context-Pfad ist geprüft, aber TDT-Boosting bleibt ohne Flashlight-Decoder als nicht unterstützt dokumentiert.</div></div></div>
         <div class="phase"><div class="num">2</div><div><h3>Compact-Shell + Settings-Dialog</h3><p>Neue <code>CompactWindow</code>-Ansicht mit Status, Metadaten, letzter Transkription, Aktionen. <code>SettingsDialog</code> mit Provider/Engine, Modell, Processing, Threads, Sprache, Modus, Hotkey, Min Hold, Modell-Download. „Open workspace“ öffnet die bestehende App. Keine Seite entfernen.</p><div class="exit">Exit: Standardstart ist kompakt; alle Features erreichbar; Themes/Accessibility grün.</div></div></div>
         <div class="phase"><div class="num">3</div><div><h3>Deutsches Parakeet evaluieren</h3><p>Spike für sherpa-onnx/ONNX int8 (<code>flozen1981/parakeet-primeline-onnx</code>, ~640 MB, CC-BY-4.0). Nur wenn Runtime, Lizenz, Paketgröße und Windows x64 passen: 30 deutsche Diktate gegen Parakeet v3, WER/Eigennamen/Latenz/RAM. Nur bei messbarem Gewinn als optionaler Download; nie bundlen.</p><div class="exit">Exit: belegte Entscheidung „nehmen“ oder „nicht nehmen“ — kein Bauchgefühl.</div></div></div>
-        <div class="phase"><div class="num">4</div><div><h3>Politur &amp; Release-Gate</h3><p>Settings-Migration, leere Zustände, echte Fehlermeldungen, Tray, Update-Manifest, Doku/Changelog. Build, 223+ Tests, Package, Smoke, manuelle Checkliste (Notepad, Browser, Passwortfeld, Elevated, Spiel, Roblox-String).</p><div class="exit">Exit: Release-Paket mit nachvollziehbaren Hashes und ohne Regression.</div></div></div>
+        <div class="phase"><div class="num">4</div><div><h3>Politur &amp; Release-Gate</h3><p>Settings-Migration, leere Zustände, echte Fehlermeldungen, Tray, Update-Manifest, Doku/Changelog. Build, 236 Tests, Package, Smoke, manuelle Checkliste (Notepad, Browser, Passwortfeld, Elevated, Spiel, Roblox-String).</p><div class="exit">Exit: Release-Paket mit nachvollziehbaren Hashes und ohne Regression.</div></div></div>
       </div>
 
       <div class="grid g2" style="margin-top:18px;align-items:start">
@@ -711,7 +711,7 @@
           <h3>Modell-Entscheidung</h3>
           <p class="small"><strong>Standard:</strong> Parakeet TDT 0.6B v3 q8 GGUF (714 MB, 25 Sprachen, CC-BY-4.0, NeMo-Speech.cpp, CPU). Kein Download nötig, wenn bereits installiert.</p>
           <p class="small"><strong>Optional:</strong> <code>flozen1981/parakeet-primeline-onnx</code> (640 MB, int8, CC-BY-4.0; Fine-Tune von primeline, Basis NVIDIA). Nur nach Runtime-Spike und deutschem Benchmark. Nicht bundlen, SHA-256 pinnen, Attribution in <code>THIRD_PARTY_NOTICES.md</code>.</p>
-          <p class="small"><strong>Fallback:</strong> Wenn der Spike scheitert, bleibt Parakeet v3 + Hotwords. Das ist ehrlicher als ein Katalog-Eintrag, der nicht läuft.</p>
+          <p class="small"><strong>Fallback:</strong> Wenn der Spike scheitert, bleibt Parakeet v3; TDT-Boosting ist derzeit ohne Flashlight-Decoder nicht verfügbar. Das ist ehrlicher als ein Katalog-Eintrag, der nicht läuft.</p>
         </div>
       </div>
     </div>
@@ -805,12 +805,12 @@ Das ist ein Shell-Rebuild, kein Logik-Rewrite. Keine bestehende Funktion still e
 
 # MODELLE
 - Standard: vorhandenes Parakeet TDT 0.6B v3 q8 GGUF (714 MB, 25 Sprachen, CC-BY-4.0, NeMo-Speech.cpp) als "Parakeet · fast CPU" beibehalten.
-- Hotwords: CustomWords als speech_context an Parakeet geben, sofern die C-ABI das unterstützt; Phrases begrenzen, leere Strings filtern, Boost konservativ; Tests für Namen.
+- Hotwords: CustomWords als speech_context an Parakeet geben, sofern die C-ABI das unterstützt; Phrases begrenzen, leere Strings filtern, Boost konservativ; Tests für Namen. Die aktuelle TDT-Runtime ignoriert den Kontext ohne Flashlight-Decoder; daraus wird kein Genauigkeitsgewinn abgeleitet.
 - Optionaler deutscher Fine-Tune: flozen1981/parakeet-primeline-onnx (int8 ONNX, ~640 MB, CC-BY-4.0; Fine-Tune von primeline auf Basis NVIDIA parakeet-tdt-0.6b-v3; sherpa-onnx, 4 Threads). Erst nach Runtime-Spike:
   1. sherpa-onnx/ONNX-Windows-x64 einbinden (C#-Binding oder native C-API), Paketgröße/Lizenz/AVX prüfen.
   2. 30 deutsche Diktate gegen Parakeet v3 benchmarken (WER, Eigennamen, P50/P95, RAM, Ladezeit).
   3. Nur bei messbarem Gewinn als optionalen Download anbieten; nie bundlen; Revision + SHA-256 pinnen; Attribution in THIRD_PARTY_NOTICES.md.
-- Wenn der Spike scheitert: keine Attrappe, kein Katalog-Eintrag; Entscheidung dokumentieren und Parakeet v3 + Hotwords behalten.
+- Wenn der Spike scheitert: keine Attrappe, kein Katalog-Eintrag; Entscheidung dokumentieren und Parakeet v3 ohne Boosting-Versprechen behalten.
 
 # ARCHITEKTUR
 - Bestehende Schichten behalten: SonaBar.App (WPF), Core (Settings/Contracts), Audio, Transcription, Models, Storage, WindowsIntegration, Enhancement, Meetings, Updater.
@@ -874,7 +874,7 @@ Liefere zuerst einen kurzen Plan mit den betroffenen Dateien und Tests, dann die
             <li><input type="checkbox"> <span><b>Threads sind ehrlich</b>: Whisper nutzt sie; Parakeet nur, wenn die Runtime sie setzt.</span></li>
             <li><input type="checkbox"> <span><b>Automatic erklärt</b> den effektiven Backend-Namen und den Grund.</span></li>
             <li><input type="checkbox"> <span><b>Min Hold</b> ist optional, validiert und verhindert versehentliche Modifier-Diktate.</span></li>
-            <li><input type="checkbox"> <span><b>Hotwords</b> verbessern Eigennamen nachweislich; keine leeren/überlangen Phrases.</span></li>
+            <li><input type="checkbox"> <span><b>Hotword-Pfad</b> ist getestet; TDT-Boosting ist ohne Flashlight-Decoder als nicht unterstützt dokumentiert; keine leeren/überlangen Phrases.</span></li>
             <li><input type="checkbox"> <span><b>Workspace</b> behält alle Seiten und Features; nichts still entfernt.</span></li>
             <li><input type="checkbox"> <span><b>Deutsches Parakeet</b> nur nach Benchmark; sonst dokumentierte Ablehnung.</span></li>
             <li><input type="checkbox"> <span><b>Keine Fake-Zustände</b>, keine Fake-Downloads, keine Fake-GPU, keine Fake-Threads.</span></li>
@@ -884,7 +884,7 @@ Liefere zuerst einen kurzen Plan mit den betroffenen Dateien und Tests, dann die
           <h3>Technik &amp; Release</h3>
           <ul class="checklist">
             <li><input type="checkbox"> <span><b>Build</b> ./build.ps1 -Configuration Release ohne Warnungen/Fehler.</span></li>
-            <li><input type="checkbox"> <span><b>Tests</b> 223+ / 223+ grün; neue Tests für Migration, Matrix, Threads, CompactState, Hotwords.</span></li>
+            <li><input type="checkbox"> <span><b>Tests</b> 236 / 236 grün; neue Tests für Migration, Matrix, Threads, CompactState, Hotword-Pfad.</span></li>
             <li><input type="checkbox"> <span><b>Package-Smoke</b> 20/20 Seiten; pagesFailed leer.</span></li>
             <li><input type="checkbox"> <span><b>Native Smoke</b> für Whisper, Parakeet und Qwen ASR.</span></li>
             <li><input type="checkbox"> <span><b>Manuell</b>: Notepad, Browser, Passwortfeld, Elevated, Spiel, Roblox-String.</span></li>

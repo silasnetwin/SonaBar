@@ -12,11 +12,21 @@ public sealed class WhisperEngine : ITranscriptionEngine
     private readonly SemaphoreSlim gate = new(1, 1);
     private IntPtr context;
     private string? loadedPath;
-    private static bool preferGpu = true;
-    private bool forceCpu;
+    private static bool preferGpu;
+    private static int configuredThreads;
+    private static ProcessingDevice configuredDevice = ProcessingDevice.Automatic;
+    /// <summary>The last backend that actually loaded, or null before the next load.</summary>
+    public static bool? UsingGpu { get; private set; }
     public event Action<string>? BackendNotice;
     public TranscriptionEngineCapabilities Capabilities => new(false, true, true, Languages.All.Keys.ToArray(), "whisper.cpp v1.9.4");
-    public static void ConfigureBackend(string backend) => preferGpu = backend == "GPU / accelerated";
+    /// <summary>Selects the processing device and the optional explicit CPU thread count.</summary>
+    public static void ConfigureBackend(ProcessingDevice device, int cpuThreads = 0)
+    {
+        if (configuredDevice != device) UsingGpu = null;
+        configuredDevice = device;
+        preferGpu = device == ProcessingDevice.Gpu;
+        configuredThreads = Math.Clamp(cpuThreads, 0, Math.Max(1, Environment.ProcessorCount));
+    }
 
     public async Task WarmAsync(string modelPath, CancellationToken cancellationToken)
     {
@@ -35,10 +45,10 @@ public sealed class WhisperEngine : ITranscriptionEngine
                 cancellationToken.ThrowIfCancellationRequested(); Load(modelPath);
                 var samples = Read16kMonoWave(waveFile, cancellationToken);
                 using var registration = cancellationToken.Register(() => Native.Cancel(context));
-                // Four threads leave modern desktop CPUs mostly idle during recognition.
-                // Reserve one logical processor for the shell/capture path, but allow enough
-                // parallelism for a dictation to complete as soon as recording stops.
-                var response = Native.Transcribe(context, samples, language, prompt, RecognitionThreadCount(Environment.ProcessorCount));
+                // Leave one logical processor for the shell and capture path unless the user
+                // selected an explicit thread count. This keeps a dictation responsive while
+                // still allowing enough parallelism for short recordings.
+                var response = Native.Transcribe(context, samples, language, prompt, RecognitionThreadCount(Environment.ProcessorCount, configuredThreads));
                 cancellationToken.ThrowIfCancellationRequested();
                 return ParseNativeResult(response, language);
             }, CancellationToken.None);
@@ -49,10 +59,18 @@ public sealed class WhisperEngine : ITranscriptionEngine
     public async Task UnloadAsync(CancellationToken cancellationToken) { await gate.WaitAsync(cancellationToken); try { Unload(); } finally { gate.Release(); } }
     private void Load(string modelPath)
     {
-        if (loadedPath == modelPath && context != IntPtr.Zero) return;
+        // A changed device resets UsingGpu to null in ConfigureBackend, so the next load
+        // replaces an already loaded model. A CPU fallback stays in place until then.
+        if (loadedPath == modelPath && context != IntPtr.Zero && (UsingGpu == false || UsingGpu == preferGpu)) return;
         Unload();
-        try { context = Native.Load(modelPath, preferGpu && !forceCpu); }
-        catch (Exception) when (preferGpu && !forceCpu) { forceCpu = true; context = Native.Load(modelPath, false); BackendNotice?.Invoke("GPU acceleration failed. Switched to CPU."); }
+        if (!preferGpu) { context = Native.Load(modelPath, false); UsingGpu = false; loadedPath = modelPath; return; }
+        try { context = Native.Load(modelPath, true); UsingGpu = true; }
+        catch (Exception)
+        {
+            context = Native.Load(modelPath, false);
+            UsingGpu = false;
+            BackendNotice?.Invoke("GPU acceleration failed. Switched to CPU.");
+        }
         loadedPath = modelPath;
     }
     private void Unload() { if (context != IntPtr.Zero) Native.Unload(context); context = IntPtr.Zero; loadedPath = null; }
@@ -65,7 +83,13 @@ public sealed class WhisperEngine : ITranscriptionEngine
         return samples.ToArray();
     }
     public void Dispose() { Unload(); gate.Dispose(); }
-    internal static int RecognitionThreadCount(int logicalProcessorCount) => Math.Clamp(logicalProcessorCount - 1, 1, 16);
+    internal static int RecognitionThreadCount(int logicalProcessorCount, int configuredThreadCount = 0)
+    {
+        var available = Math.Max(1, logicalProcessorCount);
+        return configuredThreadCount > 0
+            ? Math.Clamp(configuredThreadCount, 1, available)
+            : Math.Clamp(logicalProcessorCount - 1, 1, 16);
+    }
     internal static TranscriptionResult ParseNativeResult(string response, string requestedLanguage)
     {
         var native = JsonSerializer.Deserialize<NativeResult>(response, nativeJson) ?? throw new InvalidDataException("whisper.cpp returned an invalid transcription result.");

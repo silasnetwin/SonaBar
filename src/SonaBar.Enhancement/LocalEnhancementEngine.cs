@@ -10,7 +10,7 @@ public sealed class LocalEnhancementEngine : IEnhancementEngine
 {
     static LocalEnhancementEngine() => LLama.Native.NativeLibraryConfig.All.WithLogCallback((_,_)=>{}).WithCuda(false).WithVulkan(true).WithAutoFallback(true);
     private static bool preferGpu=true;
-    public static void ConfigureBackend(string backend)=>preferGpu=backend!="CPU";
+    public static void ConfigureBackend(ProcessingDevice device)=>preferGpu=device!=ProcessingDevice.Cpu;
     private readonly SemaphoreSlim gate = new(1, 1);
     private LLamaWeights? weights;
     private string? loadedPath;

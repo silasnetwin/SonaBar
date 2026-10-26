@@ -20,6 +20,7 @@ public partial class App : Application
     private ServiceProvider? services;
     private System.Windows.Forms.NotifyIcon? tray;
     private MainWindow? window;
+    private CompactWindow? compact;
     private AppController? controller;
     private bool quitting;
     private bool smoke;
@@ -74,19 +75,21 @@ public partial class App : Application
             ("build_id",typeof(App).Assembly.ManifestModule.ModuleVersionId.ToString("N")),
             ("timing_diagnostics",controller.Settings.DebugLogging));
         Theme.Apply(controller.Settings.Theme);
-        WhisperEngine.ConfigureBackend(controller.Settings.Backend);
-        LocalEnhancementEngine.ConfigureBackend(controller.Settings.Backend);
         try { services.GetRequiredService<AudioDucker>().Recover(); } catch (Exception error) { SafeLog.Write("VolumeRecovery", error); }
         Mark("services_ready");
-        window = new MainWindow(controller); MainWindow = window;
+        window = new MainWindow(controller);
+        window.OnboardingCompleted += ShowWindow;
+        compact = new CompactWindow(controller, ShowWorkspace);
+        MainWindow = smoke ? window : compact;
         var overlay = new RecordingOverlay(controller); controller.AttachOverlay(overlay);
         tray = new System.Windows.Forms.NotifyIcon { Icon = new System.Drawing.Icon(Path.Combine(AppContext.BaseDirectory, "SonaBar.ico")), Text = "SonaBar · Speech to Text", Visible = true };
         var menu = new System.Windows.Forms.ContextMenuStrip();
         void Item(string title, Action action) => menu.Items.Add(title, null, (_, _) => Dispatcher.Invoke(action));
         Item("SonaBar", ShowWindow); menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
         Item("Start Dictation", controller.ToggleDictation); Item("Edit Selected Text", controller.EditSelection);
-        Item("Transcribe File", () => { ShowWindow(); window.Navigate("Files"); }); Item("Meeting Mode", () => { ShowWindow(); window.Navigate("Meetings"); });
-        Item("History", () => { ShowWindow(); window.Navigate("History"); }); Item("Settings", ShowWindow);
+        Item("Transcribe File", () => ShowWorkspace("Files")); Item("Meeting Mode", () => ShowWorkspace("Meetings"));
+        Item("History", () => ShowWorkspace("History")); Item("Settings", ShowSettings);
+        Item("Open workspace", () => ShowWorkspace("Overview"));
         var pause = new System.Windows.Forms.ToolStripMenuItem("Pause SonaBar") { CheckOnClick = true }; pause.CheckedChanged += (_, _) => controller.Paused = pause.Checked; menu.Items.Add(pause);
         menu.Items.Add(new System.Windows.Forms.ToolStripSeparator()); Item("Quit", Quit);
         tray.ContextMenuStrip = menu; tray.MouseClick += (_, args) => { if (args.Button == System.Windows.Forms.MouseButtons.Left) Dispatcher.Invoke(ShowWindow); };
@@ -95,8 +98,14 @@ public partial class App : Application
         if(!smoke)controller.Initialize();
         if(!smoke&&controller.Settings.AutomaticUpdates)_=CheckForUpdatesAsync();
         SystemEvents.UserPreferenceChanged += PreferenceChanged;
-        if (!smoke&&(!controller.Settings.Onboarded || !e.Args.Contains("--tray"))) ShowWindow();
-        if (!controller.Settings.Onboarded) window.Navigate("Welcome");
+        if (!smoke && !controller.Settings.Onboarded)
+        {
+            compact?.Hide();
+            window.Show();
+            window.Navigate("Welcome");
+            window.Activate();
+        }
+        else if (!smoke && !e.Args.Contains("--tray")) ShowWindow();
         Mark("window_shown");
         // The models and the speech engine are prepared after the window exists. Nothing is
         // downloaded here, so the first start stays fast and a missing model is reported as
@@ -115,6 +124,21 @@ public partial class App : Application
                 catch(Exception error){failed.Add(page+":"+error.GetType().Name);}
             }
             window.Navigate("Overview");content.UpdateLayout();
+            void SaveElement(FrameworkElement element,string fileName,int width,int height)
+            {
+                element.Measure(new System.Windows.Size(width,height));element.Arrange(new Rect(0,0,width,height));element.UpdateLayout();
+                var bitmap=new System.Windows.Media.Imaging.RenderTargetBitmap(width,height,96,96,System.Windows.Media.PixelFormats.Pbgra32);
+                bitmap.Render(element);
+                var encoder=new System.Windows.Media.Imaging.PngBitmapEncoder();
+                encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bitmap));
+                using var stream=File.Create(Path.Combine(Brand.DataRoot,fileName));encoder.Save(stream);
+            }
+            // The compact window is the default shell, so the smoke test renders it and the
+            // compact settings too. A broken layout is visible without a screen recording.
+            if(compact is not null)SaveElement((FrameworkElement)compact.Content,"compact-shot.png",430,660);
+            var compactSettings=new SettingsDialog(controller,ShowWorkspace);
+            SaveElement((FrameworkElement)compactSettings.Content,"settings-shot.png",480,680);
+            SaveElement((FrameworkElement)compactSettings.Content,"settings-full-shot.png",480,900);
             // An optional page name writes a picture of that page, so a layout change can be
             // reviewed without a screen recording.
             var shotIndex=Array.IndexOf(e.Args,"--smoke-shot");
@@ -154,7 +178,39 @@ public partial class App : Application
         return null;
     }
     private void PreferenceChanged(object sender, UserPreferenceChangedEventArgs e) { if (controller?.Settings.Theme == "System") Dispatcher.BeginInvoke(() => Theme.Apply("System")); }
-    private void ShowWindow() { controller?.RememberForegroundWindow(); window?.Show(); if (window is not null) window.WindowState = WindowState.Normal; window?.Activate(); }
+    private void ShowWindow()
+    {
+        controller?.RememberForegroundWindow();
+        if (compact is not null && controller?.Settings.Onboarded == true)
+        {
+            compact.Show();
+            if (compact.WindowState == WindowState.Minimized) compact.WindowState = WindowState.Normal;
+            compact.Activate();
+            return;
+        }
+        window?.Show();
+        if (window is not null) window.WindowState = WindowState.Normal;
+        window?.Activate();
+    }
+    private void ShowWorkspace(string page)
+    {
+        compact?.Hide();
+        if (window is null) return;
+        window.Show();
+        if (window.WindowState == WindowState.Minimized) window.WindowState = WindowState.Normal;
+        window.Activate();
+        window.Navigate(page);
+    }
+    private void ShowSettings()
+    {
+        if (controller is null) return;
+        if (!controller.Settings.Onboarded) { ShowWorkspace("Welcome"); return; }
+        if (compact is null) { ShowWorkspace("General"); return; }
+        compact.Show();
+        if (compact.WindowState == WindowState.Minimized) compact.WindowState = WindowState.Normal;
+        compact.Activate();
+        compact.OpenSettings();
+    }
     public async void Quit()
     {
         if (quitting) return;

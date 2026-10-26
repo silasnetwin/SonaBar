@@ -46,6 +46,13 @@ public sealed class SettingsStore
             // by a hardware guess. New installations start with the automatic choice.
             if(!document.RootElement.TryGetProperty("AutoQuality",out _))value.AutoQuality=false;
             if(!document.RootElement.TryGetProperty("SchemaVersion",out version)||version.GetInt32()<4)value.SchemaVersion=4;
+            // Version 5 replaces the free-form backend label with an explicit processing
+            // choice. Old files used the same three readable labels, so keep their intent.
+            if(!document.RootElement.TryGetProperty("ProcessingDevice",out _)&&document.RootElement.TryGetProperty("Backend",out var legacyBackend))
+                value.ProcessingDevice=ProcessingDeviceInfo.Parse(legacyBackend.GetString());
+            if(!document.RootElement.TryGetProperty("CpuThreads",out _))value.CpuThreads=0;
+            if(!document.RootElement.TryGetProperty("MinHoldMs",out _))value.MinHoldMs=0;
+            if(!document.RootElement.TryGetProperty("SchemaVersion",out version)||version.GetInt32()<5)value.SchemaVersion=5;
             value.Validate();return value;
         }
         catch (Exception e) when (e is JsonException or InvalidDataException or InvalidOperationException or FormatException)

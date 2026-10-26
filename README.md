@@ -117,6 +117,7 @@ Windows kann in solchen Fenstern nicht zurücklesen, ob der Text angekommen ist.
 - .NET 10 WPF mit eigenem Windows-Rahmen, nativen Minimieren-, Maximieren- und Schließen-Schaltflächen.
 - Native Größenänderung, Snap und Per-Monitor-DPI.
 - Helle Oberfläche als Standard, Dark und „Windows folgen“ per Klick.
+- Kompaktes Hauptfenster mit Status, letzter Transkription und einem Start-/Stopp-Knopf; der vollständige Workspace bleibt über **Open workspace** erreichbar.
 - Tray-Icon, optionaler Start mit Windows und eine kompakte Aufnahme-Pille.
 - Hilfe direkt in der App unter **About → Help** – ohne externe Dokumentation.
 - Portable ZIP oder per-user Installation – beides ohne Administratorrechte.
@@ -148,6 +149,10 @@ Die Sprachliste im Einstellungsfenster folgt dem gewählten Modell. Eine ältere
 - **Passwortfelder bleiben leer.** SonaBar erkennt sie und verweigert das Einfügen.
 
 ## Screenshots
+
+| Kompaktes Hauptfenster | Kompakte Einstellungen |
+| --- | --- |
+| <img src="docs/media/compact.png" width="430" alt="Kompaktes SonaBar-Hauptfenster"> | <img src="docs/media/settings-compact.png" width="480" alt="Kompakte SonaBar-Einstellungen"> |
 
 | Diktat-Einstellungen | Modelle |
 | --- | --- |
@@ -208,6 +213,10 @@ Vollständige Änderungen: [CHANGELOG.md](CHANGELOG.md) · [Release v0.1.3](http
 
 ## Feinschliff im aktuellen Quellcode
 
+- **Kompaktes Hauptfenster.** SonaBar startet jetzt in einem kleinen Dictate-Fenster mit Status, Modus, Shortcut, Modell, effektiver Verarbeitung, letzter Transkription und einem Start-/Stopp-Knopf. Der vollständige Workspace bleibt über **Open workspace** und das Tray-Menü erreichbar; der Abschluss des Onboardings führt zurück in dieses Fenster.
+- **Kompakte Einstellungen.** Modus, Shortcut, Mindest-Haltezeit, installiertes Modell oder Automatik, Sprache, Verarbeitungsgerät und Whisper-CPU-Threads sind direkt erreichbar. Schreibmodelle, eigene Wörter, Snippets, Anwendungen, History und Diagnose bleiben im Workspace.
+- **Ehrliche CPU- und Thread-Wahl.** **Automatic**, **CPU** und **GPU / accelerated** ersetzen das alte Backend-Feld. Whisper nutzt die gewählte Thread-Zahl, fällt bei fehlender GPU auf CPU zurück und zeigt den effektiven Pfad; Parakeet und Qwen bleiben CPU-only und verwalten ihre Threads selbst. Das Gerät wird erst nach dem Speichern neu geladen.
+- **Mindest-Haltezeit und Parakeet-Speech-Context.** Push-to-Talk kann sehr kurze versehentliche Presses verwerfen. Eigene Wörter werden bei Parakeet als nativer Speech-Context übergeben (maximal 64 Begriffe), aber die aktuelle TDT-Runtime ignoriert Word-Boosting ohne Flashlight-Decoder; SonaBar behauptet dafür keinen Genauigkeitsgewinn. Whisper und lokales Writing nutzen die Wörter weiterhin. Die Einstellungen migrieren mit Schema 5 ohne Datenverlust.
 - **Hilfe in der App.** **About → Help** erklärt Diktat, Einfügeprobleme, Datenschutz, Diagnose und die kostenlose Produktpolitik.
 - **Snippets auch beim Tippen.** Der Auslöser wird optional direkt in der Ziel-App ersetzt – nach Leertaste, Enter, Tab oder Satzzeichen. Auch mehrwörtige Auslöser wie `be right back` und Auslöser mit Satzzeichen wie `e.g.` funktionieren; ein Mausklick setzt den Tipp-Puffer zurück. Die Funktion ist standardmäßig deaktiviert, überspringt das SonaBar-Fenster und Passwortfelder und weist auf Grenzen bei Spielen und Apps mit Administratorrechten hin.
 - **Klarere leere Seiten.** History, Statistik, Snippets und Anwendungen zeigen kurze Hinweise statt großer leerer Listen. Bei ausgeschalteter History führt ein direkter Weg zu den Datenschutzeinstellungen.
@@ -219,6 +228,7 @@ Vollständige Änderungen: [CHANGELOG.md](CHANGELOG.md) · [Release v0.1.3](http
 
 | Bereich | Stand |
 | --- | --- |
+| Kompaktes Hauptfenster | Standardstart; Workspace, Tray und Einstellungen bleiben erreichbar |
 | Diktat, Einfügen, History, Snippets, Dateien | Early Access, im Alltag nutzbar |
 | Snippets beim Tippen | Optional, standardmäßig deaktiviert; Passwortfelder und das SonaBar-Fenster werden übersprungen |
 | Meetings, Sprechertrennung, PDF-Export | Early Access; Qualität hängt von der Aufnahme ab |

@@ -14,6 +14,15 @@ public sealed class WhisperResultTests
         Assert.Equal(expected, WhisperEngine.RecognitionThreadCount(logicalProcessorCount));
     }
 
+    [Theory]
+    [InlineData(8, 4, 4)]
+    [InlineData(4, 12, 4)]
+    [InlineData(8, 1, 1)]
+    public void ExplicitCpuThreadCountIsClampedToAvailableCpu(int logicalProcessorCount, int configured, int expected)
+    {
+        Assert.Equal(expected, WhisperEngine.RecognitionThreadCount(logicalProcessorCount, configured));
+    }
+
     [Fact]
     public void NativeLowercaseJsonProducesTranscript()
     {

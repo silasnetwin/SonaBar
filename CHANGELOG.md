@@ -7,6 +7,31 @@ All notable changes to SonaBar are documented here. Versions follow
 
 ### Added
 
+- **Compact everyday window.** SonaBar now opens in a 430 x 660 Dictate-style
+  window with the current state, mode, shortcut, model, effective processing
+  path, the last transcription, copy and a single start/stop action. The full
+  workspace remains available through **Open workspace**, the tray menu and the
+  compact settings dialog; closing the compact window keeps SonaBar in the tray.
+- **Compact settings.** Mode, shortcut capture, minimum push-to-talk hold,
+  installed model or automatic profile, language, processing device and Whisper
+  CPU threads are editable without opening the workspace. Advanced settings,
+  writing models, custom words, snippets, applications, history and diagnostics
+  stay in the full workspace.
+- **Honest processing controls.** `ProcessingDevice` replaces the old free-form
+  backend label, with Automatic, CPU and GPU choices. Whisper accepts an explicit
+  CPU thread count, falls back to CPU when GPU loading fails, and reports the
+  effective backend in the compact window and diagnostics. Parakeet and Qwen
+  remain CPU-only and show that their runtimes manage their own threads.
+- **Minimum push-to-talk hold.** An optional 0.5-2.0 second threshold discards
+  accidental short presses instead of sending them to the speech model.
+- **Parakeet speech-context plumbing.** Installed custom words are passed to
+  NeMo-Speech.cpp as one native speech-context request, capped at 64
+  deduplicated phrases. The current TDT head logs that it ignores speech
+  contexts without a Flashlight decoder, so SonaBar does not claim a Parakeet
+  accuracy gain; Whisper and local writing still use the words.
+- **Settings schema 5.** Existing `Backend` values migrate to `ProcessingDevice`;
+  `CpuThreads` and `MinHoldMs` are clamped when a settings file is hand-edited.
+
 - **In-app Help page.** **About → Help** now covers the dictation workflow,
   delivery troubleshooting for elevated and game windows, privacy, diagnostics
   and the free-software policy. The page is built by the page smoke test.
@@ -53,6 +78,17 @@ All notable changes to SonaBar are documented here. Versions follow
 
 ### Fixed
 
+- **Short push-to-talk presses stay short.** The key-up timestamp is captured
+  immediately, so a slow microphone or model start cannot turn an accidental tap
+  into a valid hold. The compact button also stops and inserts while recording
+  instead of cancelling the dictation.
+- **Onboarding now returns to the compact window.** Finishing the Welcome flow
+  hides the workspace and shows the everyday window instead of leaving SonaBar
+  tray-only until the next launch.
+- **GPU fallback reaches the user.** The router now forwards Whisper's CPU
+  fallback notice, and the effective processing summary changes to
+  `GPU unavailable (CPU fallback)`. Changing the processing device forces the
+  next model load to use the new choice instead of reusing the old backend.
 - **Empty pages no longer show blank frames.** History, Statistics, Snippets and
   Applications replace empty list boxes with short guidance. History offers a
   direct link to Privacy when storage is off.

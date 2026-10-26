@@ -25,6 +25,15 @@ public sealed class StartupAndThemeTests
     public void OnlyWorkInProgressCountsAsBusy(ReadinessStage stage, bool busy) =>
         Assert.Equal(busy, new Readiness(stage).IsBusy);
 
+    [Theory]
+    [InlineData(true, true, 2000, 1500, true)]
+    [InlineData(true, true, 2000, 2000, false)]
+    [InlineData(true, false, 2000, 100, false)]
+    [InlineData(false, true, 2000, 100, false)]
+    [InlineData(true, true, 0, 100, false)]
+    public void ShortPushToTalkPressesAreDiscarded(bool pushToTalk, bool released, int minHoldMs, long heldMs, bool discarded) =>
+        Assert.Equal(discarded, AppController.IsTooShortPushToTalk(pushToTalk, released, minHoldMs, heldMs));
+
     [Fact]
     public void EveryStageCarriesALabelTheUserCanRead()
     {

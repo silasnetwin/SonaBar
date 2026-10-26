@@ -8,15 +8,21 @@ using SonaBar.Meetings;
 
 if(args.Length<2)throw new ArgumentException("Arguments: input.wav report.json");
 var elapsed=System.Diagnostics.Stopwatch.StartNew();
-if(args.Contains("--cpu"))LocalEnhancementEngine.ConfigureBackend("CPU");
+if(args.Contains("--cpu"))LocalEnhancementEngine.ConfigureBackend(ProcessingDevice.Cpu);
 using var manager=new ModelManager();
 var requestedModel=args.FirstOrDefault(x=>x.StartsWith("--model=",StringComparison.Ordinal))?[8..]??"small";
 var speechModel=manager.Catalog.First(x=>x.Id==requestedModel);
 if(!manager.IsInstalled(speechModel))await manager.DownloadAsync(speechModel,null,default);
 var parakeet=speechModel.Engine=="NeMo-Speech.cpp";
 var qwen=speechModel.Engine=="Qwen3-ASR";
-if(!parakeet&&!qwen)WhisperEngine.ConfigureBackend(args.Contains("--gpu")?"GPU / accelerated":"CPU");
+if(!parakeet&&!qwen)WhisperEngine.ConfigureBackend(args.Contains("--gpu")?ProcessingDevice.Gpu:ProcessingDevice.Cpu);
 using ITranscriptionEngine speech=qwen?new QwenEngine():parakeet?new ParakeetEngine():new WhisperEngine();
+var hotword=args.FirstOrDefault(x=>x.StartsWith("--hotword=",StringComparison.Ordinal))?[10..];
+if(speech is ParakeetEngine parakeetEngine&&!string.IsNullOrWhiteSpace(hotword))
+{
+    parakeetEngine.ConfigureHotwords([hotword]);
+    Console.WriteLine("NOTE: NeMo-Speech.cpp's TDT head currently ignores speech contexts without a Flashlight decoder; this run exercises the ABI path but claims no boosting effect.");
+}
 if(args.Contains("--latency-only"))
 {
     if(args.Contains("--greedy"))Console.WriteLine("whisper.cpp production bridge uses its pinned beam-search profile; --greedy is retained for compatibility only.");

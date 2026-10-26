@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Windows.Threading;
 using SonaBar.Audio;
+using SonaBar.Enhancement;
 using SonaBar.Models;
 using SonaBar.Storage;
 using SonaBar.Transcription;
@@ -33,11 +34,40 @@ public sealed partial class AppController : INotifyPropertyChanged, IDisposable
     public HardwareProfile Hardware => hardware ??= HardwareDetector.Detect();
     /// <summary>The speech profile that is actually used, honouring the automatic choice.</summary>
     public string EffectiveSpeechModel => Settings.AutoQuality ? HardwareRecommendations.RecommendModel(Hardware) : Settings.EffectiveSpeechModel;
+    public ModelDefinition? EffectiveSpeechModelDefinition => Models.Catalog.FirstOrDefault(model => model.Id == EffectiveSpeechModel);
+    public string SpeechModelName => EffectiveSpeechModelDefinition?.Name ?? EffectiveSpeechModel;
+    public string SpeechEngineName => EffectiveSpeechModelDefinition?.Engine ?? "Unknown";
+    public bool SpeechSupportsCpuThreads => SpeechEngineName == "Whisper";
+    public bool SpeechSupportsGpu => SpeechEngineName == "Whisper";
+    /// <summary>An honest summary of what the selected engine can do with this PC's CPU and GPU.</summary>
+    public string ProcessingSummary => SpeechEngineName switch
+    {
+        "Whisper" => WhisperProcessingSummary() + " · " + (Settings.CpuThreads > 0 ? $"{Settings.CpuThreads} threads" : "auto threads"),
+        "NeMo-Speech.cpp" => "CPU only · engine-managed threads",
+        "Qwen3-ASR" => "CPU sidecar · engine-managed threads",
+        _ => ProcessingDeviceInfo.Label(Settings.ProcessingDevice)
+    };
+    private string WhisperProcessingSummary()
+    {
+        var usingGpu = Speech switch
+        {
+            TranscriptionEngineRouter router => router.WhisperUsingGpu,
+            WhisperEngine => WhisperEngine.UsingGpu,
+            _ => null
+        };
+        return Settings.ProcessingDevice switch
+        {
+            ProcessingDevice.Cpu => "CPU",
+            ProcessingDevice.Gpu when usingGpu == false => "GPU unavailable (CPU fallback)",
+            ProcessingDevice.Gpu => "GPU / accelerated",
+            _ => "Automatic (CPU)"
+        };
+    }
     public void RefreshHardware() => hardware = HardwareDetector.Detect();
     /// <summary>The language codes the selected speech model can actually transcribe.</summary>
-    public IReadOnlyList<SpeechLanguage> SupportedLanguages()
+    public IReadOnlyList<SpeechLanguage> SupportedLanguages(ModelDefinition? selectedModel = null)
     {
-        var model = ResolveSpeechModel() ?? Models.Catalog.FirstOrDefault(candidate => candidate.Id == EffectiveSpeechModel);
+        var model = selectedModel ?? ResolveSpeechModel() ?? Models.Catalog.FirstOrDefault(candidate => candidate.Id == EffectiveSpeechModel);
         IReadOnlyCollection<string> codes = Speech is TranscriptionEngineRouter router && model is not null
             ? router.CapabilitiesFor(Models.PathFor(model)).Languages
             : Speech.Capabilities.Languages;
@@ -77,7 +107,23 @@ public sealed partial class AppController : INotifyPropertyChanged, IDisposable
         ModelPreparation = quality + " is ready offline";
         Changed(nameof(ModelPreparation));
         Changed(nameof(EffectiveSpeechModel));
+        Changed(nameof(SpeechModelName));
+        Changed(nameof(SpeechEngineName));
+        Changed(nameof(ProcessingSummary));
         return quality.ToString();
+    }
+    /// <summary>Pushes the current device, thread and hotword choices into the engines.</summary>
+    public void ApplyEngineSettings()
+    {
+        WhisperEngine.ConfigureBackend(Settings.ProcessingDevice, Settings.CpuThreads);
+        LocalEnhancementEngine.ConfigureBackend(Settings.ProcessingDevice);
+        if (Speech is TranscriptionEngineRouter router) router.ConfigureHotwords(Settings.CustomWords);
+        Changed(nameof(EffectiveSpeechModelDefinition));
+        Changed(nameof(SpeechModelName));
+        Changed(nameof(SpeechEngineName));
+        Changed(nameof(SpeechSupportsCpuThreads));
+        Changed(nameof(SpeechSupportsGpu));
+        Changed(nameof(ProcessingSummary));
     }
     private CancellationTokenSource? operation;
     private InsertionTarget? target;
@@ -85,6 +131,8 @@ public sealed partial class AppController : INotifyPropertyChanged, IDisposable
     private Task recordingStart=Task.CompletedTask;
     private TaskCompletionSource startupSignal = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private bool shuttingDown;
+    private bool pushToTalkRelease;
+    private long pushToTalkHeldMs;
     private Task speechWarmup=Task.CompletedTask;
     private Task preparationTask=Task.CompletedTask;
     private RecordingOverlay? overlay;
@@ -131,7 +179,19 @@ public sealed partial class AppController : INotifyPropertyChanged, IDisposable
         Machine.Changed += state => { if(state==OperationState.Idle)idleSignal.TrySetResult();else if(idleSignal.Task.IsCompleted)idleSignal=new(TaskCreationOptions.RunContinuationsAsynchronously); Changed(nameof(Busy)); overlay?.SetState(state); };
         Audio.Level += QueueLevel;
         Audio.Faulted += message => Application.Current.Dispatcher.BeginInvoke(() => { Notify(message); if (Machine.State == OperationState.Recording) ToggleDictation(); });
-        if(speech is SonaBar.Transcription.WhisperEngine whisper)whisper.BackendNotice+=message=>Application.Current.Dispatcher.BeginInvoke(()=>Notify(message));
+        if (speech is WhisperEngine whisper)
+            whisper.BackendNotice += BackendFallback;
+        else if (speech is TranscriptionEngineRouter router)
+            router.BackendNotice += BackendFallback;
+        ApplyEngineSettings();
+    }
+    private void BackendFallback(string message)
+    {
+        Application.Current.Dispatcher.BeginInvoke(() =>
+        {
+            Notify(message);
+            Changed(nameof(ProcessingSummary));
+        });
     }
     public void AttachOverlay(RecordingOverlay value) => overlay = value;
     private void QueueLevel(float level)
@@ -176,7 +236,18 @@ public sealed partial class AppController : INotifyPropertyChanged, IDisposable
             if(Settings.DebugLogging)SafeLog.WriteDiagnostic("Hotkey",("id",id),("down",down),("state",Machine.State.ToString()),("paused",Paused));
             if (Paused && down) return;
             if (id == 3) { if (down) EditSelection(); return; }
-            if (Settings.PushToTalk) { if (down && !Busy || !down && (Machine.State == OperationState.Recording || starting)) ToggleDictation(); }
+            if (Settings.PushToTalk)
+            {
+                if (down && !Busy) { pushToTalkRelease = false; pushToTalkHeldMs = 0; ToggleDictation(); }
+                else if (!down && (Machine.State == OperationState.Recording || starting))
+                {
+                    // Capture the key-up time now. Waiting for a slow microphone or model
+                    // start must not turn a short accidental press into a valid hold.
+                    pushToTalkHeldMs = dictationClock.ElapsedMilliseconds;
+                    pushToTalkRelease = true;
+                    ToggleDictation();
+                }
+            }
             else if (down) ToggleDictation();
         };
         hotkeys.Error += Notify;
@@ -246,7 +317,18 @@ public sealed partial class AppController : INotifyPropertyChanged, IDisposable
             Readiness = new Readiness(ReadinessStage.Error, "The speech model could not be loaded.");
         }
     }
-    public void SaveSettings() { Settings.Validate(); hotkeys.Register(Settings); SettingsStore.Save(Settings); History.Prune(Settings.HistoryRetentionDays); WindowIntegration.SetStartup(Settings.LaunchAtLogin); Theme.Apply(Settings.Theme); }
+    public void SaveSettings()
+    {
+        Settings.Validate();
+        // Register first: a shortcut conflict restores the previous bindings and must not
+        // leave the in-memory engine settings changed when the save fails.
+        hotkeys.Register(Settings);
+        ApplyEngineSettings();
+        SettingsStore.Save(Settings);
+        History.Prune(Settings.HistoryRetentionDays);
+        WindowIntegration.SetStartup(Settings.LaunchAtLogin);
+        Theme.Apply(Settings.Theme);
+    }
     public string TemporaryWave() => Path.Combine(Brand.DataRoot, "Temp", Guid.NewGuid() + ".wav");
     public void Notify(string text) { Status = text; overlay?.ShowNotice(text,true); }
     public void Inform(string text) { Status=text; }
@@ -268,6 +350,8 @@ public sealed partial class AppController : INotifyPropertyChanged, IDisposable
         if(Audio.IsCapturing){Notify("The microphone is in use by another SonaBar operation.");return;}
         try
         {
+            // Do not clear pushToTalkRelease here: a quick key-up can arrive while the
+            // target/microphone is still starting and must remain visible to FinishDictationAsync.
             starting=true;startupSignal=new(TaskCreationOptions.RunContinuationsAsynchronously);finishAfterStart=false;lock(timingGate){dictationTimings.Clear();audioReceived=false;}dictationClock.Restart();MarkTiming("T0");Readiness=new(ReadinessStage.Starting);overlay?.ShowPreparing();MarkTiming("T1");
             // If this was started from SonaBar's own window, return to the last external
             // window first; otherwise the app's Start button would target its own button.
@@ -322,6 +406,20 @@ public sealed partial class AppController : INotifyPropertyChanged, IDisposable
         var token = operation.Token;
         try
         {
+            // A short accidental push-to-talk press is discarded. The recording starts
+            // immediately, but only a deliberate hold is sent to the speech model.
+            if (IsTooShortPushToTalk(Settings.PushToTalk, pushToTalkRelease, Settings.MinHoldMs, pushToTalkHeldMs))
+            {
+                pushToTalkRelease = false;
+                pushToTalkHeldMs = 0;
+                await recordingStart; await Audio.StopAsync(); ducker.Dispose();
+                CompleteTimings(false);
+                Status = $"Hold for at least {Settings.MinHoldMs / 1000d:0.0} s to dictate";
+                Readiness = new(ReadinessStage.Ready);
+                return;
+            }
+            pushToTalkRelease = false;
+            pushToTalkHeldMs = 0;
             MarkTiming("T3");Machine.Move(OperationState.Transcribing); Status = "Transcribing on your computer";Readiness=new(ReadinessStage.Transcribing);
             await recordingStart;await Audio.StopAsync(); ducker.Dispose();
             feedback.Play(Settings.Sounds, FeedbackSound.Finished);
@@ -477,7 +575,9 @@ public sealed partial class AppController : INotifyPropertyChanged, IDisposable
         try { await Audio.StopAsync(); } catch (Exception e) { SafeLog.Write("Stop", e); }
         ducker.Dispose(); DeleteRecording(); Reset(); SafeLog.Write("Operation", error); Notify(error.Message);
     }
-    private void Reset() { if (Machine.State != OperationState.Idle) { if(Machine.State==OperationState.Recording)Machine.Move(OperationState.Cancelled); Machine.Move(OperationState.Idle); } operation?.Dispose(); operation = null; }
+    internal static bool IsTooShortPushToTalk(bool pushToTalk, bool released, int minHoldMs, long heldMs) =>
+        pushToTalk && released && minHoldMs > 0 && heldMs < minHoldMs;
+    private void Reset() { pushToTalkRelease=false; pushToTalkHeldMs=0; if (Machine.State != OperationState.Idle) { if(Machine.State==OperationState.Recording)Machine.Move(OperationState.Cancelled); Machine.Move(OperationState.Idle); } operation?.Dispose(); operation = null; }
     private void DeleteRecording() { if (recording is not null) { try { File.Delete(recording); } catch (IOException e) { SafeLog.Write("TempCleanup", e); } recording = null; } }
     private void Changed([CallerMemberName] string? name = null) => PropertyChanged?.Invoke(this, new(name));
     public Task SmokeTestAsync(bool trayCreated, bool settingsOpened, IReadOnlyList<string>? pagesRendered=null, IReadOnlyList<string>? pagesFailed=null)

@@ -57,7 +57,7 @@ public sealed partial class MainWindow
             _=>Ui.Card(Ui.Text("You're ready to speak.",30),Ui.Text("SonaBar stays in your system tray. Your shortcut is always one press away. Close this window whenever you're ready.",16,true))
         };
         var back=Ui.Button("Back",()=>{welcomeStep--;Navigate("Welcome");});back.IsEnabled=welcomeStep>0;
-        return Ui.Stack(step,body,Ui.Row(back,Ui.Button(welcomeStep==5?"Finish and minimize":"Continue",()=> {if(welcomeStep==3&&c.Models.ResolveSpeech(c.Settings.EffectiveSpeechModel)is null)throw new InvalidOperationException("Download a speech model to continue."); if(welcomeStep==5){c.Settings.Onboarded=true;c.SaveSettings();Navigate("Overview");Hide();}else{c.SaveSettings();welcomeStep++;Navigate("Welcome");}},true)));
+        return Ui.Stack(step,body,Ui.Row(back,Ui.Button(welcomeStep==5?"Finish":"Continue",()=> {if(welcomeStep==3&&c.Models.ResolveSpeech(c.Settings.EffectiveSpeechModel)is null)throw new InvalidOperationException("Download a speech model to continue."); if(welcomeStep==5){c.Settings.Onboarded=true;c.SaveSettings();Hide();OnboardingCompleted?.Invoke();}else{c.SaveSettings();welcomeStep++;Navigate("Welcome");}},true)));
     }
     private UIElement WelcomeDownload()
     {

@@ -11,6 +11,22 @@ Record Windows version, display scale, audio device, selected model, and the exa
 - [ ] Second instance activates the first. Closing settings leaves the tray running; Quit releases hotkeys.
 - [ ] Upgrade while preserving model files and settings; uninstall while preserving user data.
 
+## Compact-first UI and settings
+- [ ] A normal launch after onboarding opens the compact window, not the workspace. The compact header, status card, details, last transcription and footer render without clipping at 100% DPI.
+- [ ] Finish the Welcome flow. The workspace hides, the compact window appears, and the app is not left tray-only until the next launch.
+- [ ] **Open workspace** in the compact window and in compact settings opens the full workspace; closing the workspace leaves SonaBar in the tray and the tray can reopen the compact window.
+- [ ] Compact Settings shows the current mode, shortcut, minimum hold, installed model or Automatic, language, processing device and Whisper thread count. Cancel leaves every value unchanged.
+- [ ] Save each compact setting, reopen the dialog and restart SonaBar; values persist. An invalid shortcut shows an error and keeps the dialog open.
+- [ ] The primary compact button starts a dictation, changes to **Stop & insert** while recording, cancels during startup, transcription, enhancement or insertion, and shows **Preparing...** while the model is checked.
+- [ ] Copy copies the last transcription; the placeholder is hidden when text exists; a missing model routes to **Models**.
+- [ ] Tray actions open the compact window, compact settings, History, Files, Meetings and the workspace; Quit releases the hotkey.
+- [ ] Closing the compact window keeps SonaBar in the tray; a second launch activates the first instance.
+- [ ] Compact and settings render correctly in Light, Dark, System, high contrast and at 125%, 150%, 175% and 200% DPI.
+- [ ] Minimum hold: choose 1.5 s. A tap shorter than 1.5 s is discarded with the hold message, including when model startup is slow. A hold longer than 1.5 s transcribes normally.
+- [ ] Processing: set **CPU** and an explicit Whisper thread count, then inspect the compact details and Advanced diagnostics. Set **GPU / accelerated** on a machine without a usable GPU and verify the fallback message after a load attempt.
+- [ ] Parakeet selected: the app shows CPU-only engine-managed threads. Custom words are passed as a native speech-context request, but the current TDT runtime ignores boosting without a Flashlight decoder; verify the UI makes no accuracy claim. Qwen selected: the app shows the CPU sidecar and engine-managed threads.
+- [ ] Upgrade an existing schema 4 settings file with `Backend` set to CPU, GPU and Automatic; verify the value migrates to `ProcessingDevice` and schema 5 after saving.
+
 ## Application matrix
 For **Notepad, Word, Chrome, Edge, Discord, VS Code, JetBrains IDE, and Windows Terminal**, check:
 - [ ] Dictation inserts at the original caret.

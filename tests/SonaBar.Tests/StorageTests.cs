@@ -7,9 +7,35 @@ public sealed class StorageTests : IDisposable
     private readonly string directory=Path.Combine(Path.GetTempPath(),"SonaBar-tests-"+Guid.NewGuid());
     [Theory][InlineData("{\"Language\":null}")][InlineData("{\"PlainHotkey\":null}")][InlineData("{\"SchemaVersion\":\"wrong\"}")][InlineData("[]")]
     public void StructurallyInvalidSettingsRecoverWithoutCrashing(string json){Directory.CreateDirectory(directory);File.WriteAllText(Path.Combine(directory,"settings.json"),json);var store=new SettingsStore(directory);Assert.Equal(SpeechQuality.Balanced,store.Load().Quality);Assert.NotNull(store.RecoveryMessage);}
-    [Fact] public void SettingsRoundTrip(){var store=new SettingsStore(directory);var settings=new AppSettings{Language="de",StoreHistory=false,ExpandTypedSnippets=true};store.Save(settings);var actual=store.Load();Assert.Equal("de",actual.Language);Assert.False(actual.StoreHistory);Assert.True(actual.ExpandTypedSnippets);}
+    [Fact] public void SettingsRoundTrip(){var store=new SettingsStore(directory);var settings=new AppSettings{Language="de",StoreHistory=false,ExpandTypedSnippets=true,ProcessingDevice=ProcessingDevice.Gpu,CpuThreads=4,MinHoldMs=2000};store.Save(settings);var actual=store.Load();Assert.Equal("de",actual.Language);Assert.False(actual.StoreHistory);Assert.True(actual.ExpandTypedSnippets);Assert.Equal(ProcessingDevice.Gpu,actual.ProcessingDevice);Assert.Equal(4,actual.CpuThreads);Assert.Equal(2000,actual.MinHoldMs);}
+    [Fact] public void VersionFourBackendMigratesToProcessingDevice()
+    {
+        Directory.CreateDirectory(directory);
+        File.WriteAllText(Path.Combine(directory,"settings.json"),"{\"SchemaVersion\":4,\"Backend\":\"GPU / accelerated\"}");
+        var settings=new SettingsStore(directory).Load();
+        Assert.Equal(ProcessingDevice.Gpu,settings.ProcessingDevice);
+        Assert.Equal(5,settings.SchemaVersion);
+    }
+    [Fact] public void ReadableProcessingDeviceNamesLoadWithoutRecovery()
+    {
+        Directory.CreateDirectory(directory);
+        File.WriteAllText(Path.Combine(directory,"settings.json"),"{\"SchemaVersion\":5,\"ProcessingDevice\":\"CPU\"}");
+        var store=new SettingsStore(directory);var settings=store.Load();
+        Assert.Null(store.RecoveryMessage);
+        Assert.Equal(ProcessingDevice.Cpu,settings.ProcessingDevice);
+    }
+    [Fact] public void HandEditedThreadAndHoldValuesAreClamped()
+    {
+        var settings=new AppSettings{CpuThreads=9999,MinHoldMs=9000};
+        settings.Validate();
+        Assert.Equal(Environment.ProcessorCount,settings.CpuThreads);
+        Assert.Equal(2000,settings.MinHoldMs);
+        settings.CpuThreads=-2;settings.MinHoldMs=-50;settings.Validate();
+        Assert.Equal(0,settings.CpuThreads);
+        Assert.Equal(0,settings.MinHoldMs);
+    }
     [Fact] public void OldSettingsMigrateWithoutLosingUserData(){Directory.CreateDirectory(directory);File.WriteAllText(Path.Combine(directory,"settings.json"),"{\"Language\":\"de\",\"SpeechModel\":\"base\",\"CustomWords\":[\"Mara\"],\"StoreHistory\":false}");var settings=new SettingsStore(directory).Load();Assert.Equal("small",settings.EffectiveSpeechModel);Assert.Equal("de",settings.Language);Assert.Equal("Mara",Assert.Single(settings.CustomWords));Assert.False(settings.StoreHistory);Assert.Equal("Off",settings.Sounds);Assert.False(settings.ExpandTypedSnippets);}
-    [Fact] public void V2MigrationRemovesLegacySecondShortcutWithoutChangingTheUsersDictationShortcut(){Directory.CreateDirectory(directory);File.WriteAllText(Path.Combine(directory,"settings.json"),"{\"SchemaVersion\":2,\"PlainHotkey\":{\"Modifiers\":2,\"Key\":65},\"EnhancedHotkey\":{\"Modifiers\":6,\"Key\":32}}");var settings=new SettingsStore(directory).Load();Assert.Equal(new Hotkey(2,65),settings.PlainHotkey);Assert.Equal(4,settings.SchemaVersion);}
+    [Fact] public void V2MigrationRemovesLegacySecondShortcutWithoutChangingTheUsersDictationShortcut(){Directory.CreateDirectory(directory);File.WriteAllText(Path.Combine(directory,"settings.json"),"{\"SchemaVersion\":2,\"PlainHotkey\":{\"Modifiers\":2,\"Key\":65},\"EnhancedHotkey\":{\"Modifiers\":6,\"Key\":32}}");var settings=new SettingsStore(directory).Load();Assert.Equal(new Hotkey(2,65),settings.PlainHotkey);Assert.Equal(5,settings.SchemaVersion);}
     [Fact] public void ExistingInstallationsKeepTheirChosenProfileInsteadOfAGuess()
     {
         Directory.CreateDirectory(directory);

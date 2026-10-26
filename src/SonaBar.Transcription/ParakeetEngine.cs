@@ -10,7 +10,18 @@ public sealed class ParakeetEngine : ITranscriptionEngine
     private readonly SemaphoreSlim gate = new(1, 1);
     private IntPtr recognizer;
     private string? loadedPath;
+    private IReadOnlyList<string> hotwords = [];
     public TranscriptionEngineCapabilities Capabilities => new(false, true, false, ["auto", "en", "bg", "cs", "da", "de", "el", "es", "et", "fi", "fr", "hr", "hu", "it", "lt", "lv", "mt", "nl", "pl", "pt", "ro", "ru", "sk", "sl", "sv", "uk"], "NVIDIA NeMo-Speech.cpp v0.1.0");
+
+    /// <summary>
+    /// Supplies user terms as one native speech-context request. NeMo-Speech.cpp's TDT
+    /// head currently logs that it ignores speech contexts without a Flashlight decoder,
+    /// so callers must not claim that these words improve Parakeet accuracy.
+    /// </summary>
+    public void ConfigureHotwords(IEnumerable<string?>? words) => hotwords = NormalizeHotwords(words);
+    internal static IReadOnlyList<string> NormalizeHotwords(IEnumerable<string?>? words) =>
+        (words ?? []).Select(x => x?.Trim()).Where(x => !string.IsNullOrWhiteSpace(x))
+            .Select(x => x!).Distinct(StringComparer.OrdinalIgnoreCase).Take(64).ToArray();
 
     public async Task WarmAsync(string modelPath, CancellationToken cancellationToken)
     {
@@ -30,6 +41,12 @@ public sealed class ParakeetEngine : ITranscriptionEngine
                 var samples = Read16kMonoWave(waveFile, cancellationToken);
                 var options = Native.DefaultOptions();
                 options.LanguageCode = language == "auto" ? IntPtr.Zero : Marshal.StringToCoTaskMemUTF8(language);
+                using var speechContext = Native.SpeechContextMemory.Create(hotwords);
+                if (speechContext.Pointer != IntPtr.Zero)
+                {
+                    options.Contexts = speechContext.Pointer;
+                    options.ContextCount = (UIntPtr)1;
+                }
                 try
                 {
                     var status = Native.Recognize(recognizer, ref options, samples, (UIntPtr)(uint)samples.Length, 16_000, out var result);
@@ -103,7 +120,48 @@ public sealed class ParakeetEngine : ITranscriptionEngine
         [StructLayout(LayoutKind.Sequential)] internal struct ModelConfig { public UIntPtr Size; public IntPtr Path; public IntPtr Name; }
         [StructLayout(LayoutKind.Sequential)] internal struct RecognizerConfig { public UIntPtr Size; public IntPtr Backend; public IntPtr Model; public IntPtr Streaming; public IntPtr Decoder; public IntPtr Vad; public IntPtr Endpointing; public IntPtr Postproc; public IntPtr Diar; public IntPtr Batching; }
         [StructLayout(LayoutKind.Sequential)] internal struct RecognitionOptions { public UIntPtr Size; public IntPtr RequestId; public IntPtr LanguageCode; [MarshalAs(UnmanagedType.I1)] public bool InterimResults; [MarshalAs(UnmanagedType.I1)] public bool WordTimes; [MarshalAs(UnmanagedType.I1)] public bool Punctuation; [MarshalAs(UnmanagedType.I1)] public bool Verbatim; [MarshalAs(UnmanagedType.I1)] public bool Profanity; public int StopHistory; public IntPtr Contexts; public UIntPtr ContextCount; public int Alternatives; [MarshalAs(UnmanagedType.I1)] public bool Diarization; public int MaxSpeakers; }
+        [StructLayout(LayoutKind.Sequential)] internal struct SpeechContext { public UIntPtr Size; public IntPtr Phrases; public UIntPtr PhraseCount; public float Boost; }
         internal sealed class StructMemory<T> : IDisposable where T : struct { internal IntPtr Pointer { get; } = Marshal.AllocHGlobal(Marshal.SizeOf<T>()); internal StructMemory(T value) => Marshal.StructureToPtr(value, Pointer, false); public void Dispose() { Marshal.DestroyStructure<T>(Pointer); Marshal.FreeHGlobal(Pointer); } }
+        /// <summary>Owns the native phrase array and every UTF-8 phrase for one request.</summary>
+        internal sealed class SpeechContextMemory : IDisposable
+        {
+            private readonly List<IntPtr> phrases = [];
+            private IntPtr phraseArray;
+            private IntPtr pointer;
+            internal IntPtr Pointer => pointer;
+            private SpeechContextMemory(IReadOnlyList<string> words)
+            {
+                if (words.Count == 0) return;
+                try
+                {
+                    phraseArray = Marshal.AllocHGlobal(IntPtr.Size * words.Count);
+                    for (var index = 0; index < words.Count; index++)
+                    {
+                        var phrase = Marshal.StringToCoTaskMemUTF8(words[index]);
+                        phrases.Add(phrase);
+                        Marshal.WriteIntPtr(phraseArray, index * IntPtr.Size, phrase);
+                    }
+                    var context = new SpeechContext { Size = (UIntPtr)Marshal.SizeOf<SpeechContext>(), Phrases = phraseArray, PhraseCount = (UIntPtr)words.Count, Boost = 1.0f };
+                    pointer = Marshal.AllocHGlobal(Marshal.SizeOf<SpeechContext>());
+                    Marshal.StructureToPtr(context, pointer, false);
+                }
+                catch
+                {
+                    Dispose();
+                    throw;
+                }
+            }
+            internal static SpeechContextMemory Create(IReadOnlyList<string> words) => new(words);
+            public void Dispose()
+            {
+                if (pointer != IntPtr.Zero) Marshal.FreeHGlobal(pointer);
+                if (phraseArray != IntPtr.Zero) Marshal.FreeHGlobal(phraseArray);
+                foreach (var phrase in phrases) Marshal.FreeCoTaskMem(phrase);
+                pointer = IntPtr.Zero;
+                phraseArray = IntPtr.Zero;
+                phrases.Clear();
+            }
+        }
         [DllImport(Library, CallingConvention = CallingConvention.Cdecl, EntryPoint = "nemo_speech_asr_create")] internal static extern int Create(ref RecognizerConfig config, out IntPtr recognizer);
         [DllImport(Library, CallingConvention = CallingConvention.Cdecl, EntryPoint = "nemo_speech_asr_destroy")] internal static extern void Destroy(IntPtr recognizer);
         [DllImport(Library, CallingConvention = CallingConvention.Cdecl, EntryPoint = "nemo_speech_asr_recognition_options_default")] internal static extern RecognitionOptions DefaultOptions();
@@ -125,6 +183,10 @@ public sealed class ParakeetEngine : ITranscriptionEngine
 public sealed class TranscriptionEngineRouter(WhisperEngine whisper, ParakeetEngine parakeet, QwenEngine qwen) : ITranscriptionEngine
 {
     public TranscriptionEngineCapabilities Capabilities => new(true, true, true, Languages.All.Keys.ToArray(), "SonaBar local engine router");
+    /// <summary>The backend Whisper actually loaded, or null before the first load.</summary>
+    public bool? WhisperUsingGpu => WhisperEngine.UsingGpu;
+    /// <summary>Forwards Whisper's CPU-fallback notice without exposing the engine.</summary>
+    public event Action<string>? BackendNotice { add => whisper.BackendNotice += value; remove => whisper.BackendNotice -= value; }
     /// <summary>Capabilities of the engine that owns a specific installed model path.</summary>
     public TranscriptionEngineCapabilities CapabilitiesFor(string modelPath) => Select(modelPath).Capabilities;
     /// <summary>Falls back to automatic detection when a saved language is not supported by the selected engine.</summary>
@@ -142,6 +204,7 @@ public sealed class TranscriptionEngineRouter(WhisperEngine whisper, ParakeetEng
         if (name.StartsWith("qwen3-asr-", StringComparison.OrdinalIgnoreCase)) return qwen;
         return whisper;
     }
+    public void ConfigureHotwords(IEnumerable<string?>? words) => parakeet.ConfigureHotwords(words);
     public Task WarmAsync(string modelPath, CancellationToken cancellationToken) => Select(modelPath).WarmAsync(modelPath, cancellationToken);
     public Task<TranscriptionResult> TranscribeAsync(string waveFile, string modelPath, string language, string prompt, bool keepLoaded, CancellationToken cancellationToken) => Select(modelPath).TranscribeAsync(waveFile, modelPath, language, prompt, keepLoaded, cancellationToken);
     public Task UnloadAsync(CancellationToken cancellationToken) => Task.WhenAll(whisper.UnloadAsync(cancellationToken), parakeet.UnloadAsync(cancellationToken), qwen.UnloadAsync(cancellationToken));

@@ -10,6 +10,23 @@ public static class Brand
     public static void EnsureDataRoot() => Directory.CreateDirectory(DataRoot);
 }
 public enum OperationState { Idle, Recording, Transcribing, Enhancing, Inserting, Cancelled, Failed }
+/// <summary>Where speech recognition and the local writing model may run.</summary>
+public enum ProcessingDevice { Automatic, Cpu, Gpu }
+public static class ProcessingDeviceInfo
+{
+    public static string Label(ProcessingDevice device) => device switch
+    {
+        ProcessingDevice.Cpu => "CPU",
+        ProcessingDevice.Gpu => "GPU / accelerated",
+        _ => "Automatic"
+    };
+    public static ProcessingDevice Parse(string? value) => value switch
+    {
+        "CPU" => ProcessingDevice.Cpu,
+        "GPU / accelerated" => ProcessingDevice.Gpu,
+        _ => ProcessingDevice.Automatic
+    };
+}
 public sealed class OperationMachine
 {
     public OperationState State { get; private set; }
@@ -40,7 +57,7 @@ public sealed record Hotkey(uint Modifiers, uint Key)
 }
 public sealed class AppSettings
 {
-    public int SchemaVersion { get; set; } = 4;
+    public int SchemaVersion { get; set; } = 5;
     public bool Onboarded { get; set; }
     public string Language { get; set; } = "auto";
     public string SpeechModel { get; set; } = "small";
@@ -60,7 +77,11 @@ public sealed class AppSettings
     public List<VocabularyCorrection> VocabularyCorrections {get;set;} = [];
     public string EffectiveSpeechModel => UseCustomSpeechModel ? SpeechModel : SpeechProfiles.ModelFor(Quality);
     public string Theme { get; set; } = "Light";
-    public string Backend { get; set; } = "Automatic";
+    public ProcessingDevice ProcessingDevice { get; set; } = ProcessingDevice.Automatic;
+    /// <summary>Whisper recognition threads. Zero selects a safe automatic value.</summary>
+    public int CpuThreads { get; set; }
+    /// <summary>Push-to-talk recordings shorter than this are discarded. Zero disables the guard.</summary>
+    public int MinHoldMs { get; set; }
     public string? MicrophoneId { get; set; }
     public Hotkey PlainHotkey { get; set; } = new(6, 32);
     public Hotkey EditHotkey { get; set; } = new(6, 69);
@@ -110,7 +131,10 @@ public sealed class AppSettings
     {
         if (Language is null||!Languages.All.ContainsKey(Language)) throw new InvalidDataException("Choose a supported language.");
         if(PlainHotkey is null||EditHotkey is null||CustomWords is null||VocabularyCorrections is null||Snippets is null||Profiles is null)throw new InvalidDataException("Settings contain missing values.");
-        if(!Enum.IsDefined(Clipboard)||Theme is not ("System" or "Light" or "Dark")||Backend is not ("Automatic" or "CPU" or "GPU / accelerated"))throw new InvalidDataException("Invalid app preferences.");
+        if(!Enum.IsDefined(Clipboard)||!Enum.IsDefined(ProcessingDevice)||Theme is not ("System" or "Light" or "Dark"))throw new InvalidDataException("Invalid app preferences.");
+        // Keep hand-edited files safe instead of rejecting them for a value the UI can clamp.
+        CpuThreads = Math.Clamp(CpuThreads, 0, Math.Max(1, Environment.ProcessorCount));
+        MinHoldMs = Math.Clamp(MinHoldMs, 0, 2000);
         if(Sounds is not ("Off" or "Minimal" or "Standard"))Sounds="Off";
         if(!double.IsFinite(OverlayLeft)||!double.IsFinite(OverlayTop))throw new InvalidDataException("Invalid overlay position.");
         if(!Enum.IsDefined(Quality)||!Enum.IsDefined(OutputCasing))throw new InvalidDataException("Invalid transcription preferences.");
