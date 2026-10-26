@@ -35,10 +35,12 @@ public class TypedSnippetTests
     }
 
     [Fact]
-    public void SingleCharacterAndControlCharacterTriggersAreIgnored()
+    public void IneligibleTriggersAreIgnored()
     {
         Assert.Null(TypedSnippetMatcher.Match("a", [new Snippet("One", "a", "x")]));
         Assert.Empty(TypedSnippetMatcher.Triggers(new Snippet("Control", "a\tb", "x")));
+        Assert.Empty(TypedSnippetMatcher.Triggers(new Snippet("Emoji", "🙂x", "x")));
+        Assert.Empty(TypedSnippetMatcher.Triggers(new Snippet("Combining", "e\u0301x", "x")));
         Assert.Empty(TypedSnippetMatcher.Triggers(null));
     }
 

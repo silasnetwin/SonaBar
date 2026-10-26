@@ -40,6 +40,7 @@ For **Notepad, Word, Chrome, Edge, Discord, VS Code, JetBrains IDE, and Windows 
 - [ ] Custom words, snippet import/export, tabs/newlines and clipboard/date/time variables.
 - [ ] Typed snippets: off by default; enable in Snippets, then type a trigger plus space, Enter, Tab and punctuation in Notepad and a browser. Verify one replacement, no lost delimiter, longest-alternative matching and `{date}`, `{time}` and `{clipboard}` variables.
 - [ ] Multi-word and punctuation triggers such as `be right back` and `e.g.` expand; clicking elsewhere in the same field before the delimiter does not replace earlier text.
+- [ ] After typing a partial trigger, press Enter or Tab and then a space; no trigger expands across the line break or tab stop.
 - [ ] Typed snippets do not fire in SonaBar, password fields or elevated targets; disabling the option restores literal typing.
 - [ ] History search/filter/delete and disabled-history behavior; clear history retains lifetime totals.
 - [ ] Empty History, Statistics, Snippets and Applications show useful guidance without a blank list frame; History links to Privacy when storage is off.

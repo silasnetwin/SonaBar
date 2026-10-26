@@ -23,7 +23,8 @@ All notable changes to SonaBar are documented here. Versions follow
   case-insensitive, requires a word boundary and prefers the longest
   alternative. The setting is off by default, ignores injected input, skips
   SonaBar's own window and password fields, clears the typed buffer on a mouse
-  click, and warns that games or elevated apps may reject injected text.
+  click or line break, and warns that games or elevated apps may reject injected
+  text.
 - **Parakeet TDT 0.6B v3 now runs from the release package.** The NeMo-Speech.cpp
   runtime and its required ggml, Abseil and protobuf DLLs are bundled, so the
   verified 25-language European model can run on CPU without a separate C++

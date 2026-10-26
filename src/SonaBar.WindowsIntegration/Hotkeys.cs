@@ -128,8 +128,18 @@ public sealed class GlobalHotkeyService : IDisposable
         var text = KeyText(info, foreground, out var deadKey);
         if (deadKey) { typedBuffer.Clear(); return false; }
         if (text.Length == 0) return false;
-        if (key == 0x0D) return TryExpand(key, '\r', out _);
-        if (key == 0x09) return TryExpand(key, '\t', out _);
+        if (key == 0x0D)
+        {
+            if (TryExpand(key, '\r', out _)) return true;
+            // Enter moves the caret to a new line. A trigger cannot span that line,
+            // so do not let a later space replace text typed before the line break.
+            typedBuffer.Clear(); return false;
+        }
+        if (key == 0x09)
+        {
+            if (TryExpand(key, '\t', out _)) return true;
+            typedBuffer.Clear(); return false;
+        }
         if (text.Length == 1 && TypedSnippetMatcher.IsDelimiter(text[0]))
         {
             if (TryExpand(key, text[0], out var blocked)) return true;

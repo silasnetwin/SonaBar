@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace SonaBar.Core;
 
 /// <summary>A snippet trigger found at the end of the text typed so far.</summary>
@@ -20,11 +22,18 @@ public static class TypedSnippetMatcher
             .ToArray();
     }
 
-    /// <summary>Single-character and control-character triggers are too easy to fire by accident.</summary>
+    /// <summary>
+    /// Single-character and control-character triggers are too easy to fire by accident.
+    /// Surrogate pairs and combining marks are rejected because a target's Backspace
+    /// may delete a grapheme cluster instead of one UTF-16 code unit.
+    /// </summary>
     public static bool IsEligible(string trigger) =>
         trigger.Length >= 2 &&
         trigger.Any(character => !char.IsWhiteSpace(character)) &&
-        !trigger.Any(char.IsControl);
+        !trigger.Any(char.IsControl) &&
+        !trigger.Any(character => char.IsSurrogate(character) ||
+            char.GetUnicodeCategory(character) is UnicodeCategory.NonSpacingMark
+                or UnicodeCategory.SpacingCombiningMark or UnicodeCategory.EnclosingMark);
 
     public static bool IsDelimiter(char value) =>
         value is ' ' or '\t' or '\r' or '\n' or '.' or ',' or '!' or '?' or ';' or ':';
