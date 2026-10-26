@@ -1,0 +1,1006 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<title>SonaBar × Dictate — Rebuild Brief</title>
+<style>
+  :root{
+    --bg:#0c0c10;
+    --bg-2:#111116;
+    --panel:#17171e;
+    --panel-2:#1d1d26;
+    --panel-3:#24242f;
+    --line:#2d2d3a;
+    --line-soft:#23232d;
+    --text:#f4f0e9;
+    --text-soft:#c9c2d3;
+    --muted:#9c95a9;
+    --accent:#e34f80;
+    --accent-2:#8aa4ff;
+    --accent-3:#f3b45f;
+    --green:#61d69c;
+    --red:#ff7373;
+    --shadow:0 20px 60px rgba(0,0,0,.35);
+    --mono:ui-monospace,SFMono-Regular,Consolas,"Liberation Mono",monospace;
+    --sans:"Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+    --display:"Segoe UI Variable Display","Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth;scroll-padding-top:84px}
+  body{
+    margin:0;
+    color:var(--text);
+    background:
+      radial-gradient(1100px 600px at 15% -10%,rgba(227,79,128,.14),transparent 60%),
+      radial-gradient(900px 500px at 90% 8%,rgba(138,164,255,.11),transparent 55%),
+      linear-gradient(180deg,var(--bg),#09090c 65%);
+    font-family:var(--sans);
+    line-height:1.58;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:rgba(227,79,128,.35);color:#fff}
+  a{color:var(--accent-2);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{width:min(1180px,calc(100% - 48px));margin:0 auto}
+  .topbar{
+    position:sticky;top:0;z-index:50;
+    background:rgba(12,12,16,.82);
+    border-bottom:1px solid rgba(45,45,58,.7);
+    backdrop-filter:blur(18px);
+  }
+  .topbar .wrap{display:flex;align-items:center;gap:18px;min-height:64px}
+  .brand{display:flex;align-items:center;gap:11px;min-width:max-content}
+  .brand-mark{
+    width:30px;height:30px;border-radius:9px;
+    display:grid;place-items:center;
+    background:linear-gradient(135deg,rgba(227,79,128,.9),rgba(138,164,255,.9));
+    color:#0c0c10;font-weight:900;font-size:15px;
+    box-shadow:0 8px 24px rgba(227,79,128,.22);
+  }
+  .brand-text{font-family:var(--display);font-weight:700;letter-spacing:-.02em}
+  .brand-text small{display:block;font-family:var(--sans);font-size:10px;font-weight:600;letter-spacing:.16em;color:var(--muted);text-transform:uppercase;line-height:1.2}
+  .topnav{display:flex;align-items:center;gap:2px;flex-wrap:wrap;margin-left:auto}
+  .topnav a{
+    color:var(--text-soft);font-size:12.5px;font-weight:600;
+    padding:7px 9px;border-radius:8px;
+  }
+  .topnav a:hover{color:var(--text);background:rgba(255,255,255,.05);text-decoration:none}
+  .topnav a.active{color:#fff;background:rgba(227,79,128,.16)}
+  .top-actions{display:flex;gap:8px;margin-left:8px}
+  .btn{
+    appearance:none;border:1px solid var(--line);
+    background:var(--panel-2);color:var(--text);
+    border-radius:10px;padding:8px 13px;
+    font:600 12.5px/1.2 var(--sans);cursor:pointer;
+    display:inline-flex;align-items:center;gap:7px;
+    transition:background .15s ease,border-color .15s ease,transform .15s ease;
+  }
+  .btn:hover{background:var(--panel-3);border-color:#3a3a4a;text-decoration:none}
+  .btn:active{transform:translateY(1px)}
+  .btn.primary{background:linear-gradient(180deg,#ec5b8b,#d83e70);border-color:rgba(255,255,255,.12);color:#fff}
+  .btn.primary:hover{background:linear-gradient(180deg,#f26895,#df4777)}
+  .btn.ghost{background:transparent}
+  .btn.small{padding:6px 10px;font-size:11.5px}
+  .hero{padding:78px 0 62px;border-bottom:1px solid var(--line-soft)}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;
+    color:var(--accent);font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase;
+  }
+  .eyebrow::before{content:"";width:22px;height:1px;background:var(--accent)}
+  h1,h2,h3{font-family:var(--display);letter-spacing:-.035em;line-height:1.05;margin:0}
+  h1{font-size:clamp(44px,7vw,86px);font-weight:750;margin:18px 0 20px;max-width:980px}
+  h1 .thin{color:var(--muted);font-weight:350}
+  h2{font-size:clamp(30px,4vw,48px);font-weight:720;margin:0 0 14px}
+  h3{font-size:19px;font-weight:680;letter-spacing:-.02em;margin:0 0 8px}
+  h4{font-size:13px;font-weight:750;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 0 10px}
+  p{margin:0 0 14px}
+  .lead{font-size:clamp(17px,2vw,20px);line-height:1.55;color:var(--text-soft);max-width:850px}
+  .hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:36px;align-items:end}
+  .hero-card{
+    background:linear-gradient(180deg,rgba(29,29,38,.9),rgba(18,18,24,.9));
+    border:1px solid var(--line);border-radius:22px;padding:22px;box-shadow:var(--shadow);
+  }
+  .hero-card .row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line-soft)}
+  .hero-card .row:last-child{border-bottom:0;padding-bottom:0}
+  .hero-card .row:first-child{padding-top:0}
+  .hero-card .k{color:var(--muted);font-size:12px}
+  .hero-card .v{font-size:12.5px;font-weight:700;text-align:right}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:34px 0 0}
+  .stat{
+    background:rgba(23,23,30,.75);border:1px solid var(--line);
+    border-radius:16px;padding:16px 16px 14px;
+  }
+  .stat .n{font-family:var(--display);font-size:30px;font-weight:750;letter-spacing:-.04em;line-height:1}
+  .stat .n small{font-size:14px;font-weight:600;color:var(--muted);letter-spacing:0}
+  .stat .l{font-size:11px;color:var(--muted);margin-top:7px;line-height:1.35}
+  .stat.hot .n{color:var(--accent)}
+  .stat.cool .n{color:var(--accent-2)}
+  .stat.good .n{color:var(--green)}
+  .stat.warm .n{color:var(--accent-3)}
+  section{padding:72px 0;border-bottom:1px solid var(--line-soft)}
+  .section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:28px}
+  .section-head p{max-width:660px;margin:0;color:var(--text-soft)}
+  .kicker{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+  .grid{display:grid;gap:16px}
+  .g2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .g3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .g4{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .card{
+    background:linear-gradient(180deg,rgba(29,29,38,.72),rgba(19,19,25,.72));
+    border:1px solid var(--line);border-radius:18px;padding:21px;
+  }
+  .card.soft{background:rgba(23,23,30,.52)}
+  .card.accent{border-color:rgba(227,79,128,.38);background:linear-gradient(180deg,rgba(227,79,128,.1),rgba(23,23,30,.6))}
+  .card.blue{border-color:rgba(138,164,255,.35);background:linear-gradient(180deg,rgba(138,164,255,.09),rgba(23,23,30,.6))}
+  .card.green{border-color:rgba(97,214,156,.32);background:linear-gradient(180deg,rgba(97,214,156,.08),rgba(23,23,30,.6))}
+  .card p:last-child{margin-bottom:0}
+  .muted{color:var(--muted)}
+  .small{font-size:12.5px}
+  .tiny{font-size:11.5px}
+  .mono{font-family:var(--mono)}
+  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+  .chip{
+    display:inline-flex;align-items:center;gap:6px;
+    border:1px solid var(--line);background:rgba(255,255,255,.03);
+    color:var(--text-soft);border-radius:999px;padding:4px 9px;font-size:11px;font-weight:600;
+  }
+  .chip.green{border-color:rgba(97,214,156,.35);color:#bff5d8;background:rgba(97,214,156,.08)}
+  .chip.red{border-color:rgba(255,115,115,.35);color:#ffd1d1;background:rgba(255,115,115,.08)}
+  .chip.blue{border-color:rgba(138,164,255,.35);color:#dbe4ff;background:rgba(138,164,255,.08)}
+  .chip.amber{border-color:rgba(243,180,95,.35);color:#ffe5bd;background:rgba(243,180,95,.08)}
+  .quote{
+    border-left:3px solid var(--accent);padding:2px 0 2px 16px;margin:16px 0;
+    color:var(--text-soft);font-size:14.5px;
+  }
+  .quote strong{color:var(--text)}
+  .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:16px;background:rgba(23,23,30,.55)}
+  table{width:100%;border-collapse:collapse;min-width:720px}
+  th,td{padding:12px 14px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line-soft);font-size:13px}
+  th{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:800;background:rgba(255,255,255,.02)}
+  tr:last-child td{border-bottom:0}
+  td strong{color:var(--text)}
+  .ok{color:var(--green);font-weight:700}
+  .warn{color:var(--accent-3);font-weight:700}
+  .bad{color:var(--red);font-weight:700}
+  .timeline{position:relative;margin-top:8px}
+  .timeline::before{content:"";position:absolute;left:74px;top:8px;bottom:8px;width:1px;background:var(--line)}
+  .t-item{display:grid;grid-template-columns:60px 1fr;gap:28px;padding:12px 0;position:relative}
+  .t-item::before{content:"";position:absolute;left:69px;top:19px;width:11px;height:11px;border-radius:50%;background:var(--panel);border:2px solid var(--accent)}
+  .t-time{font-family:var(--mono);font-size:12px;color:var(--accent);padding-top:1px;text-align:right}
+  .t-body strong{display:block;font-size:14px;margin-bottom:2px}
+  .t-body span{font-size:13px;color:var(--text-soft)}
+  .callout{
+    display:flex;gap:14px;align-items:flex-start;
+    border:1px solid rgba(243,180,95,.3);background:rgba(243,180,95,.07);
+    border-radius:16px;padding:18px 20px;margin:20px 0;
+  }
+  .callout .icon{font-size:20px;line-height:1;margin-top:1px}
+  .callout strong{color:#ffe2b5}
+  .callout p{margin:0;color:var(--text-soft);font-size:13.5px}
+  .window{
+    border:1px solid #3a3a45;border-radius:12px;overflow:hidden;
+    background:#d7d7d7;color:#111;box-shadow:0 30px 80px rgba(0,0,0,.5);
+    font-family:"Segoe UI",Tahoma,sans-serif;
+  }
+  .window .titlebar{
+    height:31px;background:linear-gradient(#f3f3f3,#e3e3e3);border-bottom:1px solid #b9b9b9;
+    display:flex;align-items:center;justify-content:center;position:relative;
+    font-size:12px;color:#333;
+  }
+  .window .titlebar .controls{position:absolute;right:7px;top:0;display:flex;height:100%}
+  .window .titlebar .controls span{width:34px;display:grid;place-items:center;font-size:11px;color:#555}
+  .window .body{padding:14px 16px 16px;background:#d7d7d7}
+  .window .apphead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .window .apphead b{font-size:15px;font-weight:600}
+  .window .apphead button{font-size:11px;padding:3px 10px;border:1px solid #9a9a9a;background:#efefef;border-radius:2px;color:#222}
+  .window .statusbox{
+    height:88px;display:grid;place-items:center;background:#c9c9c9;border:1px solid #b5b5b5;
+    color:#444;font-size:27px;margin-bottom:8px;
+  }
+  .window .meta{display:flex;flex-wrap:wrap;gap:14px;font-size:11px;color:#555;margin:0 0 7px}
+  .window .meta b{color:#333;font-weight:600}
+  .window .lastlabel{font-size:11px;color:#555;margin-bottom:4px}
+  .window .last{
+    height:80px;background:#efefef;border:1px solid #b5b5b5;padding:7px 8px;
+    font-size:12px;color:#222;overflow:hidden;
+  }
+  .window .last .ghost{color:#777}
+  .window .note{font-size:10px;color:#666;margin-top:8px;line-height:1.35}
+  .dialog{
+    background:#f3f3f3;color:#111;border:1px solid #a9a9a9;border-radius:3px;
+    box-shadow:0 24px 60px rgba(0,0,0,.45);font-family:"Segoe UI",Tahoma,sans-serif;
+    overflow:hidden;
+  }
+  .dialog .dtitle{height:28px;background:linear-gradient(#f7f7f7,#e7e7e7);border-bottom:1px solid #b9b9b9;display:flex;align-items:center;justify-content:center;font-size:11.5px;color:#333;position:relative}
+  .dialog .dtitle .controls{position:absolute;right:6px;display:flex;gap:2px}
+  .dialog .dtitle .controls span{width:18px;height:18px;display:grid;place-items:center;font-size:9px;color:#555}
+  .dialog .dbody{padding:12px 14px 10px}
+  .drow{display:grid;grid-template-columns:98px 1fr;gap:10px;align-items:center;margin-bottom:8px;font-size:11px}
+  .drow label{color:#333}
+  .drow .fakeinput{height:22px;border:1px solid #a9a9a9;background:#fff;display:flex;align-items:center;padding:0 6px;font-size:10.5px;color:#222;overflow:hidden;white-space:nowrap}
+  .drow .fakeinput.select::after{content:"▾";margin-left:auto;color:#555}
+  .drow .fakeinput.number{justify-content:space-between}
+  .drow .fakeinput.number::after{content:"⌃\A⌄";white-space:pre;font-size:8px;line-height:8px;color:#666}
+  .dialog .dnote{font-size:9.5px;color:#666;line-height:1.35;margin:8px 0 10px}
+  .dialog .dfooter{display:flex;justify-content:flex-end;gap:6px;padding:0 14px 12px}
+  .dialog .dfooter button{font-size:10.5px;padding:4px 9px;border:1px solid #9a9a9a;background:linear-gradient(#fff,#e9e9e9);border-radius:3px;color:#222}
+  .dialog .dfooter button.save{font-weight:600}
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:18px;align-items:start}
+  .compare .label{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:9px}
+  .compare .label .dot{width:7px;height:7px;border-radius:50%;background:var(--muted)}
+  .compare .label.now .dot{background:var(--accent-3)}
+  .compare .label.next .dot{background:var(--green)}
+  .mock-workspace{background:#e9e9e9;color:#111;border:1px solid #c7c7c7;border-radius:10px;padding:10px;min-height:250px;font-family:"Segoe UI",sans-serif}
+  .mock-workspace .mwtop{display:flex;align-items:center;justify-content:space-between;font-size:9px;color:#555;border-bottom:1px solid #d2d2d2;padding-bottom:7px;margin-bottom:8px}
+  .mock-workspace .mwtabs{display:flex;gap:3px;justify-content:center;margin:7px 0 10px}
+  .mock-workspace .mwtabs span{font-size:8px;padding:3px 7px;border-radius:4px;background:#dedede;color:#555}
+  .mock-workspace .mwtabs span.on{background:#fff;color:#111;box-shadow:0 1px 2px rgba(0,0,0,.12)}
+  .mock-workspace .mwhero{background:#fff;border:1px solid #ddd;border-radius:6px;padding:12px}
+  .mock-workspace .mwhero b{display:block;font-size:18px;line-height:1.1;letter-spacing:-.03em;margin:4px 0}
+  .mock-workspace .mwhero p{font-size:8px;color:#666;margin:0 0 8px}
+  .mock-workspace .mwhero .mwbtn{display:inline-block;background:#1f7a4a;color:#fff;font-size:8px;padding:4px 8px;border-radius:4px}
+  .mock-workspace .mwcards{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+  .mock-workspace .mwcards div{height:52px;border:1px solid #ddd;background:#fff;border-radius:5px;padding:6px;font-size:7px;color:#666}
+  .mock-workspace .mwcards b{display:block;font-size:9px;color:#111;margin:2px 0}
+  .mock-compact{background:#d7d7d7;color:#111;border:1px solid #b9b9b9;border-radius:10px;overflow:hidden;font-family:"Segoe UI",sans-serif;min-height:250px}
+  .mock-compact .mctitle{height:26px;background:#ededed;border-bottom:1px solid #b9b9b9;display:grid;place-items:center;font-size:9px;color:#444}
+  .mock-compact .mcbody{padding:10px}
+  .mock-compact .mchead{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:600;margin-bottom:7px}
+  .mock-compact .mcstatus{height:76px;display:grid;place-items:center;background:#c9c9c9;border:1px solid #b5b5b5;color:#444;font-size:22px}
+  .mock-compact .mcmeta{display:flex;gap:9px;flex-wrap:wrap;font-size:8px;color:#555;margin:6px 0}
+  .mock-compact .mclast{height:62px;background:#efefef;border:1px solid #b5b5b5;padding:6px;font-size:9px;color:#444}
+  .mock-compact .mcrow{display:flex;gap:5px;margin-top:7px}
+  .mock-compact .mcrow span{font-size:8px;padding:4px 7px;border:1px solid #999;background:#f4f4f4;border-radius:2px}
+  .mock-compact .mcrow span.primary{background:#2b6cb0;color:#fff;border-color:#2b6cb0}
+  .phase{display:grid;grid-template-columns:38px 1fr;gap:14px;padding:16px 0;border-bottom:1px solid var(--line-soft)}
+  .phase:last-child{border-bottom:0}
+  .phase .num{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:rgba(227,79,128,.12);border:1px solid rgba(227,79,128,.4);color:var(--accent);font-weight:800;font-size:13px}
+  .phase h3{margin:0 0 4px}
+  .phase p{font-size:13px;color:var(--text-soft);margin:0 0 8px}
+  .phase .exit{font-size:12px;color:var(--green)}
+  .checklist{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 22px;margin:0;padding:0;list-style:none}
+  .checklist li{display:flex;gap:9px;align-items:flex-start;font-size:13px;color:var(--text-soft);padding:7px 0;border-bottom:1px solid var(--line-soft)}
+  .checklist input{margin:4px 0 0;accent-color:var(--accent);width:14px;height:14px;flex:none}
+  .checklist b{color:var(--text);font-weight:650}
+  .prompt-shell{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#0a0a0d}
+  .prompt-toolbar{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.025);flex-wrap:wrap}
+  .prompt-toolbar .title{font-size:12px;font-weight:700;color:var(--text-soft);margin-right:auto}
+  .prompt-toolbar .hint{font-size:11px;color:var(--muted)}
+  .prompt{
+    margin:0;padding:20px;max-height:620px;overflow:auto;
+    white-space:pre-wrap;word-break:break-word;
+    font-family:var(--mono);font-size:12.5px;line-height:1.65;color:#dcd6e5;
+    background:
+      linear-gradient(180deg,rgba(227,79,128,.04),transparent 180px),
+      #0a0a0d;
+  }
+  .prompt::-webkit-scrollbar{width:10px}
+  .prompt::-webkit-scrollbar-thumb{background:#2a2a35;border-radius:8px}
+  .prompt .h{color:#ff9fbe;font-weight:700}
+  .prompt .c{color:#8aa4ff}
+  .prompt .g{color:#8de2b4}
+  .prompt .m{color:#a9a3b3}
+  .prompt .w{color:#f3b45f}
+  .toast{
+    position:fixed;left:50%;bottom:26px;transform:translate(-50%,20px);
+    background:#f4f0e9;color:#111;padding:10px 16px;border-radius:10px;
+    font-size:12.5px;font-weight:700;box-shadow:0 16px 50px rgba(0,0,0,.4);
+    opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease;z-index:100;
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  footer{padding:34px 0 54px;color:var(--muted);font-size:12px}
+  footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+  .src{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 24px}
+  .src a{font-size:12.5px}
+  .src span{color:var(--muted);font-size:12px}
+  .hr{height:1px;background:var(--line-soft);margin:22px 0}
+  .pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:3px 8px;font-size:10.5px;color:var(--text-soft);background:rgba(255,255,255,.03)}
+  .pill .dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+  .kbd{font-family:var(--mono);font-size:11px;border:1px solid #444;border-bottom-width:2px;border-radius:5px;padding:1px 5px;background:#1c1c24;color:#e8e2ee}
+  @media (max-width:980px){
+    .hero-grid{grid-template-columns:1fr}
+    .g4{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .g3{grid-template-columns:1fr}
+    .stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .compare{grid-template-columns:1fr}
+    .section-head{display:block}
+    .section-head p{margin-top:10px}
+  }
+  @media (max-width:720px){
+    .wrap{width:min(100% - 28px,1180px)}
+    .topbar .wrap{min-height:58px;gap:10px}
+    .topnav{display:none}
+    .top-actions{margin-left:auto}
+    .hero{padding:52px 0 42px}
+    section{padding:52px 0}
+    .g2{grid-template-columns:1fr}
+    .stats{grid-template-columns:1fr 1fr}
+    .checklist{grid-template-columns:1fr}
+    .t-item{grid-template-columns:52px 1fr;gap:18px}
+    .timeline::before{left:64px}
+    .t-item::before{left:59px}
+    .src{grid-template-columns:1fr}
+    .hero-card{order:-1}
+    h1{font-size:clamp(38px,12vw,58px)}
+  }
+  @media print{
+    .topbar,.top-actions,.prompt-toolbar .btn,.toast{display:none!important}
+    body{background:#fff;color:#111}
+    .card,.hero-card,.table-wrap,.prompt-shell{border-color:#ccc;background:#fff;box-shadow:none}
+    .prompt{max-height:none;background:#fff;color:#111}
+    section{padding:28px 0;break-inside:avoid}
+    a{color:#0645ad}
+  }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="SonaBar Rebuild Brief">
+      <span class="brand-mark">S</span>
+      <span class="brand-text">SonaBar <small>Rebuild Brief</small></span>
+    </a>
+    <nav class="topnav" aria-label="Inhalt">
+      <a href="#summary">Kurzfassung</a>
+      <a href="#video">Video</a>
+      <a href="#comments">Kommentare</a>
+      <a href="#dictate">Dictate</a>
+      <a href="#gap">Ist / Soll</a>
+      <a href="#plan">Plan</a>
+      <a href="#prompt">Prompt</a>
+      <a href="#acceptance">Abnahme</a>
+    </nav>
+    <div class="top-actions">
+      <button class="btn small" type="button" onclick="window.print()">Drucken</button>
+      <button class="btn primary small" type="button" data-copy="promptText">Prompt kopieren</button>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero" id="summary">
+    <div class="wrap">
+      <div class="eyebrow">Internes Rebuild-Briefing · 26. Oktober 2026</div>
+      <h1>SonaBar wird<br><span class="thin">zur Diktier-Utility.</span><br>Die Tiefe bleibt.</h1>
+      <div class="hero-grid">
+        <div>
+          <p class="lead">Die Vorlage aus dem Video ist kein schönes UI. Sie ist ein ehrliches UI: <strong>Status, Modus, Hotkey, Modell, letzte Transkription, Settings.</strong> Genau diese Klarheit fehlt SonaBar im Hauptfenster. SonaBar hat die bessere Windows-Basis und mehr Funktionen — aber sie sind zu weit verteilt.</p>
+          <div class="chips">
+            <span class="chip green">Windows-native WPF</span>
+            <span class="chip blue">Parakeet bereits an Bord</span>
+            <span class="chip amber">CPU noch zu versteckt</span>
+            <span class="chip red">Shell zu groß</span>
+          </div>
+          <div class="stats" aria-label="Kennzahlen">
+            <div class="stat hot"><div class="n">0,14 <small>s</small></div><div class="l">Parakeet-Antwortzeit im Video</div></div>
+            <div class="stat warm"><div class="n">0,33 <small>s</small></div><div class="l">Groq im selben Vergleich</div></div>
+            <div class="stat cool"><div class="n">1,16 <small>s</small></div><div class="l">OpenAI im selben Vergleich</div></div>
+            <div class="stat good"><div class="n">0 <small>GB</small></div><div class="l">VRAM statt 4,4 GB für Whisper large-v3</div></div>
+          </div>
+        </div>
+        <aside class="hero-card" aria-label="Empfehlung">
+          <h4>Empfehlung</h4>
+          <p style="font-size:15px;color:var(--text);margin-bottom:12px"><strong>Kein Neubau von null.</strong> Ein <strong>Compact-first Hybrid</strong>: neue kompakte Hauptansicht und ein echter Settings-Dialog; die bestehende Workspace-App bleibt als „Erweitert“ erreichbar.</p>
+          <div class="row"><span class="k">Was ersetzt wird</span><span class="v">Shell &amp; Informationsarchitektur</span></div>
+          <div class="row"><span class="k">Was bleibt</span><span class="v">Alle Engines, Daten, Features, Tests</span></div>
+          <div class="row"><span class="k">Was zuerst kommt</span><span class="v">CPU/Threads sichtbar &amp; ehrlich</span></div>
+          <div class="row"><span class="k">Was danach kommt</span><span class="v">Deutsches Parakeet nur nach Benchmark</span></div>
+        </aside>
+      </div>
+      <div class="callout" style="margin-top:28px">
+        <div class="icon">↳</div>
+        <div>
+          <strong>Die zentrale Entscheidung:</strong>
+          <p>„Komplett umbauen“ heißt hier <em>nicht</em> „alles wegwerfen“. Die riskanten Teile von SonaBar — Hotkeys, Einfügen, History, Snippets, Qwen-Sidecar, Updates — sind bereits getestet. Ein Rewrite würde genau die Teile gefährden, die das Video nicht zeigt. Der Rebuild ersetzt die Oberfläche und die Einstellungslogik, nicht die Produktlogik.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="video">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="kicker">01 · Quellenanalyse</div>
+          <h2>Das Video, vollständig ausgewertet.</h2>
+          <p>9:40, 41.034 Aufrufe, 516 Likes, 61 ausgelesene Kommentare. Ausgewertet wurden Beschreibung, Kapitel, deutsches Auto-Transkript, Videodatei, Frames und die Kommentar-API. Die Zahlen sind eine Demo, kein breiter Benchmark.</p>
+        </div>
+        <div class="pill"><span class="dot"></span> Video + Kommentare + Frames</div>
+      </div>
+
+      <div class="grid g2" style="align-items:start">
+        <div class="card">
+          <h3>Metadaten</h3>
+          <div class="table-wrap" style="border:0;background:transparent">
+            <table style="min-width:0">
+              <tbody>
+                <tr><td class="muted">Titel</td><td><strong>Diktieren ohne Cloud: 8x schneller als die OpenAI-API – ohne Grafikkarte</strong></td></tr>
+                <tr><td class="muted">Kanal</td><td>Dirk Winiecki | Lokale KI</td></tr>
+                <tr><td class="muted">Upload</td><td>26.08.2026 · 9:40</td></tr>
+                <tr><td class="muted">Reichweite</td><td>41.034 Aufrufe · 516 Likes · 61 Kommentare/Threads</td></tr>
+                <tr><td class="muted">App</td><td><a href="https://github.com/winidi/dictate" target="_blank" rel="noreferrer">winidi/dictate</a> · MIT · Python/Qt</td></tr>
+                <tr><td class="muted">Modell</td><td><a href="https://huggingface.co/flozen1981/parakeet-primeline-onnx" target="_blank" rel="noreferrer">flozen1981/parakeet-primeline-onnx</a> · CC-BY-4.0</td></tr>
+                <tr><td class="muted">Basis</td><td><a href="https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3" target="_blank" rel="noreferrer">nvidia/parakeet-tdt-0.6b-v3</a></td></tr>
+                <tr><td class="muted">Runtime</td><td>sherpa-onnx · int8 ONNX · CPU-only · 4 Threads</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card soft">
+          <h3>Die These des Videos</h3>
+          <p style="font-size:14px">Fünf Sätze, dreimal dieselbe Aufnahme: OpenAI, Groq, lokal. Lokal gewinnt die Latenz, verliert aber bei Eigennamen und einmal beim Sinn. Der Autor sagt selbst: gut genug für Agentenarbeit, nicht für medizinische Dokumentation. Genau diese Nüchternheit ist die Vorlage — nicht die „8x“-Schlagzeile.</p>
+          <div class="quote">„OpenAI hat null Fehler gemacht … Parakeet hat in fünf Sätzen einmal den Sinn verdreht … Eigennamen … sind da ein bisschen besser aufgestellt.“<br><span class="tiny muted">— Transkript, 07:04–07:29</span></div>
+          <p class="tiny muted" style="margin-bottom:0">Die Demo misst Antwortzeit, nicht die komplette Kette vom Tastendruck bis zum eingefügten Zeichen. SonaBar muss die ganze Kette messen.</p>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+      <h3 style="margin-bottom:18px">Kapitel und was wirklich passiert</h3>
+      <div class="timeline">
+        <div class="t-item"><div class="t-time">00:00</div><div class="t-body"><strong>Der Satz tippt sich selbst.</strong><span>Demo: gesprochener Satz erscheint in unter einer Sekunde. Kein Cloud-Dienst, keine GPU.</span></div></div>
+        <div class="t-item"><div class="t-time">00:44</div><div class="t-body"><strong>Tool, Settings, Provider.</strong><span>Groq, OpenAI und Local stehen nebeneinander. Das UI ist eine kleine Utility: Status, Modus, Hotkey, Modell, letzte Transkription.</span></div></div>
+        <div class="t-item"><div class="t-time">01:41</div><div class="t-body"><strong>nvidia-smi: Karten voll, Diktat braucht 0 GB.</strong><span>Der Rechner hat große GPUs, aber die Diktat-App belegt keinen VRAM. Das ist der eigentliche Produktvorteil.</span></div></div>
+        <div class="t-item"><div class="t-time">02:16</div><div class="t-body"><strong>Installation auf frischem Ubuntu.</strong><span>Zwei Kommandos, input-Gruppe, Wayland/ydotool, einmal neu anmelden. Der Autor nennt den Bug selbst.</span></div></div>
+        <div class="t-item"><div class="t-time">02:53</div><div class="t-body"><strong>Das Modell: 640 MB, einmal laden.</strong><span>Deutscher Parakeet-Fine-Tune, int8 ONNX, 4 CPU-Threads. Deutlich kleiner als Whisper large-v3.</span></div></div>
+        <div class="t-item"><div class="t-time">03:46</div><div class="t-body"><strong>Warum Whisper raus musste.</strong><span>Whisper large-v3 belegt 4,4 GB VRAM. Für Timestamps bleibt es nützlich; für schnelles Diktat ist es der falsche Trade.</span></div></div>
+        <div class="t-item"><div class="t-time">04:46</div><div class="t-body"><strong>Derselbe Satz, dreimal.</strong><span>OpenAI, Groq, lokal. Die Bildschirmaufnahme zeigt die App und die Provider-Umschaltung; die Latenz wird sichtbar.</span></div></div>
+        <div class="t-item"><div class="t-time">06:19</div><div class="t-body"><strong>Die Zahlen.</strong><span>0,14 s lokal · 0,33 s Groq · 1,16 s OpenAI. Lokal ist ca. 8× schneller als OpenAI und gut 2× schneller als Groq.</span></div></div>
+        <div class="t-item"><div class="t-time">07:04</div><div class="t-body"><strong>Zuverlässigkeit.</strong><span>OpenAI 5/5; Parakeet 1 Sinnfehler in 5 Sätzen; Eigennamen bleiben schwierig. Englisch funktioniert out of the box, fühlt sich aber etwas langsamer an.</span></div></div>
+        <div class="t-item"><div class="t-time">08:20</div><div class="t-body"><strong>Mit der KI reden.</strong><span>Hermes + ActivityWatch: Diktat in den Agenten, nicht in ein Formular. Das ist der eigentliche Workflow.</span></div></div>
+        <div class="t-item"><div class="t-time">09:12</div><div class="t-body"><strong>Fazit.</strong><span>Einmal installieren, Zeit sparen, lokal und privat. Kein Cloud-Account, kein API-Key, keine GPU.</span></div></div>
+      </div>
+
+      <div class="hr"></div>
+      <h3 style="margin-bottom:12px">Behauptung, Beleg, Einordnung</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Behauptung</th><th>Beleg im Video</th><th>Einordnung für SonaBar</th></tr></thead>
+          <tbody>
+            <tr><td><strong>8× schneller als OpenAI</strong></td><td>0,14 s vs. 1,16 s Antwortzeit; eine Aufnahme, drei Provider.</td><td><span class="ok">Richtung stimmt.</span> Aber Antwortzeit ≠ Ende-zu-Ende. SonaBar muss Key-Release → Insert messen.</td></tr>
+            <tr><td><strong>0 GB VRAM</strong></td><td>nvidia-smi; Modell läuft auf CPU.</td><td><span class="ok">Korrekt.</span> RAM bleibt relevant. Parakeet in SonaBar ist bereits CPU-only.</td></tr>
+            <tr><td><strong>640 MB Modell</strong></td><td>Deutscher Fine-Tune, int8 ONNX.</td><td><span class="ok">Korrekt.</span> SonaBar hat aktuell ein 714-MB-q8-GGUF, nicht denselben Fine-Tune.</td></tr>
+            <tr><td><strong>4 CPU-Threads</strong></td><td>Settings-Dialog; README nennt 4 als Sweet Spot.</td><td><span class="warn">Fehlt in SonaBar.</span> Threads sind nicht einstellbar; Parakeet nutzt den Runtime-Default.</td></tr>
+            <tr><td><strong>Gute Genauigkeit</strong></td><td>OpenAI 5/5; Parakeet 1 Sinnfehler; Eigennamen schwierig.</td><td><span class="warn">Nicht überverkaufen.</span> Für Agentenarbeit okay; für Namen Hotwords und Tests nötig.</td></tr>
+            <tr><td><strong>Windows-tauglich</strong></td><td>Video ist Linux-first; Kommentare und Repo zeigen Windows-Pfad.</td><td><span class="ok">SonaBar ist hier im Vorteil.</span> Kein Python, kein Wayland, native Windows-Hooks.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout">
+        <div class="icon">!</div>
+        <div>
+          <strong>Wichtig für die Positionierung:</strong>
+          <p>Das Video ist eine Demo, keine Studie. Die 0,14 s sind ein einzelner Satz auf dem Rechner des Autors. SonaBar darf daraus keine Werbeaussage machen. Der Brief übernimmt die Architektur-Idee, nicht die Zahl.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="comments">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="kicker">02 · Kommentare</div>
+          <h2>Was die Leute wirklich wollen.</h2>
+          <p>Die Kommentare sind wertvoller als das Skript: Sie zeigen Windows-Nachfrage, Hotword-Bedarf, Setup-Schmerz und realistische Genauigkeitserwartungen. 61 Threads, inklusive Antworten des Autors.</p>
+        </div>
+        <div class="pill"><span class="dot"></span> 61 Threads ausgelesen</div>
+      </div>
+
+      <div class="grid g3">
+        <div class="card accent">
+          <h4>Windows ist der offene Markt</h4>
+          <p class="small">Mehrere Kommentare fragen nach Windows, bevor sie das Tool überhaupt testen. Der Autor sagt selbst, er hole seinen Windows-Rechner und wolle erweitern. Das Repo hat inzwischen einen Windows-Pfad — aber die Wahrnehmung bleibt „Linux-Tool“.</p>
+          <div class="chips"><span class="chip red">@egonotto4172</span><span class="chip red">@Kommentar_Roboter</span><span class="chip red">@petera.4707</span></div>
+        </div>
+        <div class="card blue">
+          <h4>Hotwords sind Pflicht</h4>
+          <p class="small">@maikschmitz3518 misst 95 s Testaudio mit 25 Eigennamen: Parakeet 12/25 ohne, 17/25 mit Hotwords; Whisper small 14/25 → 19/25. Parakeet bleibt am schnellsten, verliert aber ohne Wortliste deutlich.</p>
+          <div class="chips"><span class="chip blue">Namen</span><span class="chip blue">Fachbegriffe</span><span class="chip blue">WER</span></div>
+        </div>
+        <div class="card green">
+          <h4>Geschwindigkeit ist real</h4>
+          <p class="small">@Sahara_Dude misst auf Windows 11, Ryzen 7, CPU: Parakeet ~0,5 s, Whisper Turbo 3,53 s — gleiche sherpa-onnx-Laufzeit, int8, 4 Threads. Das ist die belastbarste unabhängige Zahl im Thread.</p>
+          <div class="chips"><span class="chip green">CPU</span><span class="chip green">Windows</span><span class="chip green">0,5 s</span></div>
+        </div>
+      </div>
+
+      <div class="grid g2" style="margin-top:16px;align-items:start">
+        <div class="card">
+          <h3>Der Kommentar, der dir aufgefallen ist</h3>
+          <div class="quote">
+            <strong>@petera.4707 · 9 Likes</strong><br>
+            „die Spracherkennung auf die CPU zu legen, rettet auf lokalen Rechnern genau den VRAM, den man für große LLMs braucht. Kleiner Mutmacher für alle, die auf Windows unterwegs sind: Das Modell selbst (Parakeet oder Canary) läuft auch unter Windows hervorragend auf der CPU. Dirk hat das Skript im Video nur elegant auf Linux-Bordmittel (Wayland/ydotool) zugeschnitten. Wer es unter Windows schon heute nutzen möchte, braucht im Grunde nur drei kleine Python-Bausteine drumherum: pynput für die Strg-Taste als Push-to-Talk, sounddevice für die saubere Mikrofonaufnahme, pyperclip + Strg+V zum automatischen Einfügen in das aktive Textfeld.“
+          </div>
+          <p class="small"><strong>Analyse:</strong> Der VRAM-Punkt ist goldrichtig. Der Python-Teil ist für SonaBar <em>nicht</em> relevant: SonaBar hat bereits native Windows-Hotkeys, WASAPI-Aufnahme und Clipboard-/SendInput-Einfügen. Der bestehende Qwen-ASR-Sidecar bleibt davon unberührt. Der einzige übernehmbare Teil ist das Modell und die explizite CPU-Thread-Steuerung.</p>
+          <div class="chips"><span class="chip green">CPU entlastet GPU</span><span class="chip amber">Python nicht nötig</span><span class="chip blue">SonaBar ist näher dran</span></div>
+        </div>
+        <div class="card soft">
+          <h3>Weitere Themen</h3>
+          <div class="table-wrap" style="border:0;background:transparent">
+            <table style="min-width:0">
+              <tbody>
+                <tr><td><strong>Handy / OpenWhispr / Voxtype</strong></td><td class="small">Mehrfach als Vergleich genannt; Handy gilt als ausgereift, aber SonaBar hat mehr Windows-Integration.</td></tr>
+                <tr><td><strong>Setup-Schmerz</strong></td><td class="small">input-Gruppe, Logout, ydotool, Umlaute, Y/Z, Arch/pacman. Windows erspart das — SonaBar sollte es nicht nachbauen.</td></tr>
+                <tr><td><strong>Zahlen als Ziffern</strong></td><td class="small">@uwegenosdude fragt nach Ziffern statt Wörtern; der Autor verweist auf ein kleines Skript. SonaBar kann das später als Textnormalisierung prüfen.</td></tr>
+                <tr><td><strong>Modell in eigene Projekte</strong></td><td class="small">@baalsebub6514 fragt, ob das Modell eigenständig nutzbar ist; der Autor bejaht. Für SonaBar: Modell separat, nicht als untrennbares App-Asset.</td></tr>
+                <tr><td><strong>Andere Sprachen</strong></td><td class="small">Englisch out of the box; andere Sprachen unterschiedlich genau. SonaBar hat bereits 25 Sprachen über Parakeet TDT v3.</td></tr>
+                <tr><td><strong>Genauigkeitsgrenzen</strong></td><td class="small">@KrisAusEU: nur bei klarer Aussprache; @MarkusReinisch: Parakeet sei das schwächste Modell. Der Autor widerspricht: für Agenten reicht es, Whisper sei gefühlt nicht viel besser.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout" style="margin-top:18px">
+        <div class="icon">→</div>
+        <div>
+          <strong>Produktfolgerung:</strong>
+          <p>Die Nachfrage ist nicht „mehr Einstellungen“, sondern <strong>„ein Fenster, das sofort verständlich ist, und ein Modell, das auf der CPU schnell genug ist“</strong>. SonaBar sollte die Windows-Stärke ausspielen und die CPU-Wahl sichtbar machen — nicht das Linux-Setup nachbauen.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="dictate">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="kicker">03 · Die Vorlage</div>
+          <h2>Das „komische Fenster“ ist eigentlich gut.</h2>
+          <p>Die Dictate-App ist bewusst banal: ein Status, drei Metadaten, ein Textfeld, ein Settings-Dialog. Das ist keine Design-Schwäche — das ist die richtige Informationshierarchie für ein Werkzeug, das im Hintergrund lebt.</p>
+        </div>
+        <div class="pill"><span class="dot"></span> Referenz, keine Kopiervorlage</div>
+      </div>
+
+      <div class="compare">
+        <div>
+          <div class="label now"><span class="dot"></span> Dictate · Referenz</div>
+          <div class="window" aria-label="Nachbau des Dictate-Hauptfensters">
+            <div class="titlebar">Dictate<span class="controls"><span>—</span><span>□</span><span>×</span></span></div>
+            <div class="body">
+              <div class="apphead"><b>Dictate</b><button type="button">Settings</button></div>
+              <div class="statusbox">Ready</div>
+              <div class="meta"><span>Mode: <b>Push-to-talk</b></span><span>Hotkey: <b>CTRL</b></span><span>Model: <b>parakeet-primeline</b></span></div>
+              <div class="lastlabel">Last transcription:</div>
+              <div class="last">Und das Ganze hier war auch nicht Whisper, das habe ich monatelang benutzt. Allerdings stellt sich heraus, dass das wahrscheinlich ein Fehler war.<br><span class="ghost">…</span></div>
+              <div class="note">Runs entirely offline on your CPU. Model: parakeet-primeline (German fine-tune).</div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="label next"><span class="dot"></span> Dictate · Settings</div>
+          <div class="dialog" aria-label="Nachbau des Dictate-Settings-Dialogs">
+            <div class="dtitle">Dictate — Settings<span class="controls"><span>—</span><span>□</span><span>×</span></span></div>
+            <div class="dbody">
+              <div class="drow"><label>Provider:</label><div class="fakeinput select">Local (Parakeet DE, CPU offline)</div></div>
+              <div class="drow"><label>Mode:</label><div class="fakeinput select">Push-to-talk (hold key)</div></div>
+              <div class="drow"><label>Hotkey:</label><div class="fakeinput select">CTRL</div></div>
+              <div class="drow"><label>Local model:</label><div class="fakeinput">Installed and ready.</div></div>
+              <div class="drow"><label></label><div class="fakeinput" style="justify-content:center">Re-download model</div></div>
+              <div class="drow"><label>CPU threads:</label><div class="fakeinput number">4</div></div>
+              <div class="drow"><label>Min hold to send:</label><div class="fakeinput number">2.0 s</div></div>
+              <div class="dnote">Runs entirely offline on your CPU. Model: parakeet-primeline (German fine-tune). 4 threads is the sweet spot.</div>
+              <div class="dfooter"><button type="button">Cancel</button><button type="button" class="save">Save</button></div>
+            </div>
+          </div>
+          <p class="tiny muted" style="margin-top:12px">Die Optik ist Tkinter/Win32, nicht das Ziel. Das <em>Informationsmodell</em> ist das Ziel.</p>
+        </div>
+      </div>
+
+      <div class="grid g3" style="margin-top:26px">
+        <div class="card green">
+          <h4>Übernehmen</h4>
+          <p class="small"><strong>Status-first:</strong> „Ready / Listening / Transcribing“ als größtes Element. <strong>Eine Zeile Kontext:</strong> Mode, Hotkey, Model. <strong>Letzte Transkription</strong> bleibt sichtbar. <strong>Settings als Dialog</strong> mit Provider, Modell, CPU, Threads, Min Hold.</p>
+        </div>
+        <div class="card accent">
+          <h4>Nicht übernehmen</h4>
+          <p class="small">Kein Tkinter-Look, keine fehlende DPI-/Screenreader-Unterstützung, keine versteckten Provider, keine Modell-Downloads ohne SHA-256, kein „Ready“, das nicht wirklich bereit ist. SonaBar bleibt WPF mit Themes, High Contrast und echten Zuständen.</p>
+        </div>
+        <div class="card blue">
+          <h4>Die Formel</h4>
+          <p class="small"><strong>Ein Fenster, eine Aufgabe:</strong> bereit sein, zuhören, Text liefern. Alles andere — Files, Meetings, History, Snippets, Writing, Apps — lebt hinter <strong>„Open workspace“</strong>. Kein Feature wird entfernt, nur priorisiert.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="gap">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="kicker">04 · SonaBar heute</div>
+          <h2>Was schon da ist. Was zu tief liegt.</h2>
+          <p>SonaBar ist technisch weiter als Dictate: Windows-native, mehrere Engines, History, Snippets, Meetings, Updates. Das Problem ist die Oberfläche und die Sichtbarkeit der Entscheidungen.</p>
+        </div>
+        <div class="pill"><span class="dot"></span> Baseline 0.1.3 · 223 Tests</div>
+      </div>
+
+      <div class="grid g2" style="align-items:start">
+        <div>
+          <div class="label now" style="margin-bottom:9px"><span class="dot" style="background:var(--accent-3)"></span> Heute: Workspace</div>
+          <div class="mock-workspace" aria-label="Heutige SonaBar-Struktur, schematisch">
+            <div class="mwtop"><span>● SonaBar by SilasNet</span><span>⚙ — □ ×</span></div>
+            <div class="mwtabs"><span class="on">General</span><span>Transcription</span><span>Shortcuts</span><span>Recording</span><span>History</span><span>About</span></div>
+            <div class="mwhero"><span style="font-size:7px;color:#2a7;font-weight:700">SONABAR / VOICE WORKSPACE</span><b>Speak naturally.<br>Text follows.</b><p>Put your cursor where you want the words…</p><span class="mwbtn">Start a dictation</span></div>
+            <div class="mwcards"><div><b>01 Dictation</b>Write directly into any app.</div><div><b>02 Files</b>Turn recordings into text.</div><div><b>03 Meetings</b>Keep a conversation's words.</div></div>
+          </div>
+          <p class="tiny muted" style="margin-top:10px">Groß, freundlich, marketing-nah. Der Status ist unten in der Fußzeile; die letzte Transkription ist eine Karte unter dem Hero; Backend/CPU liegt unter Recording → Advanced.</p>
+        </div>
+        <div>
+          <div class="label next" style="margin-bottom:9px"><span class="dot"></span> Ziel: Compact</div>
+          <div class="mock-compact" aria-label="Vorschlag für das kompakte SonaBar-Fenster, schematisch">
+            <div class="mctitle">SonaBar</div>
+            <div class="mcbody">
+              <div class="mchead"><span>SonaBar</span><span style="font-size:8px;border:1px solid #999;padding:2px 6px;background:#f4f4f4">Settings</span></div>
+              <div class="mcstatus">Ready</div>
+              <div class="mcmeta"><span>Mode: <b>Push-to-talk</b></span><span>Hotkey: <b>Ctrl + Shift + Space</b></span><span>Model: <b>Parakeet CPU</b></span></div>
+              <div class="mclast"><span style="color:#777">Last transcription</span><br>Dein letzter Satz erscheint hier — kopierbar und einsetzbar.</div>
+              <div class="mcrow"><span class="primary">Start dictation</span><span>Open workspace</span><span>History</span></div>
+            </div>
+          </div>
+          <p class="tiny muted" style="margin-top:10px">Kompakt, status-first, mit direktem Weg in die Tiefe. Die Workspace-Seiten bleiben unverändert erreichbar.</p>
+        </div>
+      </div>
+
+      <div class="hr"></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Bereich</th><th>Ist-Zustand</th><th>Soll-Zustand</th><th>Risiko / Hinweis</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Hauptfenster</strong></td><td>1080×780, 6 Tabs + Subnav, Hero, Footer.</td><td>ca. 560–620×600–720, Status, Metadaten, letzter Text, Aktionen.</td><td>Shell-Rebuild, keine Logik-Änderung.</td></tr>
+            <tr><td><strong>Status</strong></td><td>Fußzeile, klein.</td><td>Große Statuskarte: Ready / Listening / Transcribing / Error.</td><td>An <code>OperationMachine</code> binden, keine Fake-States.</td></tr>
+            <tr><td><strong>Letzte Transkription</strong></td><td>Overview-Karte; nach Navigation weg.</td><td>Immer sichtbar im Compact-Fenster; Copy/Reuse.</td><td>Bestehendes <code>LastText</code> wiederverwenden.</td></tr>
+            <tr><td><strong>Backend / CPU</strong></td><td>Advanced: Automatic / CPU / GPU; Parakeet hart CPU; keine Threads.</td><td>Settings: Processing (Auto/CPU/GPU), CPU threads, effektiver Backend-Hinweis.</td><td>Parakeet-C-ABI hat aktuell kein Thread-Feld; nicht faken.</td></tr>
+            <tr><td><strong>Modell</strong></td><td>Models-Seite; Parakeet TDT v3 q8 GGUF, 25 Sprachen.</td><td>„Fast CPU“ = Parakeet; optional deutscher Fine-Tune nach Spike; Hotwords.</td><td>ONNX-Modell braucht sherpa-onnx, nicht nur Katalog-Eintrag.</td></tr>
+            <tr><td><strong>Hotkey / Modus</strong></td><td>Shortcuts-Seite; Push-to-talk vorhanden.</td><td>Im Settings-Dialog sichtbar; Min Hold optional.</td><td>Keine bestehenden Defaults still ändern.</td></tr>
+            <tr><td><strong>Min Hold</strong></td><td>Nicht vorhanden.</td><td>0–2 s, Default 0 (bestehende Nutzer) / Vorschlag 0,3 s.</td><td>Verhindert versehentliche Modifier-Diktate.</td></tr>
+            <tr><td><strong>Tiefe Features</strong></td><td>Files, Meetings, History, Snippets, Writing, Apps, Privacy, Help.</td><td>Unverändert über „Open workspace“ erreichbar.</td><td>Kein Feature entfernen; Tests bleiben.</td></tr>
+            <tr><td><strong>Barrierefreiheit</strong></td><td>WPF, AutomationProperties, Themes.</td><td>Im Compact-Fenster genauso: Fokus, Namen, High Contrast, DPI.</td><td>Nicht dem Tkinter-Look opfern.</td></tr>
+            <tr><td><strong>Tests</strong></td><td>223/223, Package-Smoke 20/20.</td><td>Plus Settings-Migration, Backend-Matrix, Thread-Clamp, Compact-State, Hotwords.</td><td>Build/Test/Package/Smoke bleiben Gate.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="grid g3" style="margin-top:16px">
+        <div class="card soft"><h4>Schon gut</h4><p class="small">Parakeet TDT v3 ist bereits eingebunden und CPU-verifiziert. Whisper, Qwen, History, Snippets, Typed Expansion, Updates und Qwen-Sidecar sind vorhanden. SonaBar muss die Engine nicht erfinden.</p></div>
+        <div class="card soft"><h4>Wirklich neu</h4><p class="small">Compact-Shell, Settings-Dialog, echte CPU/Thread-Wahl, Min Hold, Hotword-Brücke, optionaler deutscher Parakeet-Fine-Tune. Das ist genug für einen großen Schnitt — aber kein Grund, die Logik neu zu schreiben.</p></div>
+        <div class="card soft"><h4>Nicht anfassen</h4><p class="small">Qwen-ASR bleibt im authentifizierten Named-Pipe-Sidecar ohne Netzwerk-Listener. Keine Modellgewichte ins Repo. Keine WhisperBar-Assets. Keine erfundenen Fortschritte oder GPU-Fähigkeiten.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="plan">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="kicker">05 · Umsetzung</div>
+          <h2>Fünf Phasen, ein Produkt.</h2>
+          <p>Die Reihenfolge ist wichtig: Erst messen und die Wahrheit in die Einstellungen bringen, dann die Shell umbauen, dann das Modell evaluieren. Nicht mit dem schönsten Screenshot anfangen.</p>
+        </div>
+        <div class="pill"><span class="dot"></span> Hybrid statt Rewrite</div>
+      </div>
+
+      <div class="card">
+        <div class="phase"><div class="num">0</div><div><h3>Baseline messen &amp; guardrails</h3><p>Fixierte WAVs (2 s, 5 s, 10 s, 30 s), drei Runs, P50/P95 für Key-Release → Insert. Whisper small/turbo, Parakeet v3, Qwen ASR. RAM, VRAM, Threads, Modell-Ladezeit. Keine UI-Änderung.</p><div class="exit">Exit: reproduzierbare Zahlen + dokumentierte Messlücke.</div></div></div>
+        <div class="phase"><div class="num">1</div><div><h3>CPU, Threads, Hotwords, Min Hold</h3><p><code>ProcessingDevice</code> (Auto/CPU/GPU), <code>CpuThreads</code> (0=Auto), <code>MinHoldMs</code>. Backend-Matrix pro Engine. Parakeet-C-ABI prüfen: Threads nur anbieten, wenn die Runtime sie wirklich setzt; sonst effektiven Wert read-only zeigen. <code>CustomWords</code> als <code>speech_context</code> an Parakeet geben. Tests.</p><div class="exit">Exit: CPU ist sichtbar, ehrlich und getestet; Hotwords verbessern Namen.</div></div></div>
+        <div class="phase"><div class="num">2</div><div><h3>Compact-Shell + Settings-Dialog</h3><p>Neue <code>CompactWindow</code>-Ansicht mit Status, Metadaten, letzter Transkription, Aktionen. <code>SettingsDialog</code> mit Provider/Engine, Modell, Processing, Threads, Sprache, Modus, Hotkey, Min Hold, Modell-Download. „Open workspace“ öffnet die bestehende App. Keine Seite entfernen.</p><div class="exit">Exit: Standardstart ist kompakt; alle Features erreichbar; Themes/Accessibility grün.</div></div></div>
+        <div class="phase"><div class="num">3</div><div><h3>Deutsches Parakeet evaluieren</h3><p>Spike für sherpa-onnx/ONNX int8 (<code>flozen1981/parakeet-primeline-onnx</code>, ~640 MB, CC-BY-4.0). Nur wenn Runtime, Lizenz, Paketgröße und Windows x64 passen: 30 deutsche Diktate gegen Parakeet v3, WER/Eigennamen/Latenz/RAM. Nur bei messbarem Gewinn als optionaler Download; nie bundlen.</p><div class="exit">Exit: belegte Entscheidung „nehmen“ oder „nicht nehmen“ — kein Bauchgefühl.</div></div></div>
+        <div class="phase"><div class="num">4</div><div><h3>Politur &amp; Release-Gate</h3><p>Settings-Migration, leere Zustände, echte Fehlermeldungen, Tray, Update-Manifest, Doku/Changelog. Build, 223+ Tests, Package, Smoke, manuelle Checkliste (Notepad, Browser, Passwortfeld, Elevated, Spiel, Roblox-String).</p><div class="exit">Exit: Release-Paket mit nachvollziehbaren Hashes und ohne Regression.</div></div></div>
+      </div>
+
+      <div class="grid g2" style="margin-top:18px;align-items:start">
+        <div class="card blue">
+          <h3>CPU-/Engine-Matrix</h3>
+          <div class="table-wrap" style="border:0;background:transparent">
+            <table style="min-width:0">
+              <thead><tr><th>Engine</th><th>Auto</th><th>CPU</th><th>GPU</th><th>Threads</th></tr></thead>
+              <tbody>
+                <tr><td><strong>Whisper</strong></td><td>CPU</td><td class="ok">ja</td><td class="ok">ja, Fallback</td><td class="ok">ja</td></tr>
+                <tr><td><strong>Parakeet v3</strong></td><td>CPU</td><td class="ok">ja</td><td class="bad">nein</td><td class="warn">nur wenn ABI</td></tr>
+                <tr><td><strong>Qwen ASR</strong></td><td>CPU</td><td class="ok">ja</td><td class="bad">nein</td><td class="bad">Sidecar</td></tr>
+                <tr><td><strong>Deutsches Parakeet</strong></td><td>CPU</td><td class="ok">ja</td><td class="bad">nein</td><td class="ok">sherpa-onnx</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="tiny muted" style="margin-top:10px">„Auto“ darf nie GPU versprechen, wo die Engine CPU-only ist. Der Dialog zeigt den <strong>effektiven</strong> Backend-Namen und den Grund.</p>
+        </div>
+        <div class="card accent">
+          <h3>Modell-Entscheidung</h3>
+          <p class="small"><strong>Standard:</strong> Parakeet TDT 0.6B v3 q8 GGUF (714 MB, 25 Sprachen, CC-BY-4.0, NeMo-Speech.cpp, CPU). Kein Download nötig, wenn bereits installiert.</p>
+          <p class="small"><strong>Optional:</strong> <code>flozen1981/parakeet-primeline-onnx</code> (640 MB, int8, CC-BY-4.0; Fine-Tune von primeline, Basis NVIDIA). Nur nach Runtime-Spike und deutschem Benchmark. Nicht bundlen, SHA-256 pinnen, Attribution in <code>THIRD_PARTY_NOTICES.md</code>.</p>
+          <p class="small"><strong>Fallback:</strong> Wenn der Spike scheitert, bleibt Parakeet v3 + Hotwords. Das ist ehrlicher als ein Katalog-Eintrag, der nicht läuft.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="prompt">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="kicker">06 · Der Prompt</div>
+          <h2>Copy-paste für den nächsten Agenten.</h2>
+          <p>Der Prompt ist absichtlich konkret: Dateien, Zustände, Grenzen, Tests, Abnahme. Er beschreibt den Hybrid-Rebuild, nicht einen kompletten Neubau. Er darf gekürzt werden — aber nicht die Guardrails.</p>
+        </div>
+        <div class="pill"><span class="dot"></span> bereit zum Kopieren</div>
+      </div>
+
+      <div class="prompt-shell">
+        <div class="prompt-toolbar">
+          <span class="title">sonabar-compact-rebuild.prompt.md</span>
+          <span class="hint">Deutsch · Code/UI-Strings Englisch</span>
+          <button class="btn small" type="button" data-copy="promptText">Kopieren</button>
+          <button class="btn small" type="button" data-download="promptText">Als .md laden</button>
+        </div>
+<pre class="prompt" id="promptText">Du bist der leitende .NET-10/WPF-Entwickler für SonaBar von SilasNet. Arbeite im vorhandenen Repository, nicht in einem leeren Projekt. Antworte auf Deutsch; alle sichtbaren UI-Strings bleiben Englisch; README/Doku bleiben Deutsch.
+
+# ZIEL
+Baue SonaBar von einer großen Multi-Page-Workspace-App zu einer kompakten Windows-Diktierutility um, die sich an der Informationshierarchie der Dictate-App aus dem Video orientiert:
+- große Statusanzeige (Ready / Listening / Transcribing / Error)
+- eine Zeile Kontext (Mode, Hotkey, Model)
+- sichtbare letzte Transkription
+- ein klarer Settings-Dialog
+- CPU als echte, sichtbare und ehrliche Wahl
+- alle bestehenden SonaBar-Funktionen bleiben erhalten und über "Open workspace" erreichbar
+
+Das ist ein Shell-Rebuild, kein Logik-Rewrite. Keine bestehende Funktion still entfernen. Keine erfundenen Zustände, Modelle, Fortschritte, GPU-Fähigkeiten oder Threads.
+
+# AUSGANGSLAGE (verifizieren, nicht raten)
+- .NET 10 / WPF, Windows x64, Version 0.1.3.
+- Engines: Whisper (whisper.cpp v1.9.4, CPU/GPU), Parakeet TDT 0.6B v3 (NeMo-Speech.cpp C ABI, CPU-only, 25 Sprachen, q8 GGUF), Qwen3-ASR (authentifizierter Named-Pipe-Sidecar, kein Netzwerk-Listener).
+- Aktuelle Settings: Backend = "Automatic" | "CPU" | "GPU / accelerated"; Parakeet ist in ParakeetEngine.cs hart auf Gpu = -1; Whisper nutzt RecognitionThreadCount(Environment.ProcessorCount) = clamp(ProcessorCount - 1, 1, 16).
+- Aktuelle UI: MainWindow.cs, ca. 1080x780, 6 Tabs + Subnav, Hero, Footer; Backend liegt unter Recording > Advanced; Models auf eigener Seite.
+- Tests: 223/223; Package-Smoke 20/20. Build: ./build.ps1 -Configuration Release. Native Smoke: tests/SonaBar.NativeSmoke.
+
+# NICHT ZU TUN
+- Kein neues Python/Electron für die App; der bestehende Qwen-ASR-Sidecar bleibt unverändert. Kein Cloud-Zwang, keine API-Keys.
+- Keine WhisperBar-Assets, keine WhisperBar-Edition, keine Affiliations-Behauptung.
+- Keine Modellgewichte committen. Keine Downloads ohne HTTPS, SHA-256 und Lizenz.
+- Keine Fake-UI: kein "GPU", wenn die Engine CPU-only ist; keine Threads, die nicht gesetzt werden; kein "Ready", wenn kein Modell geladen ist.
+- Keine bestehenden Features entfernen: Files, Meetings, History, Statistics, Snippets (inkl. opt-in Typed Expansion), Writing, Custom Words, Applications, Privacy, Help, Updates, Themes.
+- Qwen-ASR bleibt im authentifizierten Windows-Named-Pipe-Sidecar ohne Netzwerk-Listener.
+- Exakten Roblox-String "Paste sent — check the app/target" nicht verändern.
+- Version 0.1.3 nicht eigenmächtig bumpen; erst nach Abnahme.
+- Keine Änderung an Default-Hotkeys oder bestehenden Settings ohne Migration.
+
+# SOLL-UI
+1. CompactWindow als Standardstart:
+   - ca. 560-620 px breit, 600-720 px hoch, resizable, Min 520x560.
+   - Titel "SonaBar"; Settings-Button; optional Tray.
+   - Große Statuskarte: "Ready", "Listening…", "Transcribing…", "Could not insert", "Model not installed".
+   - Metadatenzeile: Mode (Push-to-talk / Toggle), Hotkey, Model + effektives Backend (z. B. "Parakeet · CPU").
+   - "Last transcription"-Panel: Text, Copy, Reuse/Insert, Clear; leerer Zustand ohne Fake-Text.
+   - Primäraktion: "Start dictation" / "Stop & insert"; sekundär "Open workspace", "History".
+   - Status/Fehler nur aus OperationMachine/AppController, nie aus einem Timer.
+2. SettingsDialog:
+   - Provider/Engine: Local Whisper, Local Parakeet, Local Qwen ASR (nur wenn Runtime vorhanden).
+   - Model: installiertes Modell, Größe, Sprache, Lizenz; Download/Verify/Delete.
+   - Processing: Automatic / CPU / GPU (GPU nur wenn Engine es kann); darunter effektiver Backend-Name + Grund.
+   - CPU threads: 0 = Auto, sonst 1..logical; nur anzeigen/aktivieren, wenn die Engine den Wert wirklich nutzt; bei Parakeet sonst read-only "Runtime default".
+   - Language; Mode; Hotkey; Min hold to send (0-2 s, Default 0 für Bestandsnutzer, Vorschlag 0,3 s).
+   - Save / Cancel; keine sofortige stille Persistenz bei jedem Klick.
+   - Link "Open workspace" für alle bestehenden Seiten.
+3. Workspace:
+   - bestehende MainWindow-Seiten bleiben funktional; keine Seite löschen.
+   - Navigation aus dem CompactWindow öffnet die Workspace-Ansicht auf der richtigen Seite.
+   - Themes Light/Dark/System/High Contrast über DynamicResource; keine hardcodierten Farben.
+   - AutomationProperties, Fokus, Tab-Reihenfolge, Screenreader, DPI.
+
+# DATEN & MIGRATION
+- AppSettings.SchemaVersion auf 5 erhöhen.
+- Neues Enum ProcessingDevice { Automatic, Cpu, Gpu }; CpuThreads int (0=Auto); MinHoldMs int (0-2000).
+- Bestehendes Backend migrieren: "CPU" -> Cpu, "GPU / accelerated" -> Gpu, "Automatic" -> Automatic. Keine Werte verlieren.
+- Validierung: CpuThreads 0..Environment.ProcessorCount (oder 1..64), MinHoldMs 0..2000; ungültige Werte auf Default.
+- Settings-Tests für Migration, Clamp und Persistenz.
+
+# ENGINE-/CPU-MATRIX
+- Whisper: Automatic = CPU (schneller für kurze Diktate auf vielen Windows-Geräten); CPU = CPU; GPU = GPU mit sichtbarem Fallback auf CPU, wenn Laden fehlschlägt. Threads aus CpuThreads oder bisheriger Heuristik.
+- Parakeet: CPU-only. GPU-Auswahl disabled mit Erklärung. Threads nur anbieten, wenn die NeMo-Speech.cpp-C-ABI/Runtime sie tatsächlich setzt; aktuell hat backend_config nur gpu. Wenn nicht: "Runtime default" read-only anzeigen, nicht faken. Effektiven Backend-Namen "Parakeet · CPU" anzeigen.
+- Qwen ASR: CPU-only, Sidecar; keine GPU-/Thread-UI.
+- Deutsches Parakeet (optional): nur nach Spike; siehe Modell-Abschnitt.
+- "Automatic" darf nie eine Fähigkeit versprechen, die die Engine nicht hat.
+
+# MODELLE
+- Standard: vorhandenes Parakeet TDT 0.6B v3 q8 GGUF (714 MB, 25 Sprachen, CC-BY-4.0, NeMo-Speech.cpp) als "Parakeet · fast CPU" beibehalten.
+- Hotwords: CustomWords als speech_context an Parakeet geben, sofern die C-ABI das unterstützt; Phrases begrenzen, leere Strings filtern, Boost konservativ; Tests für Namen.
+- Optionaler deutscher Fine-Tune: flozen1981/parakeet-primeline-onnx (int8 ONNX, ~640 MB, CC-BY-4.0; Fine-Tune von primeline auf Basis NVIDIA parakeet-tdt-0.6b-v3; sherpa-onnx, 4 Threads). Erst nach Runtime-Spike:
+  1. sherpa-onnx/ONNX-Windows-x64 einbinden (C#-Binding oder native C-API), Paketgröße/Lizenz/AVX prüfen.
+  2. 30 deutsche Diktate gegen Parakeet v3 benchmarken (WER, Eigennamen, P50/P95, RAM, Ladezeit).
+  3. Nur bei messbarem Gewinn als optionalen Download anbieten; nie bundlen; Revision + SHA-256 pinnen; Attribution in THIRD_PARTY_NOTICES.md.
+- Wenn der Spike scheitert: keine Attrappe, kein Katalog-Eintrag; Entscheidung dokumentieren und Parakeet v3 + Hotwords behalten.
+
+# ARCHITEKTUR
+- Bestehende Schichten behalten: SonaBar.App (WPF), Core (Settings/Contracts), Audio, Transcription, Models, Storage, WindowsIntegration, Enhancement, Meetings, Updater.
+- Neue UI-Komponenten in SonaBar.App: CompactWindow, SettingsDialog, CompactState/ViewModel (testbar), WorkspaceHost.
+- Keine Engine-Logik in Code-behind duplizieren; AppController/OperationMachine bleiben Quelle der Wahrheit.
+- ModelManager: SHA-256, Pause/Resume, Verify, Delete; keine stillen Downloads.
+- Keine neue Netzwerkabhängigkeit; lokale Inferenz bleibt lokal.
+
+# TESTS & ABNAHME
+Automatisiert:
+- Settings-Migration Backend -> ProcessingDevice; CpuThreads/MinHold-Clamp.
+- Backend-Matrix: Whisper CPU/GPU/Fallback; Parakeet CPU-only; Qwen CPU-only; effektiver Backend-String.
+- CompactState: Ready/Listening/Transcribing/Error/Model missing; LastText; Copy/Reuse.
+- Hotword-Kontext: CustomWords werden gefiltert/übergeben; keine leeren Phrases.
+- ModelCatalog: gepinnte URL, SHA-256, Lizenz, kein lokales Weight im Repo.
+- Keine Regression in 223 bestehenden Tests.
+- Build: ./build.ps1 -Configuration Release; Package-Smoke 20/20; Native Smoke für Whisper/Parakeet/Qwen.
+
+Manuell:
+- Notepad/Browser: Diktat kommt an, Umlaute korrekt.
+- Passwortfeld: keine unerwünschte Expansion/Injektion.
+- Elevated App/Spiel: klare Fehlermeldung, kein stiller Verlust.
+- Roblox: exakt "Paste sent — check the app/target".
+- Light/Dark/High Contrast, DPI 100/150/200 %, Tastatur/Fokus/Screenreader.
+- CPU ausgewählt: Parakeet nutzt CPU, 0 VRAM; GPU nicht heimlich aktiv.
+- Parakeet + GPU-Auswahl: disabled + Erklärung, kein Fake.
+- Min Hold: kurzer Tap wird verworfen; langer Hold transkribiert.
+- Workspace: alle bestehenden Seiten erreichbar; keine Funktion verschwunden.
+
+# REIHENFOLGE
+0. Baseline messen (2/5/10/30 s WAVs, 3 Runs, P50/P95, RAM/VRAM/Threads) und Messlücke dokumentieren.
+1. Settings/Backend/Threads/MinHold/Hotwords + Tests.
+2. CompactWindow + SettingsDialog + Workspace-Link + Themes/Accessibility.
+3. Deutscher Parakeet-Spike + Benchmark + Entscheidung.
+4. Doku/Changelog, Build, Tests, Package, Smoke, manuelle Checkliste, Commit/Push/CI.
+
+# AUSGABE
+Liefere zuerst einen kurzen Plan mit den betroffenen Dateien und Tests, dann die Implementierung in kleinen, prüfbaren Schritten. Nach jedem Schritt: Build/Test-Ergebnis und was noch offen ist. Keine unbegründeten Werbeaussagen; keine Zahlen ohne Messung.</pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="acceptance">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="kicker">07 · Abnahme</div>
+          <h2>Woran der Rebuild gemessen wird.</h2>
+          <p>Nicht an einem Screenshot. An echten Zuständen, echten Messwerten, echten Tests und daran, dass keine bestehende Funktion verschwindet.</p>
+        </div>
+        <div class="pill"><span class="dot"></span> Definition of Done</div>
+      </div>
+
+      <div class="grid g2" style="align-items:start">
+        <div class="card">
+          <h3>Produkt</h3>
+          <ul class="checklist">
+            <li><input type="checkbox"> <span><b>Compact startet standardmäßig</b> mit Status, Metadaten, letzter Transkription und Aktionen.</span></li>
+            <li><input type="checkbox"> <span><b>CPU ist sichtbar</b> im Settings-Dialog, nicht nur unter Advanced.</span></li>
+            <li><input type="checkbox"> <span><b>Parakeet bleibt CPU-only</b>; GPU-Auswahl ist disabled und erklärt, nicht fake.</span></li>
+            <li><input type="checkbox"> <span><b>Threads sind ehrlich</b>: Whisper nutzt sie; Parakeet nur, wenn die Runtime sie setzt.</span></li>
+            <li><input type="checkbox"> <span><b>Automatic erklärt</b> den effektiven Backend-Namen und den Grund.</span></li>
+            <li><input type="checkbox"> <span><b>Min Hold</b> ist optional, validiert und verhindert versehentliche Modifier-Diktate.</span></li>
+            <li><input type="checkbox"> <span><b>Hotwords</b> verbessern Eigennamen nachweislich; keine leeren/überlangen Phrases.</span></li>
+            <li><input type="checkbox"> <span><b>Workspace</b> behält alle Seiten und Features; nichts still entfernt.</span></li>
+            <li><input type="checkbox"> <span><b>Deutsches Parakeet</b> nur nach Benchmark; sonst dokumentierte Ablehnung.</span></li>
+            <li><input type="checkbox"> <span><b>Keine Fake-Zustände</b>, keine Fake-Downloads, keine Fake-GPU, keine Fake-Threads.</span></li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Technik &amp; Release</h3>
+          <ul class="checklist">
+            <li><input type="checkbox"> <span><b>Build</b> ./build.ps1 -Configuration Release ohne Warnungen/Fehler.</span></li>
+            <li><input type="checkbox"> <span><b>Tests</b> 223+ / 223+ grün; neue Tests für Migration, Matrix, Threads, CompactState, Hotwords.</span></li>
+            <li><input type="checkbox"> <span><b>Package-Smoke</b> 20/20 Seiten; pagesFailed leer.</span></li>
+            <li><input type="checkbox"> <span><b>Native Smoke</b> für Whisper, Parakeet und Qwen ASR.</span></li>
+            <li><input type="checkbox"> <span><b>Manuell</b>: Notepad, Browser, Passwortfeld, Elevated, Spiel, Roblox-String.</span></li>
+            <li><input type="checkbox"> <span><b>Themes</b>: Light/Dark/System/High Contrast; DPI 100/150/200 %.</span></li>
+            <li><input type="checkbox"> <span><b>Accessibility</b>: Fokus, Tab-Reihenfolge, AutomationProperties, Screenreader.</span></li>
+            <li><input type="checkbox"> <span><b>Doku</b>: README (DE), CHANGELOG, IMPLEMENTATION_STATUS, WHISPERBAR_PARITY, Manual Checklist.</span></li>
+            <li><input type="checkbox"> <span><b>Keine Gewichte</b> im Repo; Lizenzen/Attributionen aktualisiert.</span></li>
+            <li><input type="checkbox"> <span><b>Commit/Push/CI</b> mit nachvollziehbarem Ergebnis.</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout" style="margin-top:18px">
+        <div class="icon">✓</div>
+        <div>
+          <strong>Die eine Frage, die der Rebuild beantworten muss:</strong>
+          <p>Kann ein neuer Nutzer SonaBar öffnen, „Ready“ sehen, den Hotkey drücken, sprechen, den Text im Ziel sehen — und verstehen, ob er gerade CPU oder GPU nutzt? Wenn ja, ist die Shell richtig. Alles andere ist Tiefe, die im Workspace bleiben darf.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="sources" style="border-bottom:0">
+    <div class="wrap">
+      <div class="section-head">
+        <div>
+          <div class="kicker">08 · Quellen</div>
+          <h2>Belege &amp; weiterlesen.</h2>
+        </div>
+      </div>
+      <div class="src">
+        <div><a href="https://www.youtube.com/watch?v=_q5JYuXpkJM" target="_blank" rel="noreferrer">YouTube: Diktieren ohne Cloud (9:40)</a><br><span>Dirk Winiecki | Lokale KI · 26.08.2026</span></div>
+        <div><a href="https://github.com/winidi/dictate" target="_blank" rel="noreferrer">GitHub: winidi/dictate</a><br><span>MIT · Python/Qt · Linux/Windows</span></div>
+        <div><a href="https://huggingface.co/flozen1981/parakeet-primeline-onnx" target="_blank" rel="noreferrer">HF: flozen1981/parakeet-primeline-onnx</a><br><span>CC-BY-4.0 · int8 ONNX · ~640 MB</span></div>
+        <div><a href="https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3" target="_blank" rel="noreferrer">HF: nvidia/parakeet-tdt-0.6b-v3</a><br><span>Basis-Modell · CC-BY-4.0</span></div>
+        <div><a href="IMPLEMENTATION_STATUS.md">SonaBar: IMPLEMENTATION_STATUS</a><br><span>Build, Tests, Package, Hashes</span></div>
+        <div><a href="WHISPERBAR_PARITY.md">SonaBar: WHISPERBAR_PARITY</a><br><span>Feature-Parität und bewusste Unterschiede</span></div>
+      </div>
+      <div class="hr"></div>
+      <p class="tiny muted" style="margin-bottom:0">Dieses Dokument ist ein internes Briefing, keine Marketingseite. Es enthält keine Modellgewichte, keine API-Keys und keine personenbezogenen Daten. Die Videozitate sind aus dem deutschen Auto-Transkript; kleine Transkriptionsfehler wurden sinngemäß geglättet. Zahlen aus dem Video sind Demo-Messungen, keine Garantie.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>SonaBar · SilasNet · internes Rebuild-Briefing · 26.10.2026</span>
+    <span>Version 0.1.3 · <a href="#top">nach oben</a></span>
+  </div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite">Kopiert.</div>
+
+<script>
+  (() => {
+    const toast = document.getElementById('toast');
+    let toastTimer;
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
+    }
+    async function copyText(text) {
+      try {
+        await navigator.clipboard.writeText(text);
+        return true;
+      } catch {
+        const area = document.createElement('textarea');
+        area.value = text;
+        area.setAttribute('readonly', '');
+        area.style.position = 'fixed';
+        area.style.left = '-9999px';
+        document.body.appendChild(area);
+        area.select();
+        const ok = document.execCommand('copy');
+        area.remove();
+        return ok;
+      }
+    }
+    document.querySelectorAll('[data-copy]').forEach(button => {
+      button.addEventListener('click', async () => {
+        const target = document.getElementById(button.dataset.copy);
+        if (!target) return;
+        const ok = await copyText(target.innerText);
+        showToast(ok ? 'Prompt kopiert.' : 'Kopieren nicht möglich — bitte manuell markieren.');
+      });
+    });
+    document.querySelectorAll('[data-download]').forEach(button => {
+      button.addEventListener('click', () => {
+        const target = document.getElementById(button.dataset.download);
+        if (!target) return;
+        const blob = new Blob([target.innerText], {type: 'text/markdown;charset=utf-8'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'sonabar-compact-rebuild.prompt.md';
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1500);
+        showToast('Prompt als .md geladen.');
+      });
+    });
+    const links = [...document.querySelectorAll('.topnav a')];
+    const sections = links.map(link => document.querySelector(link.getAttribute('href'))).filter(Boolean);
+    if ('IntersectionObserver' in window && sections.length) {
+      const observer = new IntersectionObserver(entries => {
+        const visible = entries.filter(entry => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (!visible) return;
+        links.forEach(link => link.classList.toggle('active', link.getAttribute('href') === '#' + visible.target.id));
+      }, {rootMargin: '-20% 0px -65% 0px', threshold: [0, .1, .25, .5]});
+      sections.forEach(section => observer.observe(section));
+    }
+  })();
+</script>
+</body>
+</html>
