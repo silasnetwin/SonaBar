@@ -84,7 +84,8 @@ SonaBar merkt sich das zuletzt aktive externe Fenster. Wenn du die Diktat-Schalt
 - Optionales lokales Schreibmodell für Zeichensetzung, vorsichtige Korrekturen und Umformulierungen.
 - Gesprochene Befehle am Ende eines Diktats: Aufzählung, professionelle E-Mail, freundlicherer Ton, nur Rechtschreibung, Füllwörter entfernen, Zusammenfassung, Klein- oder Großschreibung.
 - Übersetzen in Englisch, Deutsch, Französisch, Spanisch, Italienisch, Portugiesisch, Niederländisch, Polnisch, Chinesisch und weitere Sprachen.
-- Zahlen, Namen und Uhrzeiten werden beim Übersetzen geschützt. Verdächtige Ergebnisse werden verworfen, der Originaltext bleibt erhalten.
+- Zahlen, Namen und Uhrzeiten werden beim Übersetzen geschützt. Verliert das Modell geschützte Angaben oder gibt es den Ausgangstext nahezu unverändert zurück, versucht SonaBar es einmal mit einem strengeren Erhaltungsauftrag; danach wird erneut geprüft. Ein weiterhin unverändertes oder verdächtiges Ergebnis wird verworfen, der Originaltext bleibt erhalten.
+- Markierter Text lässt sich direkt umschreiben oder übersetzen. SonaBar stellt die Passage unmittelbar vor dem Einfügen wieder her und prüft sie erneut; bei einer verlorenen oder mehrdeutigen Auswahl wird nichts angehängt oder doppelt eingefügt.
 - Persönliches Wörterbuch mit expliziten *gehört → gemeint*-Ersetzungen.
 - Snippets mit Variablen und exakten Auslösern. Optional ersetzen sie den Auslöser auch beim Tippen – nach Leertaste, Enter, Tab oder Satzzeichen; standardmäßig deaktiviert.
 
@@ -116,7 +117,7 @@ Windows kann in solchen Fenstern nicht zurücklesen, ob der Text angekommen ist.
 
 **Nativ statt Web-View.**
 
-- .NET 10 WPF mit nativem Windows-Rahmen, Minimieren und Schließen; das Fenster ist bewusst nicht maximierbar.
+- .NET 10 WPF mit kompakter eigener Titelleiste, Vektor-Steuerelementen für Anheften, Einstellungen, Minimieren und Schließen; das Fenster ist bewusst nicht maximierbar. Windows 11 rundet die Ecken über DWM, Windows 10 kann eckig bleiben.
 - Feste kompakte Fenstergröße, native Fensterpositionierung und Per-Monitor-DPI.
 - Helle Oberfläche als Standard, Dark und „Windows folgen“ per Klick.
 - Ein einziges kompaktes Hauptfenster mit Status, letzter Transkription und einem Start-/Stopp-Knopf. Alle bisherigen Seiten erreichst du über **Go to**; das Zahnrad in der Kopfzeile öffnet die kompakten Einstellungen, das Tray-Menü **Tools** bietet Schnellzugriffe.
@@ -208,7 +209,7 @@ Nach dem ersten Start bietet SonaBar ein kurzes Onboarding an. Danach lebt die A
 - **Fenster zuerst.** Die Oberfläche erscheint nach etwa 0,6 Sekunden; Engine- und Modellarbeit startet danach.
 - **Kein stiller Download.** Ein fehlendes Modell ist ein sichtbarer Zustand mit direktem Link zur Modellseite.
 - **Compatibility-Modus für Spiele.** Roblox und andere nicht inspizierbare Fenster erhalten den Paste, ohne falschen „Could not insert“-Fehler.
-- **Windows-Rahmen und helle Oberfläche.** Eigene Titelleiste, segmentierte Tabs und eine gemeinsame Farbwelt für Light, Dark und hohen Kontrast.
+- **Kompakte eigene Titelleiste und helle Oberfläche.** Kreisförmiges Logo, Datenschutz-Pille, Vektor-Steuerelemente und eine gemeinsame Farbwelt für Light, Dark und hohen Kontrast.
 - **Fokus-Rückgabe.** SonaBar merkt sich das zuletzt aktive externe Fenster, damit Diktate aus dem App-Fenster im richtigen Ziel landen.
 
 Vollständige Änderungen: [CHANGELOG.md](CHANGELOG.md) · [Release v0.1.3](https://github.com/silasnetwin/SonaBar/releases/tag/v0.1.3)

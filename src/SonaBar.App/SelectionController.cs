@@ -64,12 +64,12 @@ public sealed partial class AppController
                 }
             }
             linked.Token.ThrowIfCancellationRequested();
-            TextInsertionService.ValidateSelection(selected);
+            TextInsertionService.ValidateSelectionTarget(selected);
             LastOriginal = selected.Text;
             LastText = result;
             target = selected.Target;
             Machine.Move(OperationState.Inserting);
-            await insertion.ReplaceSelectionAsync(selected, result, Settings.Clipboard == ClipboardMode.Replace ? ClipboardMode.Replace : ClipboardMode.Preserve, linked.Token);
+            await insertion.ReplaceSelectionAsync(selected, result, Settings.Clipboard == ClipboardMode.Replace ? ClipboardMode.Replace : ClipboardMode.Preserve, linked.Token, WriteDeliveryDiagnostic);
         });
         Changed(nameof(CanUndo));
         overlay?.ShowNotice("Updated", false);

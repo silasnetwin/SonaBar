@@ -276,14 +276,18 @@ public sealed record ProtectedTranslation(string Text, IReadOnlyDictionary<strin
 {
     public string Restore(string result)
     {
+        // The model is allowed to repeat a marker or to insert spaces between its letters.
+        // Replace every visible occurrence; the caller validates the protected values after
+        // restoration, so a missing marker is reported there instead of failing this pass.
         foreach (var pair in Tokens)
         {
-            var pattern = @"\b" + Regex.Escape(pair.Key) + @"\b";
-            if (Regex.Matches(result, pattern, RegexOptions.IgnoreCase).Count != 1) throw new InvalidDataException("Translation did not preserve a protected detail. Original text kept.");
-            result = Regex.Replace(result, pattern, _ => pair.Value, RegexOptions.IgnoreCase);
+            var pattern = TokenPattern(pair.Key);
+            result = Regex.Replace(result, pattern, _ => pair.Value, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
         }
         return result;
     }
+    private static string TokenPattern(string token) =>
+        @"(?<![\p{L}\p{N}_])" + string.Join(@"\s*", token.Select(character => Regex.Escape(character.ToString()))) + @"(?![\p{L}\p{N}_])";
     public static ProtectedTranslation Create(string source, string language, IEnumerable<string>? customWords = null)
     {
         var tokens = new Dictionary<string, string>();

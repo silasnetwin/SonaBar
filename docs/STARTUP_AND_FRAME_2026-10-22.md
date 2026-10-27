@@ -77,6 +77,8 @@ stays usable.
 
 ## 4. Native window frame
 
+> Superseded on 2026-10-27 by the compact 430 x 660 custom chrome: zero caption and resize border, manual title-bar drag, vector pin/settings/minimize/close controls, and no maximize. `ThemedWindow.UseCompactChrome()` is the current implementation. The DWM title-bar colour and corner helpers remain in use.
+
 `ThemedWindow.UseUtilityChrome()` uses a borderless `WindowChrome` with a 44 px caption and a
 7 px resize border, so Windows resize and snap stay native. The title bar is drawn in WPF:
 the SonaBar mark and wordmark sit on the left, followed by a settings button and Windows
@@ -113,7 +115,8 @@ top of either palette. The current values in `Palette.cs` are authoritative.
 
 `tests/SonaBar.Tests/StartupAndThemeTests.cs` covers the readiness states, the capture timeout,
 the probe timeout and recovery, the palette contrast and key coverage, and the overlay window
-properties. `ThemeTests` now asserts the native frame instead of the old borderless window and
-the opaque overlay instead of a layered one.
+properties. `ThemeTests` asserts the compact custom chrome, the title-bar controls and pin
+toggle, the page layout, and the opaque overlay instead of a layered one.
 
-Result: 183 of 183 tests pass in Release.
+Result at the time of this pass: 183 of 183 tests passed in Release. The current suite is
+247/247 after the later custom-chrome, translation-protection and selected-text work.

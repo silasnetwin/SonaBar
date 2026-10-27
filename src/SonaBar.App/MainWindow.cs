@@ -1,9 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
-using System.Windows.Controls.Primitives;
 using System.Windows.Data;
 using System.Windows.Input;
-using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using SonaBar.Storage;
 
@@ -16,17 +14,13 @@ public sealed partial class MainWindow : ThemedWindow
     private readonly ContentControl page = new();
     private readonly TextBlock heading = Ui.Text("Overview",28);
     private readonly TextBlock subtitle = Ui.Text("",13,true);
-    private readonly ScrollViewer pageScroll = new() { VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+    private readonly ScrollViewer pageScroll = new() { VerticalScrollBarVisibility = ScrollBarVisibility.Auto, Focusable = false, IsTabStop = false };
     private readonly ComboBox pageChoice = new();
-    private readonly StackPanel subNavigation = new() { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Center, Margin = new Thickness(0,0,0,8) };
     private Grid? navRow;
     private Grid? pageHeader;
-    private readonly Dictionary<string,ToggleButton> tabButtons=[];
-    private readonly Dictionary<string,ToggleButton> subTabButtons=[];
     private Button? footerSave;
     private Button? footerAction;
     private Button? recordButton;
-    private Button? maximizeButton;
     private TextBlock? footerStatus;
     private TextBlock? footerDetail;
     private System.Windows.Shapes.Ellipse? footerDot;
@@ -42,7 +36,7 @@ public sealed partial class MainWindow : ThemedWindow
     private TextBlock? homeHotkeyValue;
     private TextBlock? homeModelValue;
     private TextBlock? homeProcessingValue;
-    private TextBox? homeLastBox;
+    private TextBlock? homeLastText;
     private TextBlock? homeLastPlaceholder;
     private Button? homeCopy;
     private Button? homePrimary;
@@ -72,16 +66,6 @@ public sealed partial class MainWindow : ThemedWindow
         ("About","About"),
         ("Help","Help")
     ];
-    // Kept for the legacy sub-navigation helpers below. PageCatalog is the live navigation.
-    private static readonly (string Key,string Label,string[] Pages)[] Tabs =
-    [
-        ("General","General",["Overview","General","Files","Meetings"]),
-        ("Transcription","Transcription",["Dictation","Models","Languages","Writing","Custom Words","Snippets","Applications"]),
-        ("Shortcuts","Shortcuts",["Shortcuts"]),
-        ("Recording","Recording",["Audio","Privacy","Advanced","Debug"]),
-        ("History","History",["History","Statistics"]),
-        ("About","About",["About","Help"])
-    ];
     public MainWindow(AppController controller)
     {
         c = controller; Title = "SonaBar";
@@ -92,9 +76,7 @@ public sealed partial class MainWindow : ThemedWindow
         Height = Math.Max(520, Math.Min(660, workArea.Height - 32));
         MinWidth = Math.Min(380, Width);
         MinHeight = Math.Min(520, Height);
-        UseNativeChrome();
-        ResizeMode = ResizeMode.CanMinimize;
-        WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        UseCompactChrome();
         DataContext = c;
         var layout = new Grid();
         layout.SetResourceReference(System.Windows.Controls.Panel.BackgroundProperty,"Surface");
@@ -111,6 +93,7 @@ public sealed partial class MainWindow : ThemedWindow
         pageHeader.Children.Add(Ui.Stack(heading,subtitle));
         content.Children.Add(pageHeader);
         page.HorizontalContentAlignment=HorizontalAlignment.Stretch;
+        page.Focusable=false; page.IsTabStop=false;
         pageScroll.Content=page; pageScroll.Margin=new Thickness(0,2,0,10); pageScroll.HorizontalAlignment=HorizontalAlignment.Stretch; pageScroll.HorizontalContentAlignment=HorizontalAlignment.Stretch; Grid.SetRow(pageScroll,1); content.Children.Add(pageScroll);
         Grid.SetRow(content,1); layout.Children.Add(content);
         var footer = BuildFooter(); Grid.SetRow(footer,2); layout.Children.Add(footer);
@@ -128,21 +111,15 @@ public sealed partial class MainWindow : ThemedWindow
     }
     private UIElement BuildCompactHeader()
     {
-        var root = new StackPanel { Margin = new Thickness(20, 12, 20, 8) };
-        var top = new Grid();
+        var root = new StackPanel { Margin = new Thickness(20, 10, 20, 8) };
+        var top = new Grid { MinHeight = 32 };
         top.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         top.ColumnDefinitions.Add(new ColumnDefinition());
         top.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
         var brand = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };
-        var logo = new Border { Width = 30, Height = 30, CornerRadius = new CornerRadius(8), ClipToBounds = true, Margin = new Thickness(0, 0, 10, 0) };
-        var source = new BitmapImage();
-        source.BeginInit();
-        source.CacheOption = BitmapCacheOption.OnLoad;
-        source.UriSource = new Uri("pack://application:,,,/SonaBar.App;component/Assets/SonaBar-Source.png", UriKind.Absolute);
-        source.EndInit();
-        source.Freeze();
-        logo.Child = new System.Windows.Controls.Image { Source = source, Stretch = Stretch.UniformToFill };
+        var logo = Ui.Logo(32);
+        logo.Margin = new Thickness(0, 0, 10, 0);
         brand.Children.Add(logo);
         var names = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
         var wordmark = Ui.Text("SonaBar", 14);
@@ -154,23 +131,38 @@ public sealed partial class MainWindow : ThemedWindow
         byline.LineHeight = 13;
         names.Children.Add(wordmark); names.Children.Add(byline);
         brand.Children.Add(names);
+        brand.MouseLeftButtonDown += BeginWindowDrag;
         top.Children.Add(brand);
+
+        var dragArea = new Border { Background = Brushes.Transparent, Margin = new Thickness(8, 0, 8, 0) };
+        dragArea.MouseLeftButtonDown += BeginWindowDrag;
+        Grid.SetColumn(dragArea, 1); top.Children.Add(dragArea);
 
         var actions = new StackPanel { Orientation = Orientation.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Center };
         var privacy = Ui.StatusPill("●  Local & private");
-        privacy.Margin = new Thickness(0, 0, 8, 0);
+        privacy.Margin = new Thickness(0, 0, 6, 0);
         actions.Children.Add(privacy);
+        var pin = new Button
+        {
+            Content = Ui.Icon(Ui.PinIcon, 14, filled: true),
+            Style = (Style)FindResource("IconButton"),
+            ToolTip = "Keep SonaBar on top",
+            Margin = new Thickness(0, 0, 2, 0)
+        };
+        System.Windows.Automation.AutomationProperties.SetName(pin, "Keep SonaBar on top");
+        pin.Click += (_, _) => TogglePin(pin);
+        actions.Children.Add(pin);
         var gear = new Button
         {
-            Content = "\uE713",
+            Content = Ui.Icon(Ui.SettingsIcon, 15, filled: true),
             Style = (Style)FindResource("IconButton"),
-            FontFamily = new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"),
-            FontSize = 14,
             ToolTip = "Settings"
         };
         System.Windows.Automation.AutomationProperties.SetName(gear, "Settings");
         gear.Click += (_, _) => OpenSettings();
         actions.Children.Add(gear);
+        actions.Children.Add(CaptionButton(Ui.MinimizeIcon, "Minimise", () => WindowState = WindowState.Minimized));
+        actions.Children.Add(CaptionButton(Ui.CloseIcon, "Close", Hide, true));
         Grid.SetColumn(actions, 2); top.Children.Add(actions);
         root.Children.Add(top);
 
@@ -197,6 +189,39 @@ public sealed partial class MainWindow : ThemedWindow
         root.Children.Add(navRow);
         return root;
     }
+    private void BeginWindowDrag(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton != MouseButton.Left || e.ButtonState != MouseButtonState.Pressed) return;
+        // The compact shell is intentionally fixed. A double click on the title bar must not
+        // expand it into the old workspace, so only a single press starts a drag.
+        if (e.ClickCount != 1) { e.Handled = true; return; }
+        try { DragMove(); }
+        catch (InvalidOperationException) { }
+    }
+    private Button CaptionButton(string icon, string tooltip, Action action, bool close = false)
+    {
+        var button = new Button
+        {
+            Content = Ui.Icon(icon, close ? 12 : 13, 1.6),
+            Style = (Style)FindResource(close ? "CloseCaptionButton" : "CaptionButton"),
+            ToolTip = tooltip,
+            Margin = new Thickness(2, 0, 0, 0)
+        };
+        System.Windows.Automation.AutomationProperties.SetName(button, tooltip);
+        button.Click += (_, _) => action();
+        return button;
+    }
+    private void TogglePin(Button pin)
+    {
+        var keepOnTop = !Topmost;
+        Topmost = keepOnTop;
+        pin.SetResourceReference(Control.ForegroundProperty, keepOnTop ? "Accent" : "TextSecondary");
+        if (keepOnTop) pin.SetResourceReference(Control.BackgroundProperty, "AccentSoft");
+        else pin.Background = Brushes.Transparent;
+        var label = keepOnTop ? "Stop keeping SonaBar on top" : "Keep SonaBar on top";
+        pin.ToolTip = label;
+        System.Windows.Automation.AutomationProperties.SetName(pin, label);
+    }
     private static string PageLabelFor(string key) => PageCatalog.FirstOrDefault(item => item.Key == key).Label ?? "Home";
     private static string PageKeyFor(string label) => PageCatalog.FirstOrDefault(item => item.Label == label).Key ?? "Overview";
     public void OpenSettings()
@@ -206,78 +231,6 @@ public sealed partial class MainWindow : ThemedWindow
         settingsDialog = dialog;
         try { dialog.ShowDialog(); }
         finally { settingsDialog = null; UpdateHome(); UpdateFooter(); }
-    }
-    private Grid BuildTitleBar()
-    {
-        var bar = new Grid { Height=44 };
-        bar.ColumnDefinitions.Add(new ColumnDefinition { Width=GridLength.Auto });
-        bar.ColumnDefinitions.Add(new ColumnDefinition());
-        bar.ColumnDefinitions.Add(new ColumnDefinition { Width=GridLength.Auto });
-
-        var brand = new StackPanel { Orientation=Orientation.Horizontal,VerticalAlignment=VerticalAlignment.Center,Margin=new Thickness(18,0,0,0) };
-        var logo = new Border { Width=24,Height=24,CornerRadius=new CornerRadius(6),ClipToBounds=true,Margin=new Thickness(0,0,9,0),VerticalAlignment=VerticalAlignment.Center };
-        var source = new BitmapImage();
-        source.BeginInit();
-        source.CacheOption = BitmapCacheOption.OnLoad;
-        source.UriSource = new Uri("pack://application:,,,/SonaBar.App;component/Assets/SonaBar-Source.png", UriKind.Absolute);
-        source.EndInit();
-        source.Freeze();
-        var mark = new System.Windows.Controls.Image { Source=source,Stretch=Stretch.UniformToFill };
-        mark.Clip = new RectangleGeometry(new Rect(0,0,24,24),6,6);
-        RenderOptions.SetBitmapScalingMode(mark,BitmapScalingMode.HighQuality);
-        logo.Child=mark;
-        brand.Children.Add(logo);
-        var names = new StackPanel { VerticalAlignment=VerticalAlignment.Center };
-        var wordmark = Ui.Text("SonaBar",13); wordmark.FontWeight=FontWeights.SemiBold; wordmark.Margin=new Thickness(0); wordmark.LineHeight=16;
-        var byline = Ui.Text("by SilasNet",9,true); byline.Margin=new Thickness(0); byline.LineHeight=12;
-        names.Children.Add(wordmark); names.Children.Add(byline);
-        brand.Children.Add(names);
-        bar.Children.Add(brand);
-
-        var actions = new StackPanel { Orientation=Orientation.Horizontal,HorizontalAlignment=HorizontalAlignment.Right,VerticalAlignment=VerticalAlignment.Top };
-        var gear = new Button { Content="\uE713",Style=(Style)FindResource("IconButton"),ToolTip="Settings",HorizontalAlignment=HorizontalAlignment.Center,VerticalAlignment=VerticalAlignment.Center,Margin=new Thickness(0,0,8,0),FontFamily=new FontFamily("Segoe Fluent Icons, Segoe MDL2 Assets"),FontSize=14 };
-        gear.Click += (_,_)=>Navigate("General");
-        System.Windows.Automation.AutomationProperties.SetName(gear,"Settings");
-        MakeChromeControl(gear);
-        actions.Children.Add(gear);
-        actions.Children.Add(CaptionButton("\uE921","Minimise",()=>WindowState=WindowState.Minimized));
-        maximizeButton = CaptionButton("\uE922","Maximise",ToggleMaximize);
-        actions.Children.Add(maximizeButton);
-        actions.Children.Add(CaptionButton("\uE8BB","Close",Hide,true));
-        Grid.SetColumn(actions,2); bar.Children.Add(actions);
-        return bar;
-    }
-    private Button CaptionButton(string glyph,string tooltip,Action action,bool close=false)
-    {
-        var button = new Button { Content=glyph,Style=(Style)FindResource(close?"CloseCaptionButton":"CaptionButton"),ToolTip=tooltip,Focusable=false };
-        System.Windows.Automation.AutomationProperties.SetName(button,tooltip);
-        button.Click += (_,_)=>action();
-        MakeChromeControl(button);
-        return button;
-    }
-    private void UpdateCaptionButtons()
-    {
-        if(maximizeButton is null)return;
-        var maximized=WindowState==WindowState.Maximized;
-        var label=maximized?"Restore":"Maximise";
-        maximizeButton.Content=maximized?"\uE923":"\uE922";
-        maximizeButton.ToolTip=label;
-        System.Windows.Automation.AutomationProperties.SetName(maximizeButton,label);
-    }
-    private void ToggleMaximize() => WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
-    private Border BuildTabBar()
-    {
-        var stack = new StackPanel { Orientation=Orientation.Horizontal };
-        foreach(var tab in Tabs)
-        {
-            var button = new ToggleButton { Content=tab.Label,Style=(Style)FindResource("TabButton") };
-            button.Click += (_,_)=>Navigate(tab.Pages[0]);
-            stack.Children.Add(button);
-            tabButtons[tab.Key]=button;
-        }
-        var border = new Border { Child=stack,CornerRadius=new CornerRadius(9),Padding=new Thickness(2),HorizontalAlignment=HorizontalAlignment.Center,Margin=new Thickness(0,6,0,2) };
-        border.SetResourceReference(Border.BackgroundProperty,"Sidebar");
-        return border;
     }
     private Border BuildFooter()
     {
@@ -312,27 +265,7 @@ public sealed partial class MainWindow : ThemedWindow
         border.SetResourceReference(Border.BorderBrushProperty,"Line");
         return border;
     }
-    private static string TabFor(string page)
-    {
-        foreach(var tab in Tabs)if(tab.Pages.Contains(page))return tab.Key;
-        return "General";
-    }
-    private static string SubLabel(string page) => page switch { "General"=>"Settings","Custom Words"=>"Custom words","Applications"=>"Applications","Writing"=>"Writing tools",_=>page };
     private static bool IsSettingsPage(string name) => name is "General" or "Dictation" or "Writing" or "Audio" or "Shortcuts" or "Privacy" or "Advanced" or "Debug" or "Languages";
-    private void RebuildSubTabs(string tabKey)
-    {
-        subNavigation.Children.Clear(); subTabButtons.Clear();
-        var pages = Tabs.First(tab=>tab.Key==tabKey).Pages;
-        if(pages.Length<=1){subNavigation.Visibility=Visibility.Collapsed;return;}
-        subNavigation.Visibility=Visibility.Visible;
-        foreach(var pageName in pages)
-        {
-            var button = new ToggleButton { Content=SubLabel(pageName),Style=(Style)FindResource("SubTabButton") };
-            button.Click += (_,_)=>Navigate(pageName);
-            subNavigation.Children.Add(button);
-            subTabButtons[pageName]=button;
-        }
-    }
     private void DictationAction()
     {
         if(c.Machine.State==OperationState.Recording)c.ToggleDictation();
@@ -477,29 +410,33 @@ public sealed partial class MainWindow : ThemedWindow
         detailsCard.SetResourceReference(Border.BackgroundProperty, "BackgroundElevated");
         detailsCard.SetResourceReference(Border.BorderBrushProperty, "Border");
 
-        homeLastBox = new TextBox
+        homeLastText = new TextBlock
         {
-            IsReadOnly = true,
-            IsTabStop = false,
-            AcceptsReturn = true,
             TextWrapping = TextWrapping.Wrap,
+            FontSize = 14,
+            LineHeight = 20,
+            TextTrimming = TextTrimming.None
+        };
+        System.Windows.Automation.AutomationProperties.SetName(homeLastText, "Last transcription");
+        homeLastText.SetBinding(TextBlock.TextProperty, new Binding(nameof(AppController.LastText)) { Mode = BindingMode.OneWay });
+        var lastScroll = new ScrollViewer
+        {
+            Content = homeLastText,
+            MinHeight = 54,
+            MaxHeight = 84,
+            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
             BorderThickness = new Thickness(0),
             Background = Brushes.Transparent,
             Padding = new Thickness(0),
-            FontSize = 14,
-            MinHeight = 54,
-            MaxHeight = 84,
-            VerticalContentAlignment = VerticalAlignment.Top,
-            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled
+            Focusable = false,
+            IsTabStop = false
         };
-        System.Windows.Automation.AutomationProperties.SetName(homeLastBox, "Last transcription");
-        homeLastBox.SetBinding(TextBox.TextProperty, new Binding(nameof(AppController.LastText)) { Mode = BindingMode.OneWay });
         homeLastPlaceholder = Ui.Text("Your last transcription will appear here.", 13, true);
         homeLastPlaceholder.Margin = new Thickness(0, 3, 0, 0);
         homeLastPlaceholder.IsHitTestVisible = false;
         var lastArea = new Grid { MinHeight = 54, MaxHeight = 84 };
-        lastArea.Children.Add(homeLastBox);
+        lastArea.Children.Add(lastScroll);
         lastArea.Children.Add(homeLastPlaceholder);
 
         var lastHeader = new Grid { Margin = new Thickness(0, 0, 0, 4) };
@@ -560,7 +497,7 @@ public sealed partial class MainWindow : ThemedWindow
     private void UpdateHome()
     {
         if (homeStatusTitle is null || homeStatusDetail is null || homeModeValue is null || homeHotkeyValue is null ||
-            homeModelValue is null || homeProcessingValue is null || homeLastPlaceholder is null || homeCopy is null || homePrimary is null)
+            homeModelValue is null || homeProcessingValue is null || homeLastText is null || homeLastPlaceholder is null || homeCopy is null || homePrimary is null)
             return;
         var state = c.Machine.State;
         var title = "Ready";

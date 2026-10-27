@@ -545,11 +545,102 @@ public sealed partial class AppController : INotifyPropertyChanged, IDisposable
     }
     public async Task<string> TranslateAsync(string text,string language,CancellationToken token)
     {
+        void Mark(string stage,string? reason=null)
+        {
+            if(!Settings.DebugLogging)return;
+            if(reason is null)SafeLog.WriteDiagnostic("Translation",("stage",stage),("language",language),("chars",text.Length));
+            else SafeLog.WriteDiagnostic("Translation",("stage",stage),("reason",reason));
+        }
+        // Markers protect names, numbers and clock times, but a local model may still split or
+        // repeat one. Try the protected pass first, then fall back to a direct translation with
+        // the same preservation contract instead of failing the whole dictation.
+        Mark("start");
         var protectedText=ProtectedTranslation.Create(text,language,Settings.CustomWords);
-        var instruction=OutputPipeline.EditingInstruction(Settings,"",new(text,SpokenAction.Translate,language))+" Copy every SONABARLITERAL token exactly once, unchanged. Treat these tokens as opaque text. Do not interpret or expand them.";
-        var result=protectedText.Restore(await EnhanceAsync(protectedText.Text,instruction,token,false,false));
-        if(!OutputPipeline.PreservesProtectedDetails(text,result,Settings.CustomWords))throw new InvalidDataException("Translation changed a protected detail. Your original text was kept.");
-        return OutputPipeline.Format(result,Settings.OutputCasing);
+        var instruction=OutputPipeline.EditingInstruction(Settings,"",new(text,SpokenAction.Translate,language))+" Copy every SONABARLITERAL token exactly once, unchanged. Treat these tokens as opaque text. Do not interpret, split, translate or expand them.";
+        try
+        {
+            var result=protectedText.Restore(await EnhanceAsync(protectedText.Text,instruction,token,false,false));
+            if(string.IsNullOrWhiteSpace(result))throw new InvalidDataException("Translation returned no text.");
+            if(!TranslationUnchanged(text,result)&&OutputPipeline.PreservesProtectedDetails(text,result,Settings.CustomWords))
+            {
+                Mark("protected_ok");
+                return OutputPipeline.Format(result,Settings.OutputCasing);
+            }
+            var reason=TranslationUnchanged(text,result)?"unchanged":"protected_detail";
+            Mark("protected_rejected",reason);
+            SafeLog.Write("Translation",new InvalidDataException(reason=="unchanged"
+                ?"Protected translation returned the original text."
+                :"Protected translation did not preserve every detail."));
+        }
+        catch(InvalidDataException error)
+        {
+            Mark("protected_error",error.GetType().Name);
+            SafeLog.Write("Translation",error);
+        }
+        token.ThrowIfCancellationRequested();
+        var fallbackInstruction=OutputPipeline.EditingInstruction(Settings,"",new(text,SpokenAction.Translate,language))
+            +" Preserve every name in its ORIGINAL SPELLING, every number, time, currency amount, unit and negation exactly. Do not add time qualifiers. Return only the translation.";
+        var fallback=await EnhanceAsync(text,fallbackInstruction,token,false,false);
+        if(string.IsNullOrWhiteSpace(fallback))throw new InvalidDataException("Translation returned no text. Your original text was kept.");
+        if(TranslationUnchanged(text,fallback))
+        {
+            Mark("fallback_rejected","unchanged");
+            throw new InvalidDataException("Translation did not change the text. Your original text was kept.");
+        }
+        if(!OutputPipeline.PreservesProtectedDetails(text,fallback,Settings.CustomWords))
+        {
+            Mark("fallback_rejected","protected_detail");
+            throw new InvalidDataException("Translation changed a protected detail. Your original text was kept.");
+        }
+        Mark("fallback_ok");
+        return OutputPipeline.Format(fallback,Settings.OutputCasing);
+    }
+    /// <summary>
+    /// Detects a model response that only repeats the source, possibly with punctuation, casing
+    /// or spacing changes. Such a response is not a translation and must trigger the stronger
+    /// fallback instead of being reported as success.
+    /// </summary>
+    internal static bool TranslationUnchanged(string source,string result)
+    {
+        static string Key(string value)
+        {
+            var normalized=value.Normalize();
+            var builder=new System.Text.StringBuilder(normalized.Length);
+            foreach(var c in normalized)
+                if(!char.IsWhiteSpace(c)&&!char.IsPunctuation(c))
+                    builder.Append(char.ToUpperInvariant(c));
+            return builder.ToString();
+        }
+        static List<string> Words(string value)
+        {
+            var words=new List<string>();
+            var word=new System.Text.StringBuilder();
+            void Flush()
+            {
+                if(word.Length==0)return;
+                var text=word.ToString();
+                // Proper names are often identical across languages. Compare the remaining
+                // lowercase words so a real translation with several names is not rejected.
+                if(!char.IsUpper(text[0]))words.Add(text.ToLowerInvariant());
+                word.Clear();
+            }
+            foreach(var c in value.Normalize())
+            {
+                if(char.IsLetter(c)){ word.Append(c); continue; }
+                Flush();
+            }
+            Flush();
+            return words;
+        }
+        var key=Key(source);
+        if(key.Length==0)return false;
+        if(key==Key(result))return true;
+        // A model can return the source with a single name changed and still look different.
+        // Compare the remaining words so a mostly unchanged sentence triggers the fallback.
+        var sourceWords=Words(source);
+        if(sourceWords.Count<2)return false;
+        var resultWords=new HashSet<string>(Words(result),StringComparer.Ordinal);
+        return sourceWords.Count(resultWords.Contains)/(double)sourceWords.Count>=0.8;
     }
     public async Task RunExclusiveAsync(Func<CancellationToken, Task> action)
     {

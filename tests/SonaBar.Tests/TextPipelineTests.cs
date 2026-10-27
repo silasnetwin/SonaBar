@@ -1,3 +1,4 @@
+using SonaBar.App;
 using SonaBar.Core;
 using Xunit;
 namespace SonaBar.Tests;
@@ -11,7 +12,34 @@ public class TextPipelineTests
         Assert.DoesNotContain("10", protectedText.Text); Assert.DoesNotContain("11:30", protectedText.Text);
         var output = string.Join("，", protectedText.Tokens.Keys);
         Assert.Equal("10点，11:30", protectedText.Restore(output));
-        Assert.Throws<InvalidDataException>(() => protectedText.Restore("lost details"));
+        var lost = protectedText.Restore("lost details");
+        Assert.Equal("lost details", lost);
+        Assert.False(OutputPipeline.PreservesProtectedDetails("Um 10 Uhr und um 11:30 Uhr.", lost));
+    }
+    [Fact]
+    public void RepeatedProtectedTokenIsRestoredEverywhere()
+    {
+        var protectedText = ProtectedTranslation.Create("Mara", "English", ["Mara"]);
+        var token = Assert.Single(protectedText.Tokens).Key;
+        Assert.Equal("Mara und Mara", protectedText.Restore($"{token} und {token}"));
+    }
+    [Fact]
+    public void SpacedProtectedTokenIsStillRestored()
+    {
+        var protectedText = ProtectedTranslation.Create("Mara", "English", ["Mara"]);
+        var token = Assert.Single(protectedText.Tokens).Key;
+        Assert.Equal("Mara", protectedText.Restore(string.Join(" ", token.ToCharArray())));
+    }
+    [Fact]
+    public void TranslationThatKeepsTheSourceWordingIsTreatedAsUntranslated()
+    {
+        const string source = "Mara trifft Silas am 11. März um 11:30 Uhr in Raum 11.";
+        Assert.True(AppController.TranslationUnchanged(source, source));
+        Assert.True(AppController.TranslationUnchanged(source, "Maya trifft Silas am 11. März um 11:30 Uhr in Raum 11."));
+        Assert.True(AppController.TranslationUnchanged("Hallo Welt!", "hallo welt"));
+        Assert.False(AppController.TranslationUnchanged(source, "Mara meets Silas at 11:30 on March 11 in room 11."));
+        Assert.False(AppController.TranslationUnchanged("Mara und Silas in Berlin", "Mara and Silas in Berlin"));
+        Assert.False(AppController.TranslationUnchanged("Hallo", "Hello"));
     }
     [Fact]
     public void AutomaticCorrectionCannotReplaceAShortMessageWithDifferentContent()

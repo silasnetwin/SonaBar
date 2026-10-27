@@ -13,6 +13,7 @@ Record Windows version, display scale, audio device, selected model, and the exa
 
 ## Compact-only UI and settings
 - [ ] A normal launch after onboarding opens the single compact `MainWindow`, not a workspace. The header, status card, details, last transcription and footer render without clipping at 100% DPI; the measured window is 430 x 660 with a 414 x 621 client area.
+- [ ] The custom title bar shows the circular mark, wordmark, privacy pill, pin, gear, minimize and close. Dragging the title bar moves the window; the pin toggles always-on-top for the session; minimize and close-to-tray behave normally. Windows 11 shows rounded DWM corners.
 - [ ] Finish the Welcome flow. The compact window appears, and the app is not left tray-only until the next launch.
 - [ ] No **Open workspace** button or second workspace window exists anywhere. All 20 pages are reachable from **Go to**; **Tray > Tools > All settings** opens General; closing the window leaves SonaBar in the tray and the tray reopens the same compact window.
 - [ ] Tab through the compact window: the primary action, the **Go to** selector and the header gear show a solid accent focus ring or a soft icon highlight, never WPF's dotted focus rectangle. The read-only last transcription is skipped.
@@ -34,7 +35,8 @@ For **Notepad, Word, Chrome, Edge, Discord, OpenCode, VS Code, JetBrains IDE, an
 - [ ] Smart formatting preserves meaning and language without requiring a second mode.
 - [ ] Clipboard restore retains text, HTML, RTF, bitmap and file lists.
 - [ ] A newer clipboard change during insertion is not overwritten.
-- [ ] Selected-text editing changes only the intended selection; cancellation changes nothing.
+- [ ] Selected-text editing changes only the intended selection; cancellation changes nothing. Wait for a slow model response, switch focus away and back, then confirm the exact passage is restored and replaced once. Inspect `diagnostics.log` for `selection=expected_verified`; a lost or ambiguous selection must refuse the edit instead of appending at the caret.
+- [ ] Translate a selected sentence with a name, a time and a number. The result is in the requested language, keeps the protected details, and is not merely the source with punctuation or one name changed. Force one unchanged model response and confirm SonaBar retries, then keeps the original and shows an error instead of claiming success.
 - [ ] Password fields refuse recording/rewrite/insertion.
 - [ ] Closed target preserves the transcription; elevated app reports blocked insertion.
 - [ ] Per-app Enter is off by default. Enable only for the intended app, then verify it sends exactly once.
@@ -43,7 +45,7 @@ For **Notepad, Word, Chrome, Edge, Discord, OpenCode, VS Code, JetBrains IDE, an
 - [ ] Roblox compatibility insertion: focus stays in the Roblox text field, no false failure is reported, and the result message is `Paste sent — check the app/target`. Record the speech-stop-to-paste latency.
 - [ ] Start a dictation with the button in the SonaBar window while a browser or editor is behind it. The app must restore that external window, insert there, and must not target SonaBar's own button.
 
-> 2026-10-27 probe: an Edge contenteditable with `slateTextArea_ec4baf` accepted a 191-character sentence through `clipboard_paste;reason=composer_target`; a page that removed the final period produced `changed_assumed;coverage=190;length=191` and the exact `Paste sent — check the app/target` status. Notepad accepted both UIA value and paced Unicode insertion. Real Discord Canary and OpenCode still need the manual run.
+> 2026-10-27 probes: an Edge contenteditable with `slateTextArea_ec4baf` accepted a 191-character sentence through `clipboard_paste;reason=composer_target`; a page that removed the final period produced `changed_assumed;coverage=190;length=191` and the exact `Paste sent — check the app/target` status. A live selected-text translation/replacement pass in a native WinForms TextBox translated `Silas trifft Maya am 11. März um 11:30 Uhr in Raum 11.` to `Silas meets Maya on 11. March at 11:30 in room 11.` in 7.3 s with real `qwen3-4b`; diagnostics were `selection=expected_verified;attempt=0;length=54`, `backend=sendinput_unicode;result=verified` and `delivery=confirmed`. An earlier Notepad probe accepted both UIA value and paced Unicode insertion; the current Windows 11 Notepad build exposes `RichEditD2DPT` without usable UIA text/selection, and a generic Edge contenteditable accepted the selection but did not accept synthetic replacement; SonaBar refused without duplicating text. Real Discord Canary, OpenCode, Office and the rest of the matrix still need the manual run.
 
 ## Audio and shortcuts
 - [ ] Toggle and push-to-talk, including a very short key press.

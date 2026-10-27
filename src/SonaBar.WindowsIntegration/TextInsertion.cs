@@ -7,7 +7,7 @@ using SonaBar.Core;
 
 namespace SonaBar.WindowsIntegration;
 
-public sealed record InsertionTarget(nint Window, uint ProcessId, string Executable, AutomationElement? Element, TextPatternRange? Selection = null,string WindowTitle="",NativeTextSnapshot? NativeSelection=null,string ElementName="",string ElementClass="",string ElementControlType="");
+public sealed record InsertionTarget(nint Window, uint ProcessId, string Executable, AutomationElement? Element, TextPatternRange? Selection = null,string WindowTitle="",NativeTextSnapshot? NativeSelection=null,string ElementName="",string ElementClass="",string ElementControlType="",string? ExpectedSelection=null);
 public sealed record SelectedPassage(InsertionTarget Target,string Text);
 public sealed record InsertionReceipt(InsertionTarget Target,string Inserted,string Replaced,TextPatternRange? Range, bool WholeEmptyField);
 public sealed class ClipboardService
@@ -227,11 +227,15 @@ public sealed class TextInsertionService(ClipboardService clipboard) : IDisposab
         catch(InvalidOperationException) { }
         catch(ElementNotAvailableException) { }
         var identity=ElementIdentity(element);
+        var preserveSelection=target.ExpectedSelection is not null;
         return target with
         {
             Element=element,
-            Selection=selection,
-            NativeSelection=NativeTextControl.Capture(element),
+            // A reacquired provider usually reports a caret where the user had a passage
+            // selected. Keep the captured range and native snapshot for replacement paths;
+            // RestoreExpectedSelectionAsync verifies them again before any input.
+            Selection=preserveSelection?target.Selection:selection,
+            NativeSelection=preserveSelection?target.NativeSelection:NativeTextControl.Capture(element),
             ElementName=identity.Name,
             ElementClass=identity.Class,
             ElementControlType=identity.Type
@@ -433,18 +437,38 @@ public sealed class TextInsertionService(ClipboardService clipboard) : IDisposab
     internal static bool SelectionBelongsToContent(string text,string? content)=>content is not null&&content.Contains(text,StringComparison.Ordinal);
     public static void ValidateSelection(SelectedPassage passage)
     {
+        ValidateSelectionTarget(passage);
+        if(passage.Target.NativeSelection is null&&passage.Target.Selection?.GetText(14001)!=passage.Text)
+            throw new InvalidOperationException("The selected passage changed. Select it again to edit safely.");
+    }
+    /// <summary>
+    /// Verifies that the captured field is still editable and, for native controls, that its
+    /// content fingerprint did not change. The current selection itself is restored and
+    /// verified immediately before input instead of rejecting an expired UIA range here.
+    /// </summary>
+    public static void ValidateSelectionTarget(SelectedPassage passage)
+    {
         if(!IsEditable(passage.Target))throw new InvalidOperationException("The original selection is no longer editable.");
         if(passage.Target.NativeSelection is {} native)NativeTextControl.Validate(native);
-        else if(passage.Target.Selection?.GetText(14001)!=passage.Text)throw new InvalidOperationException("The selected passage changed. Select it again to edit safely.");
     }
-    public async Task ReplaceSelectionAsync(SelectedPassage passage,string text,ClipboardMode mode,CancellationToken token)
+    public async Task ReplaceSelectionAsync(SelectedPassage passage,string text,ClipboardMode mode,CancellationToken token,Action<string>? diagnostic=null)
     {
-        ValidateSelection(passage);
-        var focused=await FocusAsync(passage.Target);
-        if(focused.Element is null||passage.Target.Element is null||!Automation.Compare(focused.Element,passage.Target.Element))
-            throw new InvalidOperationException("The selected passage changed. Select it again to edit safely.");
-        ValidateSelection(passage);token.ThrowIfCancellationRequested();
-        await InsertAsync(focused,text,new(focused.Executable,InsertionStrategy.Automatic,false,""),mode,token);
+        ValidateSelectionTarget(passage);
+        var expected=passage.Target with { ExpectedSelection=passage.Text };
+        var focused=await FocusAsync(expected);
+        if(focused.Element is null)throw new InvalidOperationException("The selected passage changed. Select it again to edit safely.");
+        if(passage.Target.Element is not null&&!Automation.Compare(focused.Element,passage.Target.Element))
+        {
+            // Chromium can replace an accessibility node after focus moves. Accept the
+            // reacquired provider only when it still identifies the same field; the exact
+            // passage is verified again inside InsertAsync before any input is sent.
+            var original=ElementIdentity(passage.Target.Element);
+            var current=ElementIdentity(focused.Element);
+            if(original.Name!=current.Name||original.Class!=current.Class||original.Type!=current.Type)
+                throw new InvalidOperationException("The selected passage changed. Select it again to edit safely.");
+        }
+        token.ThrowIfCancellationRequested();
+        await InsertAsync(focused,text,new(focused.Executable,InsertionStrategy.Automatic,false,""),mode,token,diagnostic:diagnostic,expectedSelection:passage);
     }
     public Task RestoreFocusAsync(InsertionTarget target)=>FocusAsync(target);
     public async Task<string> SelectedTextAsync(InsertionTarget target)
@@ -466,11 +490,18 @@ public sealed class TextInsertionService(ClipboardService clipboard) : IDisposab
         try { var text = clipboard.Text(); if (string.IsNullOrWhiteSpace(text)) throw new InvalidOperationException("The selection does not contain text."); return text; }
         finally { clipboard.RestoreIfUnchanged(previous, changed); }
     }
-    public async Task<string> InsertAsync(InsertionTarget target, string text, ApplicationProfile profile, ClipboardMode mode, CancellationToken token,Action<string>? phase=null,Action<string>? diagnostic=null)
+    public async Task<string> InsertAsync(InsertionTarget target, string text, ApplicationProfile profile, ClipboardMode mode, CancellationToken token,Action<string>? phase=null,Action<string>? diagnostic=null,SelectedPassage? expectedSelection=null)
     {
         LastReceipt=null;
         LastDeliveryAssumed=false;
         LastDeliveryStatus="Text inserted";
+        if(expectedSelection is not null)
+            target=target with
+            {
+                ExpectedSelection=expectedSelection.Text,
+                Selection=expectedSelection.Target.Selection,
+                NativeSelection=expectedSelection.Target.NativeSelection
+            };
         var restoreCaret=restoreCaretOnInsert;
         restoreCaretOnInsert=false;
         token.ThrowIfCancellationRequested();
@@ -508,6 +539,8 @@ public sealed class TextInsertionService(ClipboardService clipboard) : IDisposab
         }
         target=RefineTarget(target);
         Guard(target);
+        target=await RestoreExpectedSelectionAsync(target,diagnostic,token);
+        Guard(target);
         var beforeText=InspectableText(target);
         // Rich composers (Discord/Slate, Electron editors, browser contenteditables) can
         // drop or reorder characters when a long SendInput batch arrives. A clipboard
@@ -525,6 +558,7 @@ public sealed class TextInsertionService(ClipboardService clipboard) : IDisposab
             diagnostic?.Invoke("backend=native_edit;attempted=true");
             try
             {
+                target=await RestoreExpectedSelectionAsync(target,diagnostic,token);
                 NativeTextControl.Replace(native,text);
                 replaced=native.Selected;
                 inserted=true;
@@ -582,6 +616,7 @@ public sealed class TextInsertionService(ClipboardService clipboard) : IDisposab
         {
             diagnostic?.Invoke("backend=sendinput_unicode;attempted=true");
             await EnsureInputFocusAsync(target,diagnostic,restoreCaret);
+            target=await RestoreExpectedSelectionAsync(target,diagnostic,token);
             await Native.UnicodeAsync(text,token);
             var confirmation=await ConfirmDeliveryAsync(target,text,beforeText,token);
             if(confirmation==DeliveryConfirmation.Confirmed)
@@ -621,6 +656,7 @@ public sealed class TextInsertionService(ClipboardService clipboard) : IDisposab
             try
             {
                 await EnsureInputFocusAsync(target,diagnostic,restoreCaret);
+                target=await RestoreExpectedSelectionAsync(target,diagnostic,token);
                 if(partialDetected)
                 {
                     // SendInput left a prefix in the field. Select it and let the paste
@@ -696,7 +732,7 @@ public sealed class TextInsertionService(ClipboardService clipboard) : IDisposab
                         if(tail.FindText(text,false,false)is null)range=candidate;
                     }
                 }
-                if(range is not null||wholeEmptyField)LastReceipt=new(target,text,replaced,range,wholeEmptyField);
+                if(range is not null||wholeEmptyField)LastReceipt=new(target with { ExpectedSelection=null },text,replaced,range,wholeEmptyField);
             }
             catch(ElementNotAvailableException){}
         }
@@ -738,7 +774,7 @@ public sealed class TextInsertionService(ClipboardService clipboard) : IDisposab
         if(receipt.Range is not null)
         {
             if(receipt.Range.GetText(-1)!=receipt.Inserted)throw new InvalidOperationException("The inserted text has changed. Select the passage again to edit it safely.");
-            var target=receipt.Target with {Selection=receipt.Range,NativeSelection=null};
+            var target=receipt.Target with {Selection=receipt.Range,NativeSelection=null,ExpectedSelection=null};
             if(replacement.Length==0){await FocusAsync(target);token.ThrowIfCancellationRequested();Native.SendKey(8);Native.SendKey(8,true);LastReceipt=null;return;}
             await InsertAsync(target,replacement,new(receipt.Target.Executable,InsertionStrategy.Clipboard,false,""),mode,token);
         }
@@ -838,6 +874,103 @@ public sealed class TextInsertionService(ClipboardService clipboard) : IDisposab
         {
             diagnostic?.Invoke("focus=caret_click_skipped;exception="+error.GetType().Name);
         }
+    }
+    private static async Task<InsertionTarget> RestoreExpectedSelectionAsync(InsertionTarget target,Action<string>? diagnostic,CancellationToken token)
+    {
+        var expected=target.ExpectedSelection;
+        if(string.IsNullOrEmpty(expected))return target;
+        for(var attempt=0;attempt<5;attempt++)
+        {
+            token.ThrowIfCancellationRequested();
+            if(SelectionMatches(target,expected))
+            {
+                diagnostic?.Invoke($"selection=expected_verified;attempt={attempt};length={expected.Length}");
+                return target;
+            }
+            try
+            {
+                if(attempt==0)TrySelectCaptured(target,diagnostic);
+                else if(attempt==1)
+                {
+                    var range=FindUniqueTextRange(target,expected);
+                    if(range is not null)
+                    {
+                        range.Select();
+                        target=target with { Selection=range };
+                        diagnostic?.Invoke("selection=expected_recovered_by_text");
+                    }
+                }
+                else if(attempt==2)
+                {
+                    var fresh=FindTargetElement(target);
+                    if(fresh is not null&&(target.Element is null||!Automation.Compare(fresh,target.Element)))
+                    {
+                        target=WithElement(target,fresh);
+                        target.Element!.SetFocus();
+                        TrySelectCaptured(target,diagnostic);
+                        if(!SelectionMatches(target,expected))
+                        {
+                            var range=FindUniqueTextRange(target,expected);
+                            if(range is not null)
+                            {
+                                range.Select();
+                                target=target with { Selection=range };
+                            }
+                        }
+                        diagnostic?.Invoke("selection=expected_reacquired;name="+ElementIdentity(fresh).Name);
+                    }
+                }
+            }
+            catch(InvalidOperationException error) { diagnostic?.Invoke($"selection=expected_restore_failed;attempt={attempt};exception={error.GetType().Name}"); }
+            catch(ElementNotAvailableException error) { diagnostic?.Invoke($"selection=expected_restore_failed;attempt={attempt};exception={error.GetType().Name}"); }
+            if(attempt<4)await Task.Delay(35,token);
+        }
+        if(SelectionMatches(target,expected))return target;
+        throw new InvalidOperationException("The selected passage changed. Select it again to edit safely.");
+    }
+    private static void TrySelectCaptured(InsertionTarget target,Action<string>? diagnostic)
+    {
+        try { target.Selection?.Select(); }
+        catch(InvalidOperationException error) { diagnostic?.Invoke("selection=captured_range_failed;exception="+error.GetType().Name); }
+        catch(ElementNotAvailableException error) { diagnostic?.Invoke("selection=captured_range_failed;exception="+error.GetType().Name); }
+        if(target.NativeSelection is null)return;
+        try { NativeTextControl.Select(target.NativeSelection); }
+        catch(InvalidOperationException error) { diagnostic?.Invoke("selection=native_range_failed;exception="+error.GetType().Name); }
+        catch(ElementNotAvailableException error) { diagnostic?.Invoke("selection=native_range_failed;exception="+error.GetType().Name); }
+    }
+    private static bool SelectionMatches(InsertionTarget target,string expected)
+    {
+        try
+        {
+            if(target.NativeSelection is {} native)
+            {
+                var current=NativeTextControl.Capture(target.Element);
+                return current is not null&&current.Fingerprint==native.Fingerprint&&string.Equals(current.Selected,expected,StringComparison.Ordinal);
+            }
+            if(target.Element is not null&&target.Element.TryGetCurrentPattern(TextPattern.Pattern,out var pattern)&&pattern is TextPattern text)
+            {
+                var selected=string.Join("",text.GetSelection().Select(range=>range.GetText(-1)));
+                return string.Equals(selected,expected,StringComparison.Ordinal);
+            }
+            return string.Equals(target.Selection?.GetText(14001),expected,StringComparison.Ordinal);
+        }
+        catch(InvalidOperationException) { return false; }
+        catch(ElementNotAvailableException) { return false; }
+    }
+    private static TextPatternRange? FindUniqueTextRange(InsertionTarget target,string expected)
+    {
+        try
+        {
+            if(target.Element?.TryGetCurrentPattern(TextPattern.Pattern,out var pattern)!=true||pattern is not TextPattern text)return null;
+            var document=text.DocumentRange;
+            var candidate=document.FindText(expected,false,false);
+            if(candidate is null)return null;
+            var tail=document.Clone();
+            tail.MoveEndpointByRange(TextPatternRangeEndpoint.Start,candidate,TextPatternRangeEndpoint.End);
+            return tail.FindText(expected,false,false) is null?candidate:null;
+        }
+        catch(InvalidOperationException) { return null; }
+        catch(ElementNotAvailableException) { return null; }
     }
     private static async Task<InsertionTarget> FocusAsync(InsertionTarget target,Action<string>? diagnostic=null,bool restoreCaret=false)
     {
@@ -1142,6 +1275,7 @@ public sealed class TextInsertionService(ClipboardService clipboard) : IDisposab
             if(focused is null||focused.Current.IsPassword||focused.Current.ProcessId!=target.ProcessId)return target;
             if(target.Element is not null&&Automation.Compare(focused,target.Element))return target;
             if(!IsEditableElement(focused))return target;
+            if(target.ExpectedSelection is not null)return WithElement(target,focused);
             TextPatternRange? selection=null;
             try
             {

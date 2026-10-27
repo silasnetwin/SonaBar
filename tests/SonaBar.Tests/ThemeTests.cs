@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Automation;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -12,6 +13,7 @@ using SonaBar.Transcription;
 using SonaBar.WindowsIntegration;
 using Xunit;
 using Application = System.Windows.Application;
+using Button = System.Windows.Controls.Button;
 using Color = System.Windows.Media.Color;
 using Control = System.Windows.Controls.Control;
 using TextBox = System.Windows.Controls.TextBox;
@@ -35,13 +37,27 @@ public class ThemeTests
                 var settings = new AppSettings(); using var models = new ModelManager(Path.Combine(root, "models")); using var audio = new AudioCaptureService(); using var speech = new WhisperEngine(); using var writing = new LocalEnhancementEngine(); using var hotkeys = new GlobalHotkeyService(); using var ducker = new AudioDucker(); var clipboard = new ClipboardService();
                 using var controller = new AppController(settings, new SettingsStore(root), new HistoryRepository(root), models, audio, speech, writing, clipboard, new TextInsertionService(clipboard), hotkeys, ducker);
                 var window = new MainWindow(controller); app.MainWindow = window; controller.SetResult("Morgen treffen wir uns um 11 Uhr. Bring bitte die Folien mit.");
-                // The compact shell is the only product window: native chrome, no resize
-                // handle, and a fixed everyday width instead of the old 1080x780 workspace.
-                Assert.Equal(WindowStyle.SingleBorderWindow, window.WindowStyle);
-                Assert.Equal(ResizeMode.CanMinimize, window.ResizeMode);
-                Assert.Null(System.Windows.Shell.WindowChrome.GetWindowChrome(window));
+                // The compact shell is the only product window: a custom rounded title bar,
+                // no resize handle, and a fixed everyday width instead of the old workspace.
+                Assert.Equal(WindowStyle.None, window.WindowStyle);
+                Assert.Equal(ResizeMode.NoResize, window.ResizeMode);
+                var chrome = System.Windows.Shell.WindowChrome.GetWindowChrome(window);
+                Assert.NotNull(chrome);
+                Assert.Equal(0, chrome.CaptionHeight);
+                Assert.Equal(new Thickness(0), chrome.ResizeBorderThickness);
+                Assert.False(chrome.UseAeroCaptionButtons);
+                Assert.True(window.ShowInTaskbar);
                 Assert.InRange(window.Width, 380, 430);
                 Assert.InRange(window.Height, 520, 660);
+                Assert.NotNull(FindButton(window, "Settings"));
+                Assert.NotNull(FindButton(window, "Minimise"));
+                Assert.NotNull(FindButton(window, "Close"));
+                var pin = FindButton(window, "Keep SonaBar on top");
+                Assert.NotNull(pin);
+                pin.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Assert.True(window.Topmost);
+                pin.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Assert.False(window.Topmost);
                 // The footer follows the readiness state, so a missing model cannot be labelled
                 // "Ready to listen" anywhere in the window.
                 Assert.Equal(controller.Readiness.Label, controller.PresenceLabel);
@@ -98,6 +114,16 @@ public class ThemeTests
             catch (Exception error) { failure = error; }
             finally { Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools(); if (Directory.Exists(root)) Directory.Delete(root, true); }
         }); thread.SetApartmentState(ApartmentState.STA); thread.Start(); Assert.True(thread.Join(TimeSpan.FromSeconds(90))); if (failure is not null) throw new InvalidOperationException("Theme verification failed", failure);
+    }
+    private static Button? FindButton(DependencyObject root, string name) =>
+        Descendants(root).OfType<Button>().FirstOrDefault(button => AutomationProperties.GetName(button) == name);
+    private static IEnumerable<DependencyObject> Descendants(DependencyObject root)
+    {
+        foreach (var child in LogicalTreeHelper.GetChildren(root).OfType<DependencyObject>())
+        {
+            yield return child;
+            foreach (var descendant in Descendants(child)) yield return descendant;
+        }
     }
     private static double Contrast(Color a, Color b) { double Lum(Color c) { double F(byte x) { var v = x / 255d; return v <= .04045 ? v / 12.92 : Math.Pow((v + .055) / 1.055, 2.4); } return .2126 * F(c.R) + .7152 * F(c.G) + .0722 * F(c.B); } var x = Lum(a); var y = Lum(b); return (Math.Max(x, y) + .05) / (Math.Min(x, y) + .05); }
 }

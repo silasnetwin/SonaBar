@@ -19,23 +19,25 @@ public class ThemedWindow : Window
     }
 
     /// <summary>
-    /// Applies a borderless, Windows-native resize and snap frame. The window draws its own
-    /// title bar with Windows minimise, maximise/restore and close controls.
+    /// Applies the fixed compact shell used by the product window. The window draws its own
+    /// title bar, keeps the native taskbar entry, and relies on Windows 11's rounded DWM frame.
+    /// There is deliberately no resize border and no native caption hit area, so dragging and
+    /// caption actions stay under the app's control.
     /// </summary>
-    protected void UseUtilityChrome()
+    protected void UseCompactChrome()
     {
         WindowStyle = WindowStyle.None;
+        ResizeMode = ResizeMode.NoResize;
+        WindowStartupLocation = WindowStartupLocation.CenterScreen;
+        ShowInTaskbar = true;
         var chrome = new System.Windows.Shell.WindowChrome
         {
-            CaptionHeight = 44,
-            ResizeBorderThickness = new Thickness(7),
+            CaptionHeight = 0,
+            ResizeBorderThickness = new Thickness(0),
             GlassFrameThickness = new Thickness(0),
             CornerRadius = new CornerRadius(0),
             UseAeroCaptionButtons = false
         };
         System.Windows.Shell.WindowChrome.SetWindowChrome(this, chrome);
     }
-
-    protected static void MakeChromeControl(UIElement element) =>
-        System.Windows.Shell.WindowChrome.SetIsHitTestVisibleInChrome(element, true);
 }

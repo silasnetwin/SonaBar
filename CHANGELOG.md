@@ -25,6 +25,21 @@ All notable changes to SonaBar are documented here. Versions follow
   WPF's dotted focus rectangle is replaced by a solid accent border or a soft
   icon highlight, so keyboard focus stays visible without the broken-looking
   dashed box.
+- **Custom compact chrome.** The native caption buttons are replaced by vector
+  pin, settings, minimize and close controls beside a circular SonaBar mark, a
+  privacy pill and a manual title-bar drag surface. The pin toggles always-on-top
+  for the current session only. Windows 11 supplies rounded DWM corners; Windows
+  10 may show square corners.
+- **Selected-text editing stays on the original passage.** The captured passage
+  is carried through focus changes and Chromium accessibility-node replacement,
+  restored immediately before input, and verified again. If it cannot be
+  restored unambiguously, SonaBar refuses the edit instead of appending at a
+  lost caret or duplicating text.
+- **Translation retries with a preservation contract.** A response that loses
+  protected names or numbers, or that mostly repeats the source wording, is
+  retried once with explicit preservation instructions and validated again.
+  A second unchanged response is rejected instead of being reported as a
+  successful translation.
 - **Honest processing controls.** `ProcessingDevice` replaces the old free-form
   backend label, with Automatic, CPU and GPU choices. Whisper accepts an explicit
   CPU thread count, falls back to CPU when GPU loading fails, and reports the
