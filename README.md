@@ -14,6 +14,7 @@
     <img alt="Keine Telemetrie" src="https://img.shields.io/badge/telemetrie-keine-171B21?style=flat-square">
     <img alt="Kostenlos" src="https://img.shields.io/badge/preis-kostenlos-2EA043?style=flat-square">
     <img alt="Proprietär" src="https://img.shields.io/badge/lizenz-propriet%C3%A4r-6B7280?style=flat-square">
+    <a href="https://github.com/silasnetwin/SonaBar"><img alt="Quellcode auf GitHub" src="https://img.shields.io/badge/GitHub-Quellcode-181717?style=flat-square&logo=github&logoColor=white"></a>
   </p>
 
   <p>
@@ -21,16 +22,16 @@
     <a href="https://github.com/silasnetwin/SonaBar/releases/latest/download/SonaBar-Portable-x64.zip"><img alt="SonaBar Portable herunterladen" src="https://img.shields.io/badge/Portable-ZIP%20(.zip)-171B21?style=for-the-badge&logo=windows&logoColor=white"></a>
   </p>
 
-  <sub>Windows 11 x64 · Early Access · kostenlos · kein Konto erforderlich</sub>
+  <sub>Windows 11 x64 · Early Access 0.1.3 · kostenlos · kein Konto erforderlich</sub>
 </div>
 
 <p align="center">
   <a href="#funktionen">Funktionen</a> ·
   <a href="#so-funktioniert-es">So funktioniert’s</a> ·
   <a href="#datenschutz">Datenschutz</a> ·
-  <a href="#deine-sprache">Sprachen</a> ·
   <a href="#download">Download</a> ·
-  <a href="#faq">FAQ</a>
+  <a href="#faq">FAQ</a> ·
+  <a href="#entwickler">Entwickler</a>
 </p>
 
 <a href="docs/media/overview.png"><img src="docs/media/overview.png" alt="SonaBar auf Windows 11" width="920"></a>
@@ -39,27 +40,13 @@
 
 ---
 
-SonaBar ist eine lokale Diktier-App für Windows. Du drückst einen Shortcut, sprichst einen Satz und der Text erscheint im aktiven Feld – in deinem Browser, in Office, im Editor, im Chat oder im Terminal. Die Spracherkennung läuft auf deinem Computer. Kein Konto, keine Cloud, keine Telemetrie.
+SonaBar ist eine lokale Diktier-App für Windows. Du drückst einen Shortcut, sprichst einen Satz und der Text erscheint im aktiven Feld – im Browser, in Office, im Editor, im Chat oder im Terminal. Spracherkennung und optionales Schreibmodell laufen auf deinem Computer. Kein Konto, keine Cloud, keine Telemetrie.
 
 <p align="center">
   <a href="#diktat"><strong>Diktat</strong></a> ·
   <a href="#text-verfeinern"><strong>Text verfeinern</strong></a> ·
   <a href="#mehr-als-diktat"><strong>Mehr als Diktat</strong></a>
 </p>
-
-## So funktioniert es
-
-**Ein Shortcut. Drei Schritte.**
-
-| 1. Starten | 2. Sprechen | 3. Text erscheint |
-| --- | --- | --- |
-| Drücke <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Space</kbd> in der App, in die du schreiben willst. | Sprich in deinem normalen Tempo. Die Aufnahme-Pille zeigt Dauer und Pegel. | Drücke den Shortcut erneut. SonaBar setzt den Text an die Cursorposition. |
-
-<p align="center">
-  <img src="docs/media/overlay.png" alt="SonaBar Aufnahme-Overlay" width="430">
-</p>
-
-SonaBar merkt sich das zuletzt aktive externe Fenster. Wenn du die Diktat-Schaltfläche im SonaBar-Fenster benutzt, kehrt SonaBar vor der Aufnahme dorthin zurück – statt in sein eigenes Fenster zu schreiben.
 
 ## Funktionen
 
@@ -72,7 +59,6 @@ SonaBar merkt sich das zuletzt aktive externe Fenster. Wenn du die Diktat-Schalt
 - Geprüfte Einfügewege: UI Automation, nativer Text, Unicode und Clipboard-Fallback.
 - Passwortfelder werden erkannt und abgelehnt – dort wird nie Text eingefügt.
 - Clipboard-Fallback stellt den vorherigen Inhalt wieder her.
-- Rückgängig und erneut versuchen, wo Windows den eingefügten Text prüfen kann.
 - Pro-App-Profile für Ton, Einfüge-Strategie, abschließendes Enter und Clipboard-Verhalten.
 - Die Fußzeile zeigt die gemessene Zeit vom Ende der Sprache bis zum bestätigten Einfügen.
 - Optionale dezente Feedback-Töne für Start, Ende und Fehler: **Off**, **Minimal** oder **Standard**. Die Töne werden von SonaBar erzeugt und ändern keine Windows-Soundeinstellungen.
@@ -99,28 +85,14 @@ SonaBar merkt sich das zuletzt aktive externe Fenster. Wenn du die Diktat-Schalt
 - History mit Suche, Aufbewahrungsregeln und optionalem Speichern.
 - Statistik über Diktate, Wörter, Aufnahmezeit und durchschnittliches Tempo.
 
-### Überall einsetzbar
-
-**Dein Text gehört dorthin, wo du schreibst.**
-
-SonaBar ist für Browser, Office, Editoren, Chat-Clients und Terminals gebaut. Standard-Textfelder werden zuerst über Windows UI Automation geprüft, danach über Clipboard oder Unicode eingefügt.
-
-Bei reichen Chat- und Code-Editoren (Discord/Slack, VS Code/OpenCode, Browser-Composer) setzt SonaBar auf einen einzigen Clipboard-Paste statt auf lange Tastatur-Batches. Lange Unicode-Fallbacks werden in kleinen Paketen gesendet; normalisiert die Ziel-App den Text, meldet SonaBar ehrlich `Paste sent — check the app/target` statt eines falschen Erfolgs.
-
-Für Spiele und Oberflächen, die Windows keine Textprüfung erlauben – zum Beispiel **Roblox** – gibt es den **Compatibility**-Modus. SonaBar sendet den Paste an das verifizierte Vordergrundfenster und meldet exakt:
-
-> `Paste sent — check the app/target`
-
-Windows kann in solchen Fenstern nicht zurücklesen, ob der Text angekommen ist. Deshalb ist das eine ehrliche Bestätigung des Paste-Vorgangs und keine erfundene Erfolgsmeldung.
-
 ### Für Windows gebaut
 
 **Nativ statt Web-View.**
 
-- .NET 10 WPF mit kompakter eigener Titelleiste, Vektor-Steuerelementen für Anheften, Einstellungen, Minimieren und Schließen; das Fenster ist bewusst nicht maximierbar. Windows 11 rundet die Ecken über DWM, Windows 10 kann eckig bleiben.
+- .NET 10 WPF mit kompakter eigener Titelleiste, Vektor-Steuerelementen für Anheften, Einstellungen, Minimieren und Schließen; das Fenster ist bewusst nicht maximierbar.
 - Feste kompakte Fenstergröße, native Fensterpositionierung und Per-Monitor-DPI.
 - Helle Oberfläche als Standard, Dark und „Windows folgen“ per Klick.
-- Ein einziges kompaktes Hauptfenster mit Status, letzter Transkription und einem Start-/Stopp-Knopf. Alle bisherigen Seiten erreichst du über **Go to**; das Zahnrad in der Kopfzeile öffnet die kompakten Einstellungen, das Tray-Menü **Tools** bietet Schnellzugriffe.
+- Ein einziges kompaktes Hauptfenster mit Status, letzter Transkription und einem Start-/Stopp-Knopf. Alle 20 Seiten erreichst du über **Go to**; das Zahnrad in der Kopfzeile öffnet die kompakten Einstellungen, das Tray-Menü **Tools** bietet Schnellzugriffe.
 - Tray-Icon, optionaler Start mit Windows und eine kompakte Aufnahme-Pille.
 - Hilfe direkt in der App unter **About → Help** – ohne externe Dokumentation.
 - Portable ZIP oder per-user Installation – beides ohne Administratorrechte.
@@ -137,11 +109,25 @@ Windows kann in solchen Fenstern nicht zurücklesen, ob der Text angekommen ist.
 
 Die Sprachliste im Einstellungsfenster folgt dem gewählten Modell. Eine ältere, nicht unterstützte Sprache fällt automatisch auf die Spracherkennung zurück, statt ein Diktat scheitern zu lassen.
 
+## So funktioniert es
+
+**Ein Shortcut. Drei Schritte.**
+
+| 1. Starten | 2. Sprechen | 3. Text erscheint |
+| --- | --- | --- |
+| Drücke <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Space</kbd> in der App, in die du schreiben willst. | Sprich in deinem normalen Tempo. Die Aufnahme-Pille zeigt Dauer und Pegel. | Drücke den Shortcut erneut. SonaBar setzt den Text an die Cursorposition. |
+
+<p align="center">
+  <img src="docs/media/overlay.png" alt="SonaBar Aufnahme-Overlay" width="430">
+</p>
+
+SonaBar merkt sich das zuletzt aktive externe Fenster. Wenn du die Diktat-Schaltfläche im SonaBar-Fenster benutzt, kehrt SonaBar vor der Aufnahme dorthin zurück – statt in sein eigenes Fenster zu schreiben.
+
 ## Datenschutz
 
 <div align="center">
   <h3>Deine Stimme bleibt bei dir.</h3>
-  <p>Audio verlässt deinen Computer nicht. Die Transkription und das optionale Schreibmodell laufen lokal.</p>
+  <p>Audio verlässt deinen Computer nicht. Transkription und optionales Schreibmodell laufen lokal.</p>
 </div>
 
 - **Keine Cloud-Transkription.** Kein Konto, keine Telemetrie, keine Werbe-IDs.
@@ -180,9 +166,9 @@ Die Sprachliste im Einstellungsfenster folgt dem gewählten Modell. Eine ältere
 
 Beide Pakete sind self-contained: .NET, die nativen Inferenz-Bibliotheken und die Qwen-Python-Laufzeit sind enthalten. Sprachmodelle werden erst in der App heruntergeladen, nicht mit dem Installer ausgeliefert.
 
-> **Early Access.** 0.1.3 ist ein unsignierter Entwicklungsbuild. Signierte Releases und die automatische Update-Verifizierung sind vorbereitet, aber noch nicht veröffentlicht.
->
-> **Hinweis zum Repository.** Das Repository ist derzeit privat. Die Release-Downloads sind für GitHub-Konten mit Zugriff erreichbar. Für eine öffentliche Produktseite müssen Repository oder Download-Host freigegeben werden.
+> **Early Access 0.1.3.** Die Pakete sind unsigniert. Signierung und automatische Update-Verifizierung sind vorbereitet, aber noch nicht veröffentlicht. Der aktuelle `main`-Branch kann neuere Korrekturen enthalten als ein bereits veröffentlichtes Paket; der [CHANGELOG](CHANGELOG.md) nennt den Stand.
+
+> **Quellcode.** Das Repository ist öffentlich: [github.com/silasnetwin/SonaBar](https://github.com/silasnetwin/SonaBar).
 
 ### Systemvoraussetzungen
 
@@ -207,25 +193,15 @@ Nach dem ersten Start bietet SonaBar ein kurzes Onboarding an. Danach lebt die A
 ## Was ist neu in 0.1.3
 
 - **Fenster zuerst.** Die Oberfläche erscheint nach etwa 0,6 Sekunden; Engine- und Modellarbeit startet danach.
-- **Kein stiller Download.** Ein fehlendes Modell ist ein sichtbarer Zustand mit direktem Link zur Modellseite.
+- **Kompakte eigene Titelleiste.** Kreisförmiges Logo, Datenschutz-Pille, Vektor-Steuerelemente und eine gemeinsame Farbwelt für Light, Dark und hohen Kontrast.
+- **Ein einziges kompaktes Hauptfenster.** Alle bisherigen Seiten erreichst du über **Go to**; Einstellungen über das Zahnrad, Schnellzugriffe über das Tray-Menü **Tools**.
+- **Markierten Text sicher ersetzen.** SonaBar trägt die erwartete Auswahl durch Fokuswechsel und stellt sie unmittelbar vor dem Einfügen wieder her. Bei einer verlorenen oder mehrdeutigen Auswahl wird nichts angehängt oder doppelt eingefügt.
+- **Übersetzen mit Erhaltungsprüfung.** Geschützte Namen, Zahlen und Uhrzeiten werden geprüft; ein unverändertes oder verdächtiges Ergebnis wird verworfen.
 - **Compatibility-Modus für Spiele.** Roblox und andere nicht inspizierbare Fenster erhalten den Paste, ohne falschen „Could not insert“-Fehler.
-- **Kompakte eigene Titelleiste und helle Oberfläche.** Kreisförmiges Logo, Datenschutz-Pille, Vektor-Steuerelemente und eine gemeinsame Farbwelt für Light, Dark und hohen Kontrast.
 - **Fokus-Rückgabe.** SonaBar merkt sich das zuletzt aktive externe Fenster, damit Diktate aus dem App-Fenster im richtigen Ziel landen.
+- **Quellcode-Link.** **About → Source code on GitHub** öffnet das öffentliche Repository.
 
 Vollständige Änderungen: [CHANGELOG.md](CHANGELOG.md) · [Release v0.1.3](https://github.com/silasnetwin/SonaBar/releases/tag/v0.1.3)
-
-## Feinschliff im aktuellen Quellcode
-
-- **Ein einziges kompaktes Hauptfenster.** SonaBar startet in einem 430 × 660 großen Dictate-Fenster mit Status, Modus, Shortcut, Modell, effektiver Verarbeitung, letzter Transkription und einem Start-/Stopp-Knopf. Das frühere große Workspace-Fenster gibt es nicht mehr. Alle 20 Seiten – General, Dictation, Writing, Models, Languages, Audio, Shortcuts, Custom Words, Snippets, Applications, History, Statistics, Privacy, Advanced, Debug, Files, Meetings, About und Help – erreichst du über **Go to**. Der Abschluss des Onboardings führt zurück in dieses Fenster.
-- **Kompakte Einstellungen.** Das Zahnrad in der Kopfzeile öffnet einen Dialog für Modus, Shortcut, Mindest-Haltezeit, installiertes Modell oder Automatik, Sprache, Verarbeitungsgerät und Whisper-CPU-Threads. Schreibmodelle, eigene Wörter, Snippets, Anwendungen, History und Diagnose bleiben über **Go to** und das Tray-Menü **Tools** erreichbar.
-- **Ehrliche CPU- und Thread-Wahl.** **Automatic**, **CPU** und **GPU / accelerated** ersetzen das alte Backend-Feld. Whisper nutzt die gewählte Thread-Zahl, fällt bei fehlender GPU auf CPU zurück und zeigt den effektiven Pfad; Parakeet und Qwen bleiben CPU-only und verwalten ihre Threads selbst. Das Gerät wird erst nach dem Speichern neu geladen.
-- **Mindest-Haltezeit und Parakeet-Speech-Context.** Push-to-Talk kann sehr kurze versehentliche Presses verwerfen. Eigene Wörter werden bei Parakeet als nativer Speech-Context übergeben (maximal 64 Begriffe), aber die aktuelle TDT-Runtime ignoriert Word-Boosting ohne Flashlight-Decoder; SonaBar behauptet dafür keinen Genauigkeitsgewinn. Whisper und lokales Writing nutzen die Wörter weiterhin. Die Einstellungen migrieren mit Schema 5 ohne Datenverlust.
-- **Hilfe in der App.** **About → Help** erklärt Diktat, Einfügeprobleme, Datenschutz, Diagnose und die kostenlose Produktpolitik.
-- **Snippets auch beim Tippen.** Der Auslöser wird optional direkt in der Ziel-App ersetzt – nach Leertaste, Enter, Tab oder Satzzeichen. Auch mehrwörtige Auslöser wie `be right back` und Auslöser mit Satzzeichen wie `e.g.` funktionieren; ein Mausklick setzt den Tipp-Puffer zurück. Die Funktion ist standardmäßig deaktiviert, überspringt das SonaBar-Fenster und Passwortfelder und weist auf Grenzen bei Spielen und Apps mit Administratorrechten hin.
-- **Klarere leere Seiten.** History, Statistik, Snippets und Anwendungen zeigen kurze Hinweise statt großer leerer Listen. Bei ausgeschalteter History führt ein direkter Weg zu den Datenschutzeinstellungen.
-- **Feedback-Töne mit Vorschau.** Die Audio-Seite kann den Abschlusston vorhören; bei **Off** bleibt die Vorschau deaktiviert.
-
-> Diese Verbesserungen sind im aktuellen Quellcode enthalten. Die bereits veröffentlichten v0.1.3-Pakete können älter sein, bis ein neues Paket gebaut und veröffentlicht wurde.
 
 ## Status
 
@@ -269,12 +245,12 @@ Ja. Das Portable ZIP enthält denselben Build. Entpacken, `SonaBar.App.exe` star
 Nein. Oberfläche, Hotkeys und Einfüge-Schicht sind Windows-spezifisch.
 
 **Was kostet SonaBar?**
-SonaBar ist kostenlos. Es gibt kein Abo, keine Testphase, keinen Checkout und keinen Lizenzserver. Die App bleibt ohne Konto nutzbar; optionale Modell-Downloads unterliegen den Lizenzen der jeweiligen Modelle. Die Signierung und der automatische Update-Feed werden unabhängig davon für einen stabilen Release fertiggestellt.
+SonaBar ist kostenlos. Es gibt kein Abo, keine Testphase, keinen Checkout und keinen Lizenzserver. Die App bleibt ohne Konto nutzbar; optionale Modell-Downloads unterliegen den Lizenzen der jeweiligen Modelle. Signierung und automatischer Update-Feed werden unabhängig davon für einen stabilen Release fertiggestellt.
 
 **Steht SonaBar in Verbindung zu WhisperBar?**
 Nein. SonaBar ist ein unabhängiges Produkt von SilasNet. Es gibt keine Verbindung zu WhisperBar und keine gemeinsame Entwicklung.
 
-## Für Entwickler
+## Entwickler
 
 <details>
 <summary><strong>Aus dem Quellcode bauen</strong></summary>
@@ -351,6 +327,7 @@ Enthaltene Drittanbieter-Komponenten behalten ihre eigenen Lizenzen: whisper.cpp
 ---
 
 <div align="center">
-  <p><strong>SonaBar</strong> · ein Produkt von <a href="https://sonabar.silasnet.win">SilasNet</a></p>
+  <p><strong>SonaBar</strong> – ein Produkt von <a href="https://sonabar.silasnet.win">SilasNet</a></p>
+  <p><a href="https://github.com/silasnetwin/SonaBar">Quellcode auf GitHub</a> · <a href="https://github.com/silasnetwin/SonaBar/releases">Releases</a> · <a href="https://github.com/silasnetwin/SonaBar/issues">Issues</a></p>
   <p><sub>Für Windows gebaut · Early Access 0.1.3 · kein Konto · keine Cloud · keine Telemetrie</sub></p>
 </div>

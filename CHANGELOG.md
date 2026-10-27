@@ -58,6 +58,9 @@ All notable changes to SonaBar are documented here. Versions follow
 - **In-app Help page.** **About → Help** now covers the dictation workflow,
   delivery troubleshooting for elevated and game windows, privacy, diagnostics
   and the free-software policy. The page is built by the page smoke test.
+- **Source code link in About.** The About page links directly to the public
+  GitHub repository. The README is refreshed for the public repository with the
+  current download, privacy, build and verification information.
 - **Optional feedback sounds.** Original generated WAV cues provide **Off**,
   **Minimal** and **Standard** modes. Minimal plays the finished tone only;
   Standard adds the start and error tones. Playback is best-effort and never

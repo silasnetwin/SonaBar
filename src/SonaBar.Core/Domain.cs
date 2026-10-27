@@ -6,6 +6,7 @@ public static class Brand
 {
     public const string Name = "SonaBar", Publisher = "SilasNet", Version = "0.1.3";
     public const string Website = "https://sonabar.silasnet.win";
+    public const string SourceCode = "https://github.com/silasnetwin/SonaBar";
     public static string DataRoot => Environment.GetEnvironmentVariable("SONABAR_DATA_ROOT") is string root&&!string.IsNullOrWhiteSpace(root)?Path.GetFullPath(root):Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Publisher, Name);
     public static void EnsureDataRoot() => Directory.CreateDirectory(DataRoot);
 }

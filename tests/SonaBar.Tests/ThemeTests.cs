@@ -75,6 +75,13 @@ public class ThemeTests
                         Assert.True(content.ActualWidth > 0, $"{theme}/{page}: width={content.ActualWidth}, height={content.ActualHeight}, type={content.GetType().Name}");
                         Assert.InRange(content.ActualWidth, 380, 430);
                         Assert.Equal(surface, ((SolidColorBrush)((System.Windows.Controls.Panel)content).Background).Color);
+                        if (page is "About")
+                        {
+                            var source = FindButton(window, "Source code on GitHub");
+                            Assert.NotNull(source);
+                            Assert.StartsWith("https://github.com/silasnetwin/SonaBar", Brand.SourceCode);
+                            Assert.Equal(Brand.SourceCode, System.Windows.Automation.AutomationProperties.GetHelpText(source));
+                        }
                         var artifactDirectory = Environment.GetEnvironmentVariable("SONABAR_UI_ARTIFACTS");
                         if (!string.IsNullOrWhiteSpace(artifactDirectory))
                         {

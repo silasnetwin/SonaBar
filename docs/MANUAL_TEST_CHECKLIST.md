@@ -24,6 +24,7 @@ Record Windows version, display scale, audio device, selected model, and the exa
 - [ ] Tray actions open the compact window and Settings; **Tools** opens Home, History, Transcribe File, Meeting Mode and All settings; Quit releases the hotkey.
 - [ ] Closing the compact window keeps SonaBar in the tray; a second launch activates the first instance.
 - [ ] The compact window and Settings render correctly in Light, Dark, System, high contrast and at 125%, 150%, 175% and 200% DPI.
+- [ ] **About → Source code on GitHub** opens `https://github.com/silasnetwin/SonaBar` in the default browser; the button is keyboard reachable and has a visible focus state.
 - [ ] Minimum hold: choose 1.5 s. A tap shorter than 1.5 s is discarded with the hold message, including when model startup is slow. A hold longer than 1.5 s transcribes normally.
 - [ ] Processing: set **CPU** and an explicit Whisper thread count, then inspect the compact details and the **Advanced** page. Set **GPU / accelerated** on a machine without a usable GPU and verify the fallback message after a load attempt.
 - [ ] Parakeet selected: the app shows CPU-only engine-managed threads. Custom words are passed as a native speech-context request, but the current TDT runtime ignores boosting without a Flashlight decoder; verify the UI makes no accuracy claim. Qwen selected: the app shows the CPU sidecar and engine-managed threads.
