@@ -20,7 +20,6 @@ public partial class App : Application
     private ServiceProvider? services;
     private System.Windows.Forms.NotifyIcon? tray;
     private MainWindow? window;
-    private CompactWindow? compact;
     private AppController? controller;
     private bool quitting;
     private bool smoke;
@@ -82,17 +81,24 @@ public partial class App : Application
         Mark("services_ready");
         window = new MainWindow(controller);
         window.OnboardingCompleted += ShowWindow;
-        compact = new CompactWindow(controller, ShowWorkspace);
-        MainWindow = smoke ? window : compact;
+        MainWindow = window;
         var overlay = new RecordingOverlay(controller); controller.AttachOverlay(overlay);
         tray = new System.Windows.Forms.NotifyIcon { Icon = new System.Drawing.Icon(Path.Combine(AppContext.BaseDirectory, "SonaBar.ico")), Text = "SonaBar · Speech to Text", Visible = true };
         var menu = new System.Windows.Forms.ContextMenuStrip();
         void Item(string title, Action action) => menu.Items.Add(title, null, (_, _) => Dispatcher.Invoke(action));
         Item("SonaBar", ShowWindow); menu.Items.Add(new System.Windows.Forms.ToolStripSeparator());
         Item("Start Dictation", controller.ToggleDictation); Item("Edit Selected Text", controller.EditSelection);
-        Item("Transcribe File", () => ShowWorkspace("Files")); Item("Meeting Mode", () => ShowWorkspace("Meetings"));
-        Item("History", () => ShowWorkspace("History")); Item("Settings", ShowSettings);
-        Item("Open workspace", () => ShowWorkspace("Overview"));
+        Item("Settings", ShowSettings);
+        // Every tool lives in the compact window. The tray only provides shortcuts into
+        // that single small surface, never a second workspace.
+        var tools = new System.Windows.Forms.ToolStripMenuItem("Tools");
+        void ToolItem(string title, Action action) => tools.DropDownItems.Add(title, null, (_, _) => Dispatcher.Invoke(action));
+        ToolItem("Home", ShowWindow);
+        ToolItem("History", () => ShowWorkspace("History"));
+        ToolItem("Transcribe File", () => ShowWorkspace("Files"));
+        ToolItem("Meeting Mode", () => ShowWorkspace("Meetings"));
+        ToolItem("All settings", () => ShowWorkspace("General"));
+        menu.Items.Add(tools);
         var pause = new System.Windows.Forms.ToolStripMenuItem("Pause SonaBar") { CheckOnClick = true }; pause.CheckedChanged += (_, _) => controller.Paused = pause.Checked; menu.Items.Add(pause);
         menu.Items.Add(new System.Windows.Forms.ToolStripSeparator()); Item("Quit", Quit);
         tray.ContextMenuStrip = menu; tray.MouseClick += (_, args) => { if (args.Button == System.Windows.Forms.MouseButtons.Left) Dispatcher.Invoke(ShowWindow); };
@@ -103,7 +109,6 @@ public partial class App : Application
         SystemEvents.UserPreferenceChanged += PreferenceChanged;
         if (!smoke && !controller.Settings.Onboarded)
         {
-            compact?.Hide();
             window.Show();
             window.Navigate("Welcome");
             window.Activate();
@@ -117,7 +122,7 @@ public partial class App : Application
         Mark("ready");
         if (e.Args.Contains("--smoke-test"))
         {
-            var content=(FrameworkElement)window.Content;content.Measure(new System.Windows.Size(1060,780));content.Arrange(new Rect(0,0,1060,780));content.UpdateLayout();
+            var content=(FrameworkElement)window.Content;content.Measure(new System.Windows.Size(430,660));content.Arrange(new Rect(0,0,430,660));content.UpdateLayout();
             // Every page is built and laid out, so a broken page is found by the smoke test
             // instead of when a user opens it for the first time.
             var rendered=new List<string>();var failed=new List<string>();
@@ -136,10 +141,10 @@ public partial class App : Application
                 encoder.Frames.Add(System.Windows.Media.Imaging.BitmapFrame.Create(bitmap));
                 using var stream=File.Create(Path.Combine(Brand.DataRoot,fileName));encoder.Save(stream);
             }
-            // The compact window is the default shell, so the smoke test renders it and the
+            // The compact shell is the only window, so the smoke test renders it and the
             // compact settings too. A broken layout is visible without a screen recording.
-            if(compact is not null)SaveElement((FrameworkElement)compact.Content,"compact-shot.png",430,660);
-            var compactSettings=new SettingsDialog(controller,ShowWorkspace);
+            SaveElement((FrameworkElement)window.Content,"compact-shot.png",430,660);
+            var compactSettings=new SettingsDialog(controller);
             SaveElement((FrameworkElement)compactSettings.Content,"settings-shot.png",480,680);
             SaveElement((FrameworkElement)compactSettings.Content,"settings-full-shot.png",480,900);
             // An optional page name writes a picture of that page, so a layout change can be
@@ -187,20 +192,14 @@ public partial class App : Application
     private void ShowWindow()
     {
         controller?.RememberForegroundWindow();
-        if (compact is not null && controller?.Settings.Onboarded == true)
-        {
-            compact.Show();
-            if (compact.WindowState == WindowState.Minimized) compact.WindowState = WindowState.Normal;
-            compact.Activate();
-            return;
-        }
-        window?.Show();
-        if (window is not null) window.WindowState = WindowState.Normal;
-        window?.Activate();
+        if (window is null) return;
+        window.Show();
+        if (window.WindowState == WindowState.Minimized) window.WindowState = WindowState.Normal;
+        if (controller?.Settings.Onboarded == false) window.Navigate("Welcome");
+        window.Activate();
     }
     private void ShowWorkspace(string page)
     {
-        compact?.Hide();
         if (window is null) return;
         window.Show();
         if (window.WindowState == WindowState.Minimized) window.WindowState = WindowState.Normal;
@@ -211,11 +210,11 @@ public partial class App : Application
     {
         if (controller is null) return;
         if (!controller.Settings.Onboarded) { ShowWorkspace("Welcome"); return; }
-        if (compact is null) { ShowWorkspace("General"); return; }
-        compact.Show();
-        if (compact.WindowState == WindowState.Minimized) compact.WindowState = WindowState.Normal;
-        compact.Activate();
-        compact.OpenSettings();
+        if (window is null) return;
+        window.Show();
+        if (window.WindowState == WindowState.Minimized) window.WindowState = WindowState.Normal;
+        window.Activate();
+        window.OpenSettings();
     }
     public async void Quit()
     {

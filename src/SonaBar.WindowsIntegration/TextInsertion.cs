@@ -492,6 +492,13 @@ public sealed class TextInsertionService(ClipboardService clipboard) : IDisposab
             throw new InvalidOperationException("Windows could not inspect this field safely. Focus an editable field and try again.");
         }
         Guard(target);
+        try
+        {
+            var initialSelection=target.Selection?.GetText(1)??"";
+            diagnostic?.Invoke($"selection=initial;length={initialSelection.Length}");
+        }
+        catch (InvalidOperationException) { diagnostic?.Invoke("selection=initial;unavailable"); }
+        catch (ElementNotAvailableException) { diagnostic?.Invoke("selection=initial;unavailable"); }
         target=await FocusAsync(target,diagnostic,restoreCaret); phase?.Invoke("T9"); token.ThrowIfCancellationRequested();
         var current = FocusedElementForWindow(target.Window,target.ProcessId);
         if (current is null || current.Current.IsPassword)
@@ -502,9 +509,17 @@ public sealed class TextInsertionService(ClipboardService clipboard) : IDisposab
         target=RefineTarget(target);
         Guard(target);
         var beforeText=InspectableText(target);
+        // Rich composers (Discord/Slate, Electron editors, browser contenteditables) can
+        // drop or reorder characters when a long SendInput batch arrives. A clipboard
+        // paste is atomic there and avoids leaving a half-inserted sentence behind.
+        var preferClipboard=profile.Strategy==InsertionStrategy.Automatic&&PreferClipboardForTarget(target);
+        var partialDetected=false;
         // ValuePattern replaces the whole value, so only use it for an empty field.
         bool inserted=false,wholeEmptyField=false,assumed=false;
-        var replaced=target.Selection?.GetText(-1)??"";
+        var replaced="";
+        try { replaced=target.Selection?.GetText(-1)??""; }
+        catch (InvalidOperationException) { diagnostic?.Invoke("selection=current;unavailable"); }
+        catch (ElementNotAvailableException) { diagnostic?.Invoke("selection=current;unavailable"); }
         if(profile.Strategy==InsertionStrategy.Automatic&&target.NativeSelection is {} native)
         {
             diagnostic?.Invoke("backend=native_edit;attempted=true");
@@ -530,7 +545,7 @@ public sealed class TextInsertionService(ClipboardService clipboard) : IDisposab
                 }
             }
         }
-        if (!inserted&&profile.Strategy == InsertionStrategy.Automatic && target.Element!.TryGetCurrentPattern(ValuePattern.Pattern, out var value) && value is ValuePattern vp && !vp.Current.IsReadOnly && vp.Current.Value.Length == 0)
+        if (!inserted&&!preferClipboard&&profile.Strategy == InsertionStrategy.Automatic && target.Element!.TryGetCurrentPattern(ValuePattern.Pattern, out var value) && value is ValuePattern vp && !vp.Current.IsReadOnly && vp.Current.Value.Length == 0)
         {
             diagnostic?.Invoke("backend=uia_value;attempted=true");
             try
@@ -563,11 +578,11 @@ public sealed class TextInsertionService(ClipboardService clipboard) : IDisposab
                 diagnostic?.Invoke($"backend=uia_value;result=not_confirmed;exception={error.GetType().Name};fallback=continue");
             }
         }
-        if (!inserted && (profile.Strategy == InsertionStrategy.Unicode||profile.Strategy==InsertionStrategy.Automatic&&text.Length<=2000&&IsEditable(target)&&HasInspectableTextPattern(target)))
+        if (!inserted && !preferClipboard && (profile.Strategy == InsertionStrategy.Unicode||profile.Strategy==InsertionStrategy.Automatic&&text.Length<=2000&&IsEditable(target)&&HasInspectableTextPattern(target)))
         {
             diagnostic?.Invoke("backend=sendinput_unicode;attempted=true");
             await EnsureInputFocusAsync(target,diagnostic,restoreCaret);
-            Native.Unicode(text);
+            await Native.UnicodeAsync(text,token);
             var confirmation=await ConfirmDeliveryAsync(target,text,beforeText,token);
             if(confirmation==DeliveryConfirmation.Confirmed)
             {
@@ -580,25 +595,64 @@ public sealed class TextInsertionService(ClipboardService clipboard) : IDisposab
                 if(confirmation==DeliveryConfirmation.ChangedWithoutText)
                 {
                     var after=InspectableText(target);
-                    if(after is not null&&ContainsPartialInsertion(after,text,beforeText))
-                        throw new InvalidOperationException("SonaBar inserted part of the text but could not verify the complete result. Your text is available to copy.");
+                    var coverage=after is null?0:InsertedCoverage(after,text,beforeText);
+                    if(coverage>0)
+                    {
+                        partialDetected=true;
+                        diagnostic?.Invoke($"backend=sendinput_unicode;partial=detected;coverage={coverage};length={text.Length};action={(string.IsNullOrEmpty(beforeText)?"select_all_paste":"copy_only")}");
+                    }
                 }
             }
         }
+        if (partialDetected&&!string.IsNullOrEmpty(beforeText))
+        {
+            // We can replace a partial insertion only when the field was empty. In a field
+            // that already had user text, pasting again would duplicate the visible prefix,
+            // so stop and keep the transcript available for a manual copy.
+            diagnostic?.Invoke("delivery=failed;reason=partial_insertion;fallback=copy_only");
+            throw new InvalidOperationException("SonaBar inserted part of the text but could not verify the complete result. Your text is available to copy.");
+        }
         if (!inserted)
         {
-            diagnostic?.Invoke("backend=clipboard_paste;attempted=true;preserve="+(mode==ClipboardMode.Preserve));
+            var reason=preferClipboard?";reason=composer_target":partialDetected?";reason=partial_sendinput":"";
+            diagnostic?.Invoke("backend=clipboard_paste;attempted=true;preserve="+(mode==ClipboardMode.Preserve)+reason);
             var previous = mode == ClipboardMode.Preserve ? clipboard.Capture() : null;
             var sequence = clipboard.SetText(text);
             try
             {
                 await EnsureInputFocusAsync(target,diagnostic,restoreCaret);
+                if(partialDetected)
+                {
+                    // SendInput left a prefix in the field. Select it and let the paste
+                    // replace the partial text instead of appending a second copy.
+                    diagnostic?.Invoke("backend=clipboard_paste;recovery=select_all");
+                    Native.Chord(0x41);
+                    await Task.Delay(60,token);
+                }
                 Native.Chord(0x56);
                 var confirmation=await ConfirmDeliveryAsync(target,text,beforeText,token);
                 if(confirmation==DeliveryConfirmation.Confirmed)
                 {
                     inserted=true;
                     diagnostic?.Invoke("backend=clipboard_paste;result=verified");
+                }
+                else if(confirmation==DeliveryConfirmation.ChangedWithoutText)
+                {
+                    var after=InspectableText(target);
+                    var coverage=after is null?0:InsertedCoverage(after,text,beforeText);
+                    if(CanAssumeChangedClipboardDelivery(IsEditable(target),coverage,text))
+                    {
+                        // Rich editors often normalize whitespace, punctuation or line
+                        // breaks while pasting. A long visible prefix means the paste
+                        // landed; reporting a failure here would only invite a duplicate.
+                        inserted=true;assumed=true;
+                        diagnostic?.Invoke($"backend=clipboard_paste;result=changed_assumed;coverage={coverage};length={text.Length}");
+                    }
+                    else
+                    {
+                        diagnostic?.Invoke($"backend=clipboard_paste;result=changed_unverified;coverage={coverage};reason=not_confirmed");
+                        throw new InvalidOperationException("SonaBar could not confirm that the destination accepted the text. Your text is ready to copy.");
+                    }
                 }
                 else if(confirmation==DeliveryConfirmation.Opaque)
                 {
@@ -700,8 +754,14 @@ public sealed class TextInsertionService(ClipboardService clipboard) : IDisposab
         Native.GetWindowThreadProcessId(target.Window, out var pid);
         diagnostic?.Invoke($"focus=before;foreground=0x{Native.GetForegroundWindow().ToInt64():X};target_valid={Native.IsWindow(target.Window)};target_pid_matches={pid==target.ProcessId}");
         if (pid != target.ProcessId) throw new InvalidOperationException("The original application is no longer available.");
-        var activated=Native.ForceForegroundWindow(target.Window);
-        for(var attempt=0;attempt<5&&Native.GetForegroundWindow()!=target.Window;attempt++)await Task.Delay(15);
+        var activated=false;
+        for(var attempt=0;attempt<3;attempt++)
+        {
+            activated=Native.ForceForegroundWindow(target.Window);
+            for(var wait=0;wait<6&&Native.GetForegroundWindow()!=target.Window;wait++)await Task.Delay(20);
+            if(Native.GetForegroundWindow()==target.Window)break;
+            await Task.Delay(40);
+        }
         diagnostic?.Invoke($"focus=after_restore;foreground=0x{Native.GetForegroundWindow().ToInt64():X};set_foreground={activated}");
         if (Native.GetForegroundWindow() != target.Window) throw new InvalidOperationException("Windows prevented restoring focus. Your text is available in SonaBar.");
         // Avoid shortcuts still held by the user modifying a paste or inserted text.
@@ -787,10 +847,36 @@ public sealed class TextInsertionService(ClipboardService clipboard) : IDisposab
         try { resolved.Element!.SetFocus(); }
         catch (InvalidOperationException error) { diagnostic?.Invoke("focus=set_focus_failed;exception="+error.GetType().Name); }
         catch (ElementNotAvailableException error) { diagnostic?.Invoke("focus=set_focus_failed;exception="+error.GetType().Name); }
+        var selectionLost=false;
         try { resolved.Selection?.Select(); }
-        catch (InvalidOperationException) { throw new InvalidOperationException("The original text selection is no longer available."); }
-        catch (ElementNotAvailableException) { throw new InvalidOperationException("The original text selection is no longer available."); }
-        if(resolved.NativeSelection is {} native)NativeTextControl.Select(native);
+        catch (InvalidOperationException error) { selectionLost=true; diagnostic?.Invoke("focus=selection_restore_failed;exception="+error.GetType().Name); }
+        catch (ElementNotAvailableException error) { selectionLost=true; diagnostic?.Invoke("focus=selection_restore_failed;exception="+error.GetType().Name); }
+        if(resolved.NativeSelection is {} native)
+        {
+            try { NativeTextControl.Select(native); }
+            catch (Exception error) when (error is InvalidOperationException or ElementNotAvailableException)
+            {
+                selectionLost=true;
+                diagnostic?.Invoke("focus=native_selection_restore_failed;exception="+error.GetType().Name);
+            }
+        }
+        if(selectionLost)
+        {
+            // A selection captured before a long transcription can expire while the target
+            // window is still healthy. Reacquire the same field and continue at its current
+            // caret instead of failing the whole dictation. Replacement paths validate the
+            // passage separately and will still refuse an unsafe edit.
+            var fresh=FindTargetElement(resolved);
+            if(fresh is not null)
+            {
+                resolved=WithElement(resolved,fresh);
+                try { resolved.Element!.SetFocus(); }
+                catch (InvalidOperationException error) { diagnostic?.Invoke("focus=selection_reacquire_set_focus_failed;exception="+error.GetType().Name); }
+                catch (ElementNotAvailableException error) { diagnostic?.Invoke("focus=selection_reacquire_set_focus_failed;exception="+error.GetType().Name); }
+                diagnostic?.Invoke("focus=selection_reacquired;name="+ElementIdentity(fresh).Name);
+            }
+            else diagnostic?.Invoke("focus=selection_reacquire_missing");
+        }
         if(restoreCaret)await RestoreCaretFocusAsync(resolved,diagnostic);
         AutomationElement? focused=null;
         var matches=false;
@@ -866,19 +952,35 @@ public sealed class TextInsertionService(ClipboardService clipboard) : IDisposab
         var ok=state.Foreground==target.Window&&(state.Focus==0||state.Root==target.Window);
         diagnostic?.Invoke($"focus=final;foreground=0x{state.Foreground.ToInt64():X};focus=0x{state.Focus.ToInt64():X};root=0x{state.Root.ToInt64():X};target=0x{target.Window.ToInt64():X};ok={ok}");
         if(ok)return;
-        await FocusWindowAsync(target,diagnostic);
-        if(target.Element is not null)
+        for(var attempt=0;attempt<3;attempt++)
         {
-            try { target.Element.SetFocus(); }
-            catch(InvalidOperationException error) { diagnostic?.Invoke("focus=final_set_focus_failed;exception="+error.GetType().Name); }
-            catch(ElementNotAvailableException error) { diagnostic?.Invoke("focus=final_set_focus_failed;exception="+error.GetType().Name); }
+            await FocusWindowAsync(target,diagnostic);
+            if(target.Element is not null)
+            {
+                try { target.Element.SetFocus(); }
+                catch(InvalidOperationException error) { diagnostic?.Invoke("focus=final_set_focus_failed;exception="+error.GetType().Name); }
+                catch(ElementNotAvailableException error) { diagnostic?.Invoke("focus=final_set_focus_failed;exception="+error.GetType().Name); }
+                // A slow transcription can leave the provider behind the old element.
+                // Reacquire the editable node before trying the final focus check again.
+                var fresh=FindTargetElement(target);
+                if(fresh is not null)
+                {
+                    target=WithElement(target,fresh);
+                    try { target.Element!.SetFocus(); }
+                    catch(InvalidOperationException error) { diagnostic?.Invoke("focus=final_reacquire_set_focus_failed;exception="+error.GetType().Name); }
+                    catch(ElementNotAvailableException error) { diagnostic?.Invoke("focus=final_reacquire_set_focus_failed;exception="+error.GetType().Name); }
+                    diagnostic?.Invoke("focus=final_reacquired;name="+ElementIdentity(fresh).Name);
+                }
+            }
+            if(restoreCaret&&attempt==0)await RestoreCaretFocusAsync(target,diagnostic);
+            await Task.Delay(35);
+            state=State();
+            ok=state.Foreground==target.Window&&(state.Focus==0||state.Root==target.Window);
+            diagnostic?.Invoke($"focus=final_after_restore;attempt={attempt};foreground=0x{state.Foreground.ToInt64():X};focus=0x{state.Focus.ToInt64():X};root=0x{state.Root.ToInt64():X};target=0x{target.Window.ToInt64():X};ok={ok}");
+            if(ok)return;
+            await Task.Delay(35);
         }
-        if(restoreCaret)await RestoreCaretFocusAsync(target,diagnostic);
-        await Task.Delay(35);
-        state=State();
-        ok=state.Foreground==target.Window&&(state.Focus==0||state.Root==target.Window);
-        diagnostic?.Invoke($"focus=final_after_restore;foreground=0x{state.Foreground.ToInt64():X};focus=0x{state.Focus.ToInt64():X};root=0x{state.Root.ToInt64():X};target=0x{target.Window.ToInt64():X};ok={ok}");
-        if(!ok)throw new InvalidOperationException("Windows prevented restoring focus. Your text is available in SonaBar.");
+        throw new InvalidOperationException("Windows prevented restoring focus. Your text is available in SonaBar.");
     }
     private static bool HasInspectableTextPattern(InsertionTarget target)
     {
@@ -934,20 +1036,76 @@ public sealed class TextInsertionService(ClipboardService clipboard) : IDisposab
         var compactBefore=normalizedBefore is null?null:CollapseWhitespace(normalizedBefore);
         return compactInserted.Length>0&&Occurrences(compactAfter,compactInserted)>(compactBefore is null?0:Occurrences(compactBefore,compactInserted));
     }
-    internal static bool ContainsPartialInsertion(string after,string inserted,string? before)
+    internal static bool ContainsPartialInsertion(string after,string inserted,string? before)=>
+        InsertedCoverage(after,inserted,before)>=MinimumCoverage(inserted);
+    internal static int MinimumCoverage(string inserted)
+    {
+        var length=NormalizeText(inserted).Length;
+        return Math.Min(12,Math.Max(4,length/3));
+    }
+    /// <summary>
+    /// Returns the longest prefix of the dictated text that is newly visible in the
+    /// target. Rich editors can normalize whitespace or punctuation, so the full text
+    /// may not compare equal even though most of it arrived.
+    /// </summary>
+    internal static int InsertedCoverage(string after,string inserted,string? before)
     {
         var normalizedAfter=NormalizeText(after);
         var normalizedBefore=before is null?"":NormalizeText(before);
         var normalizedInserted=NormalizeText(inserted);
-        if(normalizedInserted.Length==0)return false;
-        var minimum=Math.Min(12,Math.Max(4,normalizedInserted.Length/3));
-        for(var length=minimum;length<=normalizedInserted.Length;length++)
+        if(normalizedInserted.Length==0)return 0;
+        var best=Coverage(normalizedAfter,normalizedBefore,normalizedInserted);
+        var compactAfter=CollapseWhitespace(normalizedAfter);
+        var compactBefore=CollapseWhitespace(normalizedBefore);
+        var compactInserted=CollapseWhitespace(normalizedInserted);
+        if(compactInserted.Length>0)best=Math.Max(best,Coverage(compactAfter,compactBefore,compactInserted));
+        return best;
+        static int Coverage(string after,string before,string inserted)
         {
-            var prefix=normalizedInserted[..length];
-            if(Occurrences(normalizedAfter,prefix)>Occurrences(normalizedBefore,prefix))return true;
+            var best=0;
+            for(var length=1;length<=inserted.Length;length++)
+            {
+                var prefix=inserted[..length];
+                if(Occurrences(after,prefix)>Occurrences(before,prefix))best=length;
+            }
+            return best;
         }
-        return false;
     }
+    internal static bool CanAssumeChangedClipboardDelivery(bool editable,int coverage,string inserted)=>
+        editable&&coverage>=MinimumCoverage(inserted);
+    internal static bool PreferClipboardForTarget(InsertionTarget target)
+    {
+        var className=target.ElementClass;
+        if(string.IsNullOrEmpty(className))
+        {
+            try { className=target.Element?.Current.ClassName??""; }
+            catch(ElementNotAvailableException) { }
+        }
+        return PreferClipboardForTarget(target.Executable,className);
+    }
+    /// <summary>
+    /// Electron, chat and rich-text composers handle a single clipboard paste more
+    /// reliably than a long SendInput Unicode batch. Native edit controls keep the
+    /// faster Unicode path.
+    /// </summary>
+    internal static bool PreferClipboardForTarget(string executable,string className)
+    {
+        var name=System.IO.Path.GetFileName(executable);
+        if(ComposerExecutables.Contains(name))return true;
+        var value=(className??"").ToLowerInvariant();
+        return ComposerClassMarkers.Any(marker=>value.Contains(marker,StringComparison.Ordinal));
+    }
+    private static readonly HashSet<string> ComposerExecutables=new(StringComparer.OrdinalIgnoreCase)
+    {
+        "discord.exe","discordcanary.exe","discordptb.exe","slack.exe","teams.exe","ms-teams.exe",
+        "code.exe","code-insiders.exe","cursor.exe","opencode.exe","chatgpt.exe","notion.exe",
+        "obsidian.exe","element.exe","signal.exe","telegram.exe","whatsapp.exe"
+    };
+    private static readonly string[] ComposerClassMarkers=
+    [
+        "slate","monaco","cm-editor","cm-content","prosemirror","ql-editor","tox-",
+        "drafteditor","contenteditable","ace_editor"
+    ];
     private enum DeliveryConfirmation { Confirmed, Unchanged, ChangedWithoutText, Opaque }
     private static async Task<DeliveryConfirmation> ConfirmDeliveryAsync(InsertionTarget target,string text,string? beforeText,CancellationToken token)
     {

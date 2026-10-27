@@ -35,14 +35,13 @@ public class ThemeTests
                 var settings = new AppSettings(); using var models = new ModelManager(Path.Combine(root, "models")); using var audio = new AudioCaptureService(); using var speech = new WhisperEngine(); using var writing = new LocalEnhancementEngine(); using var hotkeys = new GlobalHotkeyService(); using var ducker = new AudioDucker(); var clipboard = new ClipboardService();
                 using var controller = new AppController(settings, new SettingsStore(root), new HistoryRepository(root), models, audio, speech, writing, clipboard, new TextInsertionService(clipboard), hotkeys, ducker);
                 var window = new MainWindow(controller); app.MainWindow = window; controller.SetResult("Morgen treffen wir uns um 11 Uhr. Bring bitte die Folien mit.");
-                // The main window uses the WhisperBar-style utility chrome: a custom title bar
-                // with Windows caption controls replaces the native frame, while resizing stays native.
-                Assert.Equal(WindowStyle.None, window.WindowStyle);
-                Assert.True(window.ResizeMode is ResizeMode.CanResize);
-                var chrome = System.Windows.Shell.WindowChrome.GetWindowChrome(window);
-                Assert.NotNull(chrome);
-                Assert.Equal(44, chrome.CaptionHeight);
-                Assert.Equal(new Thickness(0), chrome.GlassFrameThickness);
+                // The compact shell is the only product window: native chrome, no resize
+                // handle, and a fixed everyday width instead of the old 1080x780 workspace.
+                Assert.Equal(WindowStyle.SingleBorderWindow, window.WindowStyle);
+                Assert.Equal(ResizeMode.CanMinimize, window.ResizeMode);
+                Assert.Null(System.Windows.Shell.WindowChrome.GetWindowChrome(window));
+                Assert.InRange(window.Width, 380, 430);
+                Assert.InRange(window.Height, 520, 660);
                 // The footer follows the readiness state, so a missing model cannot be labelled
                 // "Ready to listen" anywhere in the window.
                 Assert.Equal(controller.Readiness.Label, controller.PresenceLabel);
@@ -56,30 +55,23 @@ public class ThemeTests
                     foreach (var page in new[] { "Welcome", "Overview", "Dictation", "General", "Audio", "Shortcuts", "Custom Words", "Snippets", "Applications", "History", "Statistics", "Models", "Languages", "Privacy", "Advanced", "Debug", "About", "Help", "Files", "Meetings" })
                     {
                         window.Navigate(page); var content = (FrameworkElement)window.Content;
-                        content.Measure(new System.Windows.Size(1060, 780)); content.Arrange(new Rect(0, 0, 1060, 780)); content.UpdateLayout();
+                        content.Measure(new System.Windows.Size(430, 660)); content.Arrange(new Rect(0, 0, 430, 660)); content.UpdateLayout();
                         Assert.True(content.ActualWidth > 0, $"{theme}/{page}: width={content.ActualWidth}, height={content.ActualHeight}, type={content.GetType().Name}");
+                        Assert.InRange(content.ActualWidth, 380, 430);
                         Assert.Equal(surface, ((SolidColorBrush)((System.Windows.Controls.Panel)content).Background).Color);
                         var artifactDirectory = Environment.GetEnvironmentVariable("SONABAR_UI_ARTIFACTS");
-                        if (!string.IsNullOrWhiteSpace(artifactDirectory) && page is not ("Overview" or "Dictation" or "General"))
+                        if (!string.IsNullOrWhiteSpace(artifactDirectory))
                         {
                             Directory.CreateDirectory(artifactDirectory);
-                            var pageBitmap = new RenderTargetBitmap(1060, 780, 96, 96, PixelFormats.Pbgra32); pageBitmap.Render(content);
+                            var pageBitmap = new RenderTargetBitmap(430, 660, 96, 96, PixelFormats.Pbgra32); pageBitmap.Render(content);
                             var pageEncoder = new PngBitmapEncoder(); pageEncoder.Frames.Add(BitmapFrame.Create(pageBitmap));
-                            using var pageFile = File.Create(Path.Combine(artifactDirectory, $"{theme}-{page}-1.png")); pageEncoder.Save(pageFile);
-                        }
-                        if (!string.IsNullOrWhiteSpace(artifactDirectory) && page is ("Overview" or "Dictation" or "Files"))
-                        {
-                            content.Measure(new System.Windows.Size(780, 580)); content.Arrange(new Rect(0, 0, 780, 580)); content.UpdateLayout();
-                            var compactBitmap = new RenderTargetBitmap(780, 580, 96, 96, PixelFormats.Pbgra32); compactBitmap.Render(content);
-                            var compactEncoder = new PngBitmapEncoder(); compactEncoder.Frames.Add(BitmapFrame.Create(compactBitmap));
-                            using var compactFile = File.Create(Path.Combine(artifactDirectory, $"{theme}-{page}-compact.png")); compactEncoder.Save(compactFile);
-                            content.Measure(new System.Windows.Size(1060, 780)); content.Arrange(new Rect(0, 0, 1060, 780)); content.UpdateLayout();
+                            using var pageFile = File.Create(Path.Combine(artifactDirectory, $"{theme}-{page}-compact.png")); pageEncoder.Save(pageFile);
                         }
                         if (page is "Overview" or "Dictation" or "General")
                         {
                             foreach (var scale in new[] { 1d, 1.25, 1.5, 2d })
                             {
-                                var bitmap = new RenderTargetBitmap((int)(1060 * scale), (int)(780 * scale), 96 * scale, 96 * scale, PixelFormats.Pbgra32); bitmap.Render(content);
+                                var bitmap = new RenderTargetBitmap((int)(430 * scale), (int)(660 * scale), 96 * scale, 96 * scale, PixelFormats.Pbgra32); bitmap.Render(content);
                                 var directory = Environment.GetEnvironmentVariable("SONABAR_UI_ARTIFACTS");
                                 if (!string.IsNullOrWhiteSpace(directory)) { Directory.CreateDirectory(directory); var encoder = new PngBitmapEncoder(); encoder.Frames.Add(BitmapFrame.Create(bitmap)); using var file = File.Create(Path.Combine(directory, $"{theme}-{page}-{scale:0.##}.png")); encoder.Save(file); }
                             }

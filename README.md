@@ -104,6 +104,8 @@ SonaBar merkt sich das zuletzt aktive externe Fenster. Wenn du die Diktat-Schalt
 
 SonaBar ist für Browser, Office, Editoren, Chat-Clients und Terminals gebaut. Standard-Textfelder werden zuerst über Windows UI Automation geprüft, danach über Clipboard oder Unicode eingefügt.
 
+Bei reichen Chat- und Code-Editoren (Discord/Slack, VS Code/OpenCode, Browser-Composer) setzt SonaBar auf einen einzigen Clipboard-Paste statt auf lange Tastatur-Batches. Lange Unicode-Fallbacks werden in kleinen Paketen gesendet; normalisiert die Ziel-App den Text, meldet SonaBar ehrlich `Paste sent — check the app/target` statt eines falschen Erfolgs.
+
 Für Spiele und Oberflächen, die Windows keine Textprüfung erlauben – zum Beispiel **Roblox** – gibt es den **Compatibility**-Modus. SonaBar sendet den Paste an das verifizierte Vordergrundfenster und meldet exakt:
 
 > `Paste sent — check the app/target`
@@ -114,10 +116,10 @@ Windows kann in solchen Fenstern nicht zurücklesen, ob der Text angekommen ist.
 
 **Nativ statt Web-View.**
 
-- .NET 10 WPF mit eigenem Windows-Rahmen, nativen Minimieren-, Maximieren- und Schließen-Schaltflächen.
-- Native Größenänderung, Snap und Per-Monitor-DPI.
+- .NET 10 WPF mit nativem Windows-Rahmen, Minimieren und Schließen; das Fenster ist bewusst nicht maximierbar.
+- Feste kompakte Fenstergröße, native Fensterpositionierung und Per-Monitor-DPI.
 - Helle Oberfläche als Standard, Dark und „Windows folgen“ per Klick.
-- Kompaktes Hauptfenster mit Status, letzter Transkription und einem Start-/Stopp-Knopf; der vollständige Workspace bleibt über **Open workspace** erreichbar.
+- Ein einziges kompaktes Hauptfenster mit Status, letzter Transkription und einem Start-/Stopp-Knopf. Alle bisherigen Seiten erreichst du über **Go to**; das Zahnrad in der Kopfzeile öffnet die kompakten Einstellungen, das Tray-Menü **Tools** bietet Schnellzugriffe.
 - Tray-Icon, optionaler Start mit Windows und eine kompakte Aufnahme-Pille.
 - Hilfe direkt in der App unter **About → Help** – ohne externe Dokumentation.
 - Portable ZIP oder per-user Installation – beides ohne Administratorrechte.
@@ -213,8 +215,8 @@ Vollständige Änderungen: [CHANGELOG.md](CHANGELOG.md) · [Release v0.1.3](http
 
 ## Feinschliff im aktuellen Quellcode
 
-- **Kompaktes Hauptfenster.** SonaBar startet jetzt in einem kleinen Dictate-Fenster mit Status, Modus, Shortcut, Modell, effektiver Verarbeitung, letzter Transkription und einem Start-/Stopp-Knopf. Der vollständige Workspace bleibt über **Open workspace** und das Tray-Menü erreichbar; der Abschluss des Onboardings führt zurück in dieses Fenster.
-- **Kompakte Einstellungen.** Modus, Shortcut, Mindest-Haltezeit, installiertes Modell oder Automatik, Sprache, Verarbeitungsgerät und Whisper-CPU-Threads sind direkt erreichbar. Schreibmodelle, eigene Wörter, Snippets, Anwendungen, History und Diagnose bleiben im Workspace.
+- **Ein einziges kompaktes Hauptfenster.** SonaBar startet in einem 430 × 660 großen Dictate-Fenster mit Status, Modus, Shortcut, Modell, effektiver Verarbeitung, letzter Transkription und einem Start-/Stopp-Knopf. Das frühere große Workspace-Fenster gibt es nicht mehr. Alle 20 Seiten – General, Dictation, Writing, Models, Languages, Audio, Shortcuts, Custom Words, Snippets, Applications, History, Statistics, Privacy, Advanced, Debug, Files, Meetings, About und Help – erreichst du über **Go to**. Der Abschluss des Onboardings führt zurück in dieses Fenster.
+- **Kompakte Einstellungen.** Das Zahnrad in der Kopfzeile öffnet einen Dialog für Modus, Shortcut, Mindest-Haltezeit, installiertes Modell oder Automatik, Sprache, Verarbeitungsgerät und Whisper-CPU-Threads. Schreibmodelle, eigene Wörter, Snippets, Anwendungen, History und Diagnose bleiben über **Go to** und das Tray-Menü **Tools** erreichbar.
 - **Ehrliche CPU- und Thread-Wahl.** **Automatic**, **CPU** und **GPU / accelerated** ersetzen das alte Backend-Feld. Whisper nutzt die gewählte Thread-Zahl, fällt bei fehlender GPU auf CPU zurück und zeigt den effektiven Pfad; Parakeet und Qwen bleiben CPU-only und verwalten ihre Threads selbst. Das Gerät wird erst nach dem Speichern neu geladen.
 - **Mindest-Haltezeit und Parakeet-Speech-Context.** Push-to-Talk kann sehr kurze versehentliche Presses verwerfen. Eigene Wörter werden bei Parakeet als nativer Speech-Context übergeben (maximal 64 Begriffe), aber die aktuelle TDT-Runtime ignoriert Word-Boosting ohne Flashlight-Decoder; SonaBar behauptet dafür keinen Genauigkeitsgewinn. Whisper und lokales Writing nutzen die Wörter weiterhin. Die Einstellungen migrieren mit Schema 5 ohne Datenverlust.
 - **Hilfe in der App.** **About → Help** erklärt Diktat, Einfügeprobleme, Datenschutz, Diagnose und die kostenlose Produktpolitik.
@@ -228,7 +230,7 @@ Vollständige Änderungen: [CHANGELOG.md](CHANGELOG.md) · [Release v0.1.3](http
 
 | Bereich | Stand |
 | --- | --- |
-| Kompaktes Hauptfenster | Standardstart; Workspace, Tray und Einstellungen bleiben erreichbar |
+| Kompaktes Hauptfenster | Einziges Produktfenster; alle Seiten über **Go to**; Einstellungen über das Zahnrad; Tray **Tools** für Schnellzugriffe |
 | Diktat, Einfügen, History, Snippets, Dateien | Early Access, im Alltag nutzbar |
 | Snippets beim Tippen | Optional, standardmäßig deaktiviert; Passwortfelder und das SonaBar-Fenster werden übersprungen |
 | Meetings, Sprechertrennung, PDF-Export | Early Access; Qualität hängt von der Aufnahme ab |

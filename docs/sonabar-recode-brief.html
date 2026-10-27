@@ -362,7 +362,7 @@
 <main id="top">
   <section class="hero" id="summary">
     <div class="wrap">
-      <div class="eyebrow">Internes Rebuild-Briefing · 26. Oktober 2026</div>
+      <div class="eyebrow">Internes Rebuild-Briefing (Umsetzungsstand: ein einziges kompaktes Hauptfenster, alle Seiten über Go to, Tray &gt; Tools) · 27. Oktober 2026</div>
       <h1>SonaBar wird<br><span class="thin">zur Diktier-Utility.</span><br>Die Tiefe bleibt.</h1>
       <div class="hero-grid">
         <div>
@@ -382,7 +382,7 @@
         </div>
         <aside class="hero-card" aria-label="Empfehlung">
           <h4>Empfehlung</h4>
-          <p style="font-size:15px;color:var(--text);margin-bottom:12px"><strong>Kein Neubau von null.</strong> Ein <strong>Compact-first Hybrid</strong>: neue kompakte Hauptansicht und ein echter Settings-Dialog; die bestehende Workspace-App bleibt als „Erweitert“ erreichbar.</p>
+          <p style="font-size:15px;color:var(--text);margin-bottom:12px"><strong>Kein Neubau von null.</strong> Ein <strong>einziges kompaktes Hauptfenster</strong> mit echtem Settings-Dialog. Die frühere Workspace-App ist vollständig in dieses Fenster eingezogen; alle Seiten bleiben über <strong>Go to</strong> erreichbar.</p>
           <div class="row"><span class="k">Was ersetzt wird</span><span class="v">Shell &amp; Informationsarchitektur</span></div>
           <div class="row"><span class="k">Was bleibt</span><span class="v">Alle Engines, Daten, Features, Tests</span></div>
           <div class="row"><span class="k">Was zuerst kommt</span><span class="v">CPU/Threads sichtbar &amp; ehrlich</span></div>
@@ -601,7 +601,7 @@
         </div>
         <div class="card blue">
           <h4>Die Formel</h4>
-          <p class="small"><strong>Ein Fenster, eine Aufgabe:</strong> bereit sein, zuhören, Text liefern. Alles andere — Files, Meetings, History, Snippets, Writing, Apps — lebt hinter <strong>„Open workspace“</strong>. Kein Feature wird entfernt, nur priorisiert.</p>
+          <p class="small"><strong>Ein Fenster, eine Aufgabe:</strong> bereit sein, zuhören, Text liefern. Alles andere — Files, Meetings, History, Snippets, Writing, Apps — bleibt im selben Fenster über <strong>„Go to“</strong> erreichbar. Kein Feature wird entfernt, nur priorisiert.</p>
         </div>
       </div>
     </div>
@@ -611,23 +611,23 @@
     <div class="wrap">
       <div class="section-head">
         <div>
-          <div class="kicker">04 · SonaBar heute</div>
+          <div class="kicker">04 · SonaBar vor dem Umbau</div>
           <h2>Was schon da ist. Was zu tief liegt.</h2>
-          <p>SonaBar ist technisch weiter als Dictate: Windows-native, mehrere Engines, History, Snippets, Meetings, Updates. Das Problem ist die Oberfläche und die Sichtbarkeit der Entscheidungen.</p>
+          <p>SonaBar ist technisch weiter als Dictate: Windows-native, mehrere Engines, History, Snippets, Meetings, Updates. Das Problem war die Oberfläche und die Sichtbarkeit der Entscheidungen. Dieses Briefing hält die Ausgangslage fest; der Umbau ist inzwischen abgeschlossen.</p>
         </div>
         <div class="pill"><span class="dot"></span> Baseline 0.1.3 · 223 Tests</div>
       </div>
 
       <div class="grid g2" style="align-items:start">
         <div>
-          <div class="label now" style="margin-bottom:9px"><span class="dot" style="background:var(--accent-3)"></span> Heute: Workspace</div>
-          <div class="mock-workspace" aria-label="Heutige SonaBar-Struktur, schematisch">
+          <div class="label now" style="margin-bottom:9px"><span class="dot" style="background:var(--accent-3)"></span> Vorher: Workspace</div>
+          <div class="mock-workspace" aria-label="Frühere SonaBar-Struktur, schematisch">
             <div class="mwtop"><span>● SonaBar by SilasNet</span><span>⚙ — □ ×</span></div>
             <div class="mwtabs"><span class="on">General</span><span>Transcription</span><span>Shortcuts</span><span>Recording</span><span>History</span><span>About</span></div>
             <div class="mwhero"><span style="font-size:7px;color:#2a7;font-weight:700">SONABAR / VOICE WORKSPACE</span><b>Speak naturally.<br>Text follows.</b><p>Put your cursor where you want the words…</p><span class="mwbtn">Start a dictation</span></div>
             <div class="mwcards"><div><b>01 Dictation</b>Write directly into any app.</div><div><b>02 Files</b>Turn recordings into text.</div><div><b>03 Meetings</b>Keep a conversation's words.</div></div>
           </div>
-          <p class="tiny muted" style="margin-top:10px">Groß, freundlich, marketing-nah. Der Status ist unten in der Fußzeile; die letzte Transkription ist eine Karte unter dem Hero; Backend/CPU liegt unter Recording → Advanced.</p>
+          <p class="tiny muted" style="margin-top:10px">So sah der frühere Workspace aus: groß, freundlich, marketing-nah. Der Status lag unten in der Fußzeile; die letzte Transkription war eine Karte unter dem Hero; Backend/CPU lag unter Recording → Advanced.</p>
         </div>
         <div>
           <div class="label next" style="margin-bottom:9px"><span class="dot"></span> Ziel: Compact</div>
@@ -638,10 +638,10 @@
               <div class="mcstatus">Ready</div>
               <div class="mcmeta"><span>Mode: <b>Push-to-talk</b></span><span>Hotkey: <b>Ctrl + Shift + Space</b></span><span>Model: <b>Parakeet CPU</b></span></div>
               <div class="mclast"><span style="color:#777">Last transcription</span><br>Dein letzter Satz erscheint hier — kopierbar und einsetzbar.</div>
-              <div class="mcrow"><span class="primary">Start dictation</span><span>Open workspace</span><span>History</span></div>
+              <div class="mcrow"><span class="primary">Start dictation</span><span>Go to</span><span>History</span></div>
             </div>
           </div>
-          <p class="tiny muted" style="margin-top:10px">Kompakt, status-first, mit direktem Weg in die Tiefe. Die Workspace-Seiten bleiben unverändert erreichbar.</p>
+          <p class="tiny muted" style="margin-top:10px">Kompakt, status-first, mit direktem Weg in die Tiefe. Die früheren Workspace-Seiten sind jetzt Seiten im selben Fenster und über <strong>Go to</strong> erreichbar.</p>
         </div>
       </div>
 
@@ -657,9 +657,9 @@
             <tr><td><strong>Modell</strong></td><td>Models-Seite; Parakeet TDT v3 q8 GGUF, 25 Sprachen.</td><td>„Fast CPU“ = Parakeet; optional deutscher Fine-Tune nach Spike; Hotword-Pfad (TDT ignoriert Boosting ohne Flashlight-Decoder).</td><td>ONNX-Modell braucht sherpa-onnx, nicht nur Katalog-Eintrag.</td></tr>
             <tr><td><strong>Hotkey / Modus</strong></td><td>Shortcuts-Seite; Push-to-talk vorhanden.</td><td>Im Settings-Dialog sichtbar; Min Hold optional.</td><td>Keine bestehenden Defaults still ändern.</td></tr>
             <tr><td><strong>Min Hold</strong></td><td>Nicht vorhanden.</td><td>0–2 s, Default 0 (bestehende Nutzer) / Vorschlag 0,3 s.</td><td>Verhindert versehentliche Modifier-Diktate.</td></tr>
-            <tr><td><strong>Tiefe Features</strong></td><td>Files, Meetings, History, Snippets, Writing, Apps, Privacy, Help.</td><td>Unverändert über „Open workspace“ erreichbar.</td><td>Kein Feature entfernen; Tests bleiben.</td></tr>
+            <tr><td><strong>Tiefe Features</strong></td><td>Files, Meetings, History, Snippets, Writing, Apps, Privacy, Help.</td><td>Unverändert über „Go to“ im selben kompakten Fenster erreichbar.</td><td>Kein Feature entfernen; Tests bleiben.</td></tr>
             <tr><td><strong>Barrierefreiheit</strong></td><td>WPF, AutomationProperties, Themes.</td><td>Im Compact-Fenster genauso: Fokus, Namen, High Contrast, DPI.</td><td>Nicht dem Tkinter-Look opfern.</td></tr>
-            <tr><td><strong>Tests</strong></td><td>240/240, Package-Smoke 20/20.</td><td>Plus Settings-Migration, Backend-Matrix, Thread-Clamp, Compact-State, Hotword-Pfad.</td><td>Build/Test/Package/Smoke bleiben Gate.</td></tr>
+            <tr><td><strong>Tests</strong></td><td>244/244, Package-Smoke 20/20.</td><td>Plus Settings-Migration, Backend-Matrix, Thread-Clamp, Compact-State, Hotword-Pfad.</td><td>Build/Test/Package/Smoke bleiben Gate.</td></tr>
           </tbody>
         </table>
       </div>
@@ -686,7 +686,7 @@
       <div class="card">
         <div class="phase"><div class="num">0</div><div><h3>Baseline messen &amp; guardrails</h3><p>Fixierte WAVs (2 s, 5 s, 10 s, 30 s), drei Runs, P50/P95 für Key-Release → Insert. Whisper small/turbo, Parakeet v3, Qwen ASR. RAM, VRAM, Threads, Modell-Ladezeit. Keine UI-Änderung.</p><div class="exit">Exit: reproduzierbare Zahlen + dokumentierte Messlücke.</div></div></div>
         <div class="phase"><div class="num">1</div><div><h3>CPU, Threads, Hotwords, Min Hold</h3><p><code>ProcessingDevice</code> (Auto/CPU/GPU), <code>CpuThreads</code> (0=Auto), <code>MinHoldMs</code>. Backend-Matrix pro Engine. Parakeet-C-ABI prüfen: Threads nur anbieten, wenn die Runtime sie wirklich setzt; sonst effektiven Wert read-only zeigen. <code>CustomWords</code> als <code>speech_context</code> an Parakeet geben. Tests.</p><div class="exit">Exit: CPU ist sichtbar, ehrlich und getestet; der Speech-Context-Pfad ist geprüft, aber TDT-Boosting bleibt ohne Flashlight-Decoder als nicht unterstützt dokumentiert.</div></div></div>
-        <div class="phase"><div class="num">2</div><div><h3>Compact-Shell + Settings-Dialog</h3><p>Neue <code>CompactWindow</code>-Ansicht mit Status, Metadaten, letzter Transkription, Aktionen. <code>SettingsDialog</code> mit Provider/Engine, Modell, Processing, Threads, Sprache, Modus, Hotkey, Min Hold, Modell-Download. „Open workspace“ öffnet die bestehende App. Keine Seite entfernen.</p><div class="exit">Exit: Standardstart ist kompakt; alle Features erreichbar; Themes/Accessibility grün.</div></div></div>
+        <div class="phase"><div class="num">2</div><div><h3>Compact-Shell + Settings-Dialog</h3><p>Ein <code>MainWindow</code> mit Status, Metadaten, letzter Transkription, Aktionen und <strong>Go to</strong>-Selektor für alle 20 Seiten. <code>SettingsDialog</code> mit Provider/Engine, Modell, Processing, Threads, Sprache, Modus, Hotkey, Min Hold, Modell-Download. Kein separates Workspace-Fenster; keine Seite entfernen.</p><div class="exit">Exit: Standardstart ist kompakt; alle Features erreichbar; Themes/Accessibility grün.</div></div></div>
         <div class="phase"><div class="num">3</div><div><h3>Deutsches Parakeet evaluieren</h3><p>Spike für sherpa-onnx/ONNX int8 (<code>flozen1981/parakeet-primeline-onnx</code>, ~640 MB, CC-BY-4.0). Nur wenn Runtime, Lizenz, Paketgröße und Windows x64 passen: 30 deutsche Diktate gegen Parakeet v3, WER/Eigennamen/Latenz/RAM. Nur bei messbarem Gewinn als optionaler Download; nie bundlen.</p><div class="exit">Exit: belegte Entscheidung „nehmen“ oder „nicht nehmen“ — kein Bauchgefühl.</div></div></div>
         <div class="phase"><div class="num">4</div><div><h3>Politur &amp; Release-Gate</h3><p>Settings-Migration, leere Zustände, echte Fehlermeldungen, Tray, Update-Manifest, Doku/Changelog. Build, 240 Tests, Package, Smoke, manuelle Checkliste (Notepad, Browser, Passwortfeld, Elevated, Spiel, Roblox-String).</p><div class="exit">Exit: Release-Paket mit nachvollziehbaren Hashes und ohne Regression.</div></div></div>
       </div>
@@ -721,9 +721,9 @@
     <div class="wrap">
       <div class="section-head">
         <div>
-          <div class="kicker">06 · Der Prompt</div>
-          <h2>Copy-paste für den nächsten Agenten.</h2>
-          <p>Der Prompt ist absichtlich konkret: Dateien, Zustände, Grenzen, Tests, Abnahme. Er beschreibt den Hybrid-Rebuild, nicht einen kompletten Neubau. Er darf gekürzt werden — aber nicht die Guardrails.</p>
+          <div class="kicker">06 · Der ursprüngliche Prompt</div>
+          <h2>Archiviert: der Auftrag vor dem Umbau.</h2>
+          <p>Der Prompt ist absichtlich konkret: Dateien, Zustände, Grenzen, Tests, Abnahme. Er beschreibt den ursprünglichen Hybrid-Rebuild. Die Umsetzung ist inzwischen weitergegangen: Es gibt kein separates Workspace-Fenster mehr; <code>MainWindow</code> ist die einzige Oberfläche, und alle Seiten sind über <strong>Go to</strong> erreichbar.</p>
         </div>
         <div class="pill"><span class="dot"></span> bereit zum Kopieren</div>
       </div>
@@ -744,16 +744,16 @@ Baue SonaBar von einer großen Multi-Page-Workspace-App zu einer kompakten Windo
 - sichtbare letzte Transkription
 - ein klarer Settings-Dialog
 - CPU als echte, sichtbare und ehrliche Wahl
-- alle bestehenden SonaBar-Funktionen bleiben erhalten und über "Open workspace" erreichbar
+- alle bestehenden SonaBar-Funktionen bleiben erhalten und über "Go to" im selben Fenster erreichbar
 
 Das ist ein Shell-Rebuild, kein Logik-Rewrite. Keine bestehende Funktion still entfernen. Keine erfundenen Zustände, Modelle, Fortschritte, GPU-Fähigkeiten oder Threads.
 
 # AUSGANGSLAGE (verifizieren, nicht raten)
 - .NET 10 / WPF, Windows x64, Version 0.1.3.
 - Engines: Whisper (whisper.cpp v1.9.4, CPU/GPU), Parakeet TDT 0.6B v3 (NeMo-Speech.cpp C ABI, CPU-only, 25 Sprachen, q8 GGUF), Qwen3-ASR (authentifizierter Named-Pipe-Sidecar, kein Netzwerk-Listener).
-- Aktuelle Settings: Backend = "Automatic" | "CPU" | "GPU / accelerated"; Parakeet ist in ParakeetEngine.cs hart auf Gpu = -1; Whisper nutzt RecognitionThreadCount(Environment.ProcessorCount) = clamp(ProcessorCount - 1, 1, 16).
-- Aktuelle UI: MainWindow.cs, ca. 1080x780, 6 Tabs + Subnav, Hero, Footer; Backend liegt unter Recording > Advanced; Models auf eigener Seite.
-- Tests: 223/223; Package-Smoke 20/20. Build: ./build.ps1 -Configuration Release. Native Smoke: tests/SonaBar.NativeSmoke.
+- Settings: `ProcessingDevice` = Automatic | CPU | GPU; `CpuThreads` 0 = Auto; `MinHoldMs` 0-2000. Parakeet ist in ParakeetEngine.cs hart auf Gpu = -1; Whisper nutzt den konfigurierten Thread-Wert.
+- UI: MainWindow.cs, 430x660 mit nativem Rahmen, **Go to**-Selektor, Header-Zahnrad für Settings, Footer mit Start/Save; alle 20 Seiten im selben Fenster; kein separater Workspace.
+- Tests: 240/240; Package-Smoke 20/20. Build: ./build.ps1 -Configuration Release. Native Smoke: tests/SonaBar.NativeSmoke.
 
 # NICHT ZU TUN
 - Kein neues Python/Electron für die App; der bestehende Qwen-ASR-Sidecar bleibt unverändert. Kein Cloud-Zwang, keine API-Keys.
@@ -767,13 +767,13 @@ Das ist ein Shell-Rebuild, kein Logik-Rewrite. Keine bestehende Funktion still e
 - Keine Änderung an Default-Hotkeys oder bestehenden Settings ohne Migration.
 
 # SOLL-UI
-1. CompactWindow als Standardstart:
-   - ca. 560-620 px breit, 600-720 px hoch, resizable, Min 520x560.
-   - Titel "SonaBar"; Settings-Button; optional Tray.
+1. MainWindow als einzige Oberfläche:
+   - 430x660 mit nativem Rahmen, feste Größe, Min 380x520; kein Maximieren.
+   - Titel "SonaBar"; Header-Zahnrad für Settings; Tray-Menü **Tools**.
    - Große Statuskarte: "Ready", "Listening…", "Transcribing…", "Could not insert", "Model not installed".
    - Metadatenzeile: Mode (Push-to-talk / Toggle), Hotkey, Model + effektives Backend (z. B. "Parakeet · CPU").
    - "Last transcription"-Panel: Text, Copy, Reuse/Insert, Clear; leerer Zustand ohne Fake-Text.
-   - Primäraktion: "Start dictation" / "Stop & insert"; sekundär "Open workspace", "History".
+   - Primäraktion: "Start dictation" / "Stop & insert"; sekundär **Go to** und History.
    - Status/Fehler nur aus OperationMachine/AppController, nie aus einem Timer.
 2. SettingsDialog:
    - Provider/Engine: Local Whisper, Local Parakeet, Local Qwen ASR (nur wenn Runtime vorhanden).
@@ -782,10 +782,10 @@ Das ist ein Shell-Rebuild, kein Logik-Rewrite. Keine bestehende Funktion still e
    - CPU threads: 0 = Auto, sonst 1..logical; nur anzeigen/aktivieren, wenn die Engine den Wert wirklich nutzt; bei Parakeet sonst read-only "Runtime default".
    - Language; Mode; Hotkey; Min hold to send (0-2 s, Default 0 für Bestandsnutzer, Vorschlag 0,3 s).
    - Save / Cancel; keine sofortige stille Persistenz bei jedem Klick.
-   - Link "Open workspace" für alle bestehenden Seiten.
-3. Workspace:
+   - Kein separater Workspace-Link; alle Seiten über **Go to**.
+3. Seiten:
    - bestehende MainWindow-Seiten bleiben funktional; keine Seite löschen.
-   - Navigation aus dem CompactWindow öffnet die Workspace-Ansicht auf der richtigen Seite.
+   - Navigation aus dem **Go to**-Selektor öffnet die Seite im selben Fenster.
    - Themes Light/Dark/System/High Contrast über DynamicResource; keine hardcodierten Farben.
    - AutomationProperties, Fokus, Tab-Reihenfolge, Screenreader, DPI.
 
@@ -814,7 +814,7 @@ Das ist ein Shell-Rebuild, kein Logik-Rewrite. Keine bestehende Funktion still e
 
 # ARCHITEKTUR
 - Bestehende Schichten behalten: SonaBar.App (WPF), Core (Settings/Contracts), Audio, Transcription, Models, Storage, WindowsIntegration, Enhancement, Meetings, Updater.
-- Neue UI-Komponenten in SonaBar.App: CompactWindow, SettingsDialog, CompactState/ViewModel (testbar), WorkspaceHost.
+- Neue UI-Komponenten in SonaBar.App: MainWindow, SettingsDialog, CompactState/ViewModel (testbar); kein WorkspaceHost.
 - Keine Engine-Logik in Code-behind duplizieren; AppController/OperationMachine bleiben Quelle der Wahrheit.
 - ModelManager: SHA-256, Pause/Resume, Verify, Delete; keine stillen Downloads.
 - Keine neue Netzwerkabhängigkeit; lokale Inferenz bleibt lokal.
@@ -838,12 +838,12 @@ Manuell:
 - CPU ausgewählt: Parakeet nutzt CPU, 0 VRAM; GPU nicht heimlich aktiv.
 - Parakeet + GPU-Auswahl: disabled + Erklärung, kein Fake.
 - Min Hold: kurzer Tap wird verworfen; langer Hold transkribiert.
-- Workspace: alle bestehenden Seiten erreichbar; keine Funktion verschwunden.
+- Alle bestehenden Seiten über **Go to** erreichbar; keine Funktion verschwunden.
 
 # REIHENFOLGE
 0. Baseline messen (2/5/10/30 s WAVs, 3 Runs, P50/P95, RAM/VRAM/Threads) und Messlücke dokumentieren.
 1. Settings/Backend/Threads/MinHold/Hotwords + Tests.
-2. CompactWindow + SettingsDialog + Workspace-Link + Themes/Accessibility.
+2. MainWindow + SettingsDialog + Go-to-Navigation + Themes/Accessibility.
 3. Deutscher Parakeet-Spike + Benchmark + Entscheidung.
 4. Doku/Changelog, Build, Tests, Package, Smoke, manuelle Checkliste, Commit/Push/CI.
 

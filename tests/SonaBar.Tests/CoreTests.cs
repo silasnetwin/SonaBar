@@ -4,6 +4,7 @@ namespace SonaBar.Tests;
 public class CoreTests
 {
     [Fact] public void NewProfilesUseTheSingleCtrlShiftSpaceDictationShortcut(){var settings=new AppSettings();Assert.Equal(new Hotkey(6,32),settings.PlainHotkey);}
+    [Fact] public void ShortcutTextNamesFunctionKeysAndSpecialKeys(){Assert.Equal("Ctrl + Alt + F12",new Hotkey(3,123).ToString());Assert.Equal("Ctrl + Shift + Space",new Hotkey(6,32).ToString());Assert.Equal("Ctrl + Shift + E",new Hotkey(6,69).ToString());}
     [Fact] public void NewProfilesStartWithWindowsByDefault(){Assert.True(new AppSettings().LaunchAtLogin);}
     [Theory]
     [InlineData("  Hello  world ! \r\n\n\nNext ","Hello world!\n\nNext")]

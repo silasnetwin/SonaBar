@@ -3,11 +3,10 @@ using System.Windows.Input;
 
 namespace SonaBar.App;
 
-/// <summary>Compact, everyday settings. Advanced options stay in the full workspace.</summary>
+/// <summary>Compact, everyday settings. Every page stays available through the compact Go to selector and the tray Tools menu.</summary>
 public sealed class SettingsDialog : ThemedWindow
 {
     private readonly AppController c;
-    private readonly Action<string>? openWorkspace;
     private string selectedLanguage;
     private bool pushToTalk;
     private Hotkey hotkey;
@@ -16,10 +15,9 @@ public sealed class SettingsDialog : ThemedWindow
     private int minHold;
     private ModelOption selectedModel;
 
-    public SettingsDialog(AppController controller, Action<string>? openWorkspace = null)
+    public SettingsDialog(AppController controller)
     {
         c = controller;
-        this.openWorkspace = openWorkspace;
         Title = "SonaBar settings";
         var area = SystemParameters.WorkArea;
         Width = Math.Min(480, area.Width - 24);
@@ -165,9 +163,6 @@ public sealed class SettingsDialog : ThemedWindow
             Ui.SettingRow("Language", "Automatic lets the model detect the language.", language),
             Ui.SettingRow("Processing device", "Whisper can use a GPU. Parakeet and Qwen run on CPU.", deviceChoice),
             Ui.SettingRow("CPU threads", "Used by Whisper. Parakeet and Qwen manage their own CPU threads.", threadChoice)));
-        content.Children.Add(Ui.Card(Ui.Text("More in the workspace", 18),
-            Ui.Text("Writing models, custom words, snippets, applications, history and diagnostics remain available in the full workspace.", 13, true),
-            openWorkspace is null ? Ui.Text("Open the workspace from the compact window.", 12, true) : Ui.Button("Open workspace", () => { DialogResult = false; openWorkspace("Overview"); })));
         return content;
     }
 

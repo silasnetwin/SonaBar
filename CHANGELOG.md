@@ -7,16 +7,24 @@ All notable changes to SonaBar are documented here. Versions follow
 
 ### Added
 
-- **Compact everyday window.** SonaBar now opens in a 430 x 660 Dictate-style
-  window with the current state, mode, shortcut, model, effective processing
-  path, the last transcription, copy and a single start/stop action. The full
-  workspace remains available through **Open workspace**, the tray menu and the
-  compact settings dialog; closing the compact window keeps SonaBar in the tray.
+- **One compact everyday window.** SonaBar now opens in a 430 x 660
+  `MainWindow` with the current state, mode, shortcut, model, effective
+  processing path, the last transcription, copy and a single start/stop action.
+  The old 1080 x 780 workspace no longer exists. All 20 pages are reached from
+  the **Go to** selector, and the header gear opens compact settings. Closing the
+  window keeps SonaBar in the tray; **Tray > Tools** provides Home, History,
+  Transcribe File, Meeting Mode and All settings shortcuts.
 - **Compact settings.** Mode, shortcut capture, minimum push-to-talk hold,
   installed model or automatic profile, language, processing device and Whisper
-  CPU threads are editable without opening the workspace. Advanced settings,
-  writing models, custom words, snippets, applications, history and diagnostics
-  stay in the full workspace.
+  CPU threads are editable in `SettingsDialog` without leaving the compact
+  window. Writing models, custom words, snippets, applications, history and
+  diagnostics stay available on their pages through **Go to**.
+- **Compact-only focus and layout polish.** The 430 x 660 window fits without a
+  scrollbar, the Home page uses the header gear instead of a second Settings
+  button, and the read-only last transcription no longer takes a tab stop.
+  WPF's dotted focus rectangle is replaced by a solid accent border or a soft
+  icon highlight, so keyboard focus stays visible without the broken-looking
+  dashed box.
 - **Honest processing controls.** `ProcessingDevice` replaces the old free-form
   backend label, with Automatic, CPU and GPU choices. Whisper accepts an explicit
   CPU thread count, falls back to CPU when GPU loading fails, and reports the
@@ -82,14 +90,14 @@ All notable changes to SonaBar are documented here. Versions follow
   signals the running instance and exits silently instead of showing a blocking
   "already running" message box. The warning remains only when the existing
   process is a different build path, and the decision is covered by focused
-  tests.
+  tests. The compact `MainWindow` is the only window the second launch restores.
 - **Short push-to-talk presses stay short.** The key-up timestamp is captured
   immediately, so a slow microphone or model start cannot turn an accidental tap
   into a valid hold. The compact button also stops and inserts while recording
   instead of cancelling the dictation.
 - **Onboarding now returns to the compact window.** Finishing the Welcome flow
-  hides the workspace and shows the everyday window instead of leaving SonaBar
-  tray-only until the next launch.
+  shows the everyday `MainWindow` instead of leaving SonaBar tray-only until the
+  next launch.
 - **GPU fallback reaches the user.** The router now forwards Whisper's CPU
   fallback notice, and the effective processing summary changes to
   `GPU unavailable (CPU fallback)`. Changing the processing device forces the
@@ -112,6 +120,16 @@ All notable changes to SonaBar are documented here. Versions follow
   insertion service now clicks the stored caret (or the middle of an empty
   field) and verifies foreground and keyboard focus again immediately before
   SendInput, so Chrome and Claude receive the text instead of a SonaBar field.
+- **Rich Chromium/Electron composers receive one atomic paste.** Discord/Slate,
+  Slack, Teams, VS Code/Cursor/OpenCode, ChatGPT, Notion, Obsidian, Element,
+  Signal, Telegram, WhatsApp and contenteditable/CodeMirror/Monaco/ProseMirror
+  editors now skip UI Automation `SetValue` and long SendInput batches and paste
+  once through the clipboard. Long fallback text is sent in small Unicode
+  chunks, a partial insertion into an empty field is replaced with select-all +
+  paste, and a paste that the app normalizes is reported as
+  `Paste sent — check the app/target` instead of a false failure. The Edge
+  `slateTextArea` probe verified the full paste and the normalized
+  `changed_assumed` path.
 - **Browser page selections are not field selections.** Chromium can expose the
   page-level selection through a contenteditable's TextPattern. SonaBar now
   requires the selected text to occur inside the field's own content, so
@@ -123,9 +141,18 @@ All notable changes to SonaBar are documented here. Versions follow
   Chromium contenteditables are found reliably, and a delayed UI Automation value
   update no longer causes a duplicate SendInput insertion.
 - **Focus restore survives Windows' foreground lock.** Before delivery SonaBar
-  attaches to the foreground thread and retries activation, with a window-switch
-  fallback. A browser or game behind SonaBar or its overlay no longer fails with
-  "Windows prevented restoring focus."
+  attaches to both the current foreground thread and the target thread, retries
+  activation, and keeps a window-switch fallback. It no longer unmaximizes a
+  target that was intentionally maximized. A browser, editor or game behind
+  SonaBar or its overlay no longer fails with "Windows prevented restoring focus."
+- **Slow transcriptions keep a usable insertion target.** A UI Automation
+  selection captured before a long transcription can expire while the target
+  field is still healthy. SonaBar now logs the stale selection, reacquires the
+  focused editable node, retries `SetFocus` and foreground activation, and
+  continues at the current caret instead of failing the whole dictation.
+  Replacement paths still validate the original passage and refuse an unsafe
+  edit. New diagnostics distinguish `selection_restore_failed`,
+  `selection_reacquired` and `final_after_restore;attempt=...`.
 - **Tray status updates no longer throw.** The tooltip now measures the full
   `SonaBar · ` prefix before applying the 63-character Windows limit. The old
   hard-coded prefix length was one character too long, so changing the status
@@ -143,16 +170,15 @@ All notable changes to SonaBar are documented here. Versions follow
 
 ### Changed
 
-- **Workspace polish.** The General tab is a ten-destination hub for the main
-  workflows. Page headings and subtitles are clearer, the Snippets and
-  Applications subnav labels match their pages, and About shows the factual
-  build line `Version 0.1.3 · Windows x64 · unsigned`.
+- **Page polish.** General is a ten-destination hub for the main workflows.
+  Page headings and subtitles are clearer, the Snippets and Applications labels
+  match their pages, and About shows the factual build line
+  `Version 0.1.3 · Windows x64 · unsigned`.
 - **WhisperBar-inspired interface.** The shell now uses a light palette by
-  default, a custom 44 px title bar with Windows minimise, maximise/restore and
-  close controls, segmented top tabs, white cards, green positive actions and a
-  blue record control. SonaBar is an independent SilasNet application and is
-  not affiliated with WhisperBar. Native resize, snap and per-monitor DPI are
-  preserved.
+  default, native Windows chrome with minimize and close, the **Go to** page
+  selector, white cards, green positive actions and a blue record control.
+  SonaBar is an independent SilasNet application and is not affiliated with
+  WhisperBar. The window is fixed at a compact size and keeps per-monitor DPI.
 - **Dictation delivery is verified end to end.** Native edit, UI Automation,
   Unicode and clipboard paths now confirm the text in the target; browser
   contenteditables are inspected through `TextPattern`, partial insertions are

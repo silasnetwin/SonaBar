@@ -24,6 +24,7 @@ internal static class Native
     [DllImport("user32.dll")] internal static extern bool AttachThreadInput(uint attach,uint attachTo,bool attachInput);
     [DllImport("user32.dll")] internal static extern bool BringWindowToTop(nint hwnd);
     [DllImport("user32.dll")] internal static extern bool ShowWindow(nint hwnd,int command);
+    [DllImport("user32.dll")] internal static extern bool IsIconic(nint hwnd);
     [DllImport("user32.dll")] internal static extern void SwitchToThisWindow(nint hwnd,bool altTab);
     [DllImport("kernel32.dll")] internal static extern uint GetCurrentThreadId();
     [DllImport("user32.dll")] internal static extern bool IsWindow(nint hwnd);
@@ -81,12 +82,21 @@ internal static class Native
         var foreground=GetForegroundWindow();
         var current=GetCurrentThreadId();
         var foregroundThread=foreground==0?0:GetWindowThreadProcessId(foreground,out _);
-        var attached=false;
+        var targetThread=GetWindowThreadProcessId(hwnd,out _);
+        var foregroundAttached=false;
+        var targetAttached=false;
         try
         {
+            // Attaching to the target thread as well as the current foreground thread is
+            // what lets Windows hand activation back to Chromium/Electron composers after
+            // a long transcription. Without it, SetForegroundWindow can report success
+            // while the foreground lock immediately restores the previous window.
             if(foregroundThread!=0&&foregroundThread!=current)
-                attached=AttachThreadInput(current,foregroundThread,true);
-            ShowWindow(hwnd,9);
+                foregroundAttached=AttachThreadInput(current,foregroundThread,true);
+            if(targetThread!=0&&targetThread!=current&&targetThread!=foregroundThread)
+                targetAttached=AttachThreadInput(current,targetThread,true);
+            // Do not unmaximize a target that the user intentionally maximized.
+            if(IsIconic(hwnd))ShowWindow(hwnd,9);
             BringWindowToTop(hwnd);
             SetForegroundWindow(hwnd);
             for(var attempt=0;attempt<8&&GetForegroundWindow()!=hwnd;attempt++)Thread.Sleep(15);
@@ -99,7 +109,8 @@ internal static class Native
         }
         finally
         {
-            if(attached)AttachThreadInput(current,foregroundThread,false);
+            if(targetAttached)AttachThreadInput(current,targetThread,false);
+            if(foregroundAttached)AttachThreadInput(current,foregroundThread,false);
         }
     }
     internal static nint WindowAt(int x, int y) => WindowFromPoint(new POINT { X = x, Y = y });
@@ -127,6 +138,22 @@ internal static class Native
             list.Add(new INPUT { type = 1, data = new InputUnion { keyboard = new KEYBDINPUT { scan = c, flags = 6 } } });
         }
         Send(list.ToArray());
+    }
+    /// <summary>
+    /// Sends Unicode in small batches. Electron and Slate composers can drop characters
+    /// when a long transcription arrives as one huge input batch.
+    /// </summary>
+    internal static async Task UnicodeAsync(string text,CancellationToken token=default)
+    {
+        if(string.IsNullOrEmpty(text))return;
+        const int chunkSize=32;
+        for(var offset=0;offset<text.Length;offset+=chunkSize)
+        {
+            token.ThrowIfCancellationRequested();
+            var length=Math.Min(chunkSize,text.Length-offset);
+            Unicode(text.Substring(offset,length));
+            if(offset+length<text.Length)await Task.Delay(2,token);
+        }
     }
     /// <summary>Sends the literal text, using Enter for line breaks so multi-line snippets work in edit controls.</summary>
     internal static void Text(string text)

@@ -53,7 +53,17 @@ public enum SpeechQuality { Fast, Balanced, Maximum }
 public enum OutputCasing { Normal, Lowercase, Uppercase }
 public sealed record Hotkey(uint Modifiers, uint Key)
 {
-    public override string ToString() => $"{((Modifiers & 2) != 0 ? "Ctrl + " : "")}{((Modifiers & 4) != 0 ? "Shift + " : "")}{((Modifiers & 1) != 0 ? "Alt + " : "")}{((Modifiers & 8) != 0 ? "Win + " : "")}{(Key == 32 ? "Space" : ((char)Key).ToString())}";
+    public override string ToString() => $"{((Modifiers & 2) != 0 ? "Ctrl + " : "")}{((Modifiers & 4) != 0 ? "Shift + " : "")}{((Modifiers & 1) != 0 ? "Alt + " : "")}{((Modifiers & 8) != 0 ? "Win + " : "")}{KeyName(Key)}";
+    private static string KeyName(uint key) => key switch
+    {
+        8 => "Backspace", 9 => "Tab", 13 => "Enter", 27 => "Escape", 32 => "Space",
+        33 => "Page Up", 34 => "Page Down", 35 => "End", 36 => "Home",
+        37 => "Left", 38 => "Up", 39 => "Right", 40 => "Down",
+        45 => "Insert", 46 => "Delete",
+        >= 0x70 and <= 0x87 => "F" + (key - 0x6F),
+        >= 0x30 and <= 0x39 or >= 0x41 and <= 0x5A => ((char)key).ToString(),
+        _ => "Key " + key
+    };
 }
 public sealed class AppSettings
 {

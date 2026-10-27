@@ -26,15 +26,16 @@ public sealed partial class MainWindow
                 catch(OperationCanceledException){status.Text="Paused — choose Download / resume to continue";}
                 finally{pauseButton.IsEnabled=false;progress.Visibility=Visibility.Collapsed;download.Dispose();download=null;}
             },!ready);
-            // A model is one compact row: identity and state on the left, actions on the right.
-            var actions=Ui.Row(); actions.VerticalAlignment=VerticalAlignment.Center; actions.HorizontalAlignment=HorizontalAlignment.Right; actions.Margin=new Thickness(24,0,0,0);
+            // At compact width the model identity and its actions cannot share one row.
+            // Stack them so long licence names and the action buttons remain readable.
+            var actions=Ui.Row(); actions.VerticalAlignment=VerticalAlignment.Center; actions.HorizontalAlignment=HorizontalAlignment.Left; actions.Margin=new Thickness(0,8,0,0);
             if(useButton is not null)actions.Children.Add(useButton);
             actions.Children.Add(downloadButton); actions.Children.Add(pauseButton); actions.Children.Add(deleteButton);
             var info=Ui.Stack(Ui.Text(model.Name,17),Ui.Text($"{model.Engine}  ·  {model.Bytes/1048576:N0} MB  ·  {model.License}\n{model.Hardware}",12,true),status);
             info.VerticalAlignment=VerticalAlignment.Center;
-            var row=new Grid(); row.ColumnDefinitions.Add(new ColumnDefinition()); row.ColumnDefinitions.Add(new ColumnDefinition { Width=GridLength.Auto });
-            row.Children.Add(info); Grid.SetColumn(actions,1); row.Children.Add(actions);
-            var card=Ui.Card(row,progress); card.Padding=new Thickness(22,16,18,14);
+            var row=new StackPanel();
+            row.Children.Add(info); row.Children.Add(actions);
+            var card=Ui.Card(row,progress); card.Padding=new Thickness(18,14,18,12);
             if(model.Id is "small" or "qwen3-4b" or "qwen3-asr-1.7b" || model.Id==c.Settings.EffectiveSpeechModel || ready)content.Children.Add(card);
             else advanced.Children.Add(card);
         }
