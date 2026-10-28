@@ -84,7 +84,7 @@ public sealed record Palette(
         OverlayError: "#FF7B7B");
 
     /// <summary>
-    /// The light theme follows a restrained, WhisperBar-inspired palette: warm neutral
+    /// The light theme follows a restrained, compact dictation-bar palette: warm neutral
     /// window surfaces, white cards, a saturated blue for the record control and a clear
     /// green for positive actions and checked boxes.
     /// </summary>

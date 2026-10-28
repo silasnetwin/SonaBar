@@ -2,7 +2,7 @@
  <!--
    Every colour comes from the palette in Palette.cs through the application resources.
    Only the shape of the controls is defined here. The light palette deliberately follows
-   the calm, rounded surfaces of WhisperBar: white cards, hairline borders, a system blue
+   the calm, rounded surfaces of the compact dictation-bar category: white cards, hairline borders, a system blue
    record control and a green confirmation colour.
  -->
  <CornerRadius x:Key="RadiusSmall">7</CornerRadius>

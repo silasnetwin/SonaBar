@@ -1,6 +1,6 @@
 # SonaBar third-party notices
 
-SonaBar is an independent Windows application by SilasNet. It is not affiliated with, endorsed by, or connected to WhisperBar or its developer. The SonaBar name, icon and interface are original assets. No WhisperBar source code, application package or asset files are redistributed; the interface is inspired by the compact dictation-bar category, not a copy of WhisperBar.
+SonaBar is an independent Windows application by SilasNet and is not affiliated with any third-party dictation product. The SonaBar name, icon and interface are original assets. No third-party source code, application package or asset files are redistributed; the interface follows the compact dictation-bar category.
 
 The `licenses` directory in the distribution contains upstream license texts. Native libraries remain separate and replaceable. SonaBar imposes no restriction on reverse engineering or replacing LGPL components for debugging modifications to those components.
 

@@ -1,6 +1,6 @@
 # SonaBar color system — 5 October 2026
 
-Reference: [WhisperBar](https://whisperbar.pro/), reviewed for its visual hierarchy: a cool near-white canvas, dark text, white surfaces, a restrained blue accent and a clear green confirmation. SonaBar uses its own colors and Windows controls; no site assets or CSS were copied.
+Reference: compact dictation-bar interfaces, reviewed for their visual hierarchy: a cool near-white canvas, dark text, white surfaces, a restrained blue accent and a clear green confirmation. SonaBar uses its own colors and Windows controls; no third-party site assets or CSS were copied.
 
 | Role | Light | Dark |
 | --- | --- | --- |

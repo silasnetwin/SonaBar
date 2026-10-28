@@ -247,27 +247,25 @@ Nein. Oberfläche, Hotkeys und Einfüge-Schicht sind Windows-spezifisch.
 **Was kostet SonaBar?**
 SonaBar ist kostenlos. Es gibt kein Abo, keine Testphase, keinen Checkout und keinen Lizenzserver. Die App bleibt ohne Konto nutzbar; optionale Modell-Downloads unterliegen den Lizenzen der jeweiligen Modelle. Signierung und automatischer Update-Feed werden unabhängig davon für einen stabilen Release fertiggestellt.
 
-**Steht SonaBar in Verbindung zu WhisperBar?**
-Nein. SonaBar ist ein unabhängiges Produkt von SilasNet. Es gibt keine Verbindung zu WhisperBar und keine gemeinsame Entwicklung.
-
 ## Entwickler
 
 <details>
 <summary><strong>Aus dem Quellcode bauen</strong></summary>
 
-Voraussetzungen: .NET 10 SDK, Visual Studio 2022 mit C++-Desktop-Workload und CMake für die nativen Inferenz-Bibliotheken.
+Voraussetzungen: Git, PowerShell 5.1 oder neuer, Visual Studio 2022 mit C++-Desktop-Workload inklusive CMake und vcpkg. Ein .NET 10 SDK ist optional: `build.ps1` verwendet ein vorhandenes SDK oder installiert bei Bedarf eines nach `.tools/dotnet`.
 
 ```powershell
 git clone https://github.com/silasnetwin/SonaBar.git
 cd SonaBar
 git submodule update --init --recursive
 
-# Bauen, testen, veröffentlichen und packen (Portable ZIP + Installer)
+# Einmalig bauen, testen, veröffentlichen und packen (Portable ZIP + Installer).
+# Bootstrap von .NET 10, CMake-Prüfung und vcpkg-Abhängigkeiten passieren hier.
 ./build.ps1 -Configuration Release
 
-# Oder Schritt für Schritt
-.tools/dotnet/dotnet build SonaBar.slnx -c Release
-.tools/dotnet/dotnet test  SonaBar.slnx -c Release
+# Danach mit dem lokal gebootstrappten SDK Schritt für Schritt arbeiten:
+./.tools/dotnet/dotnet build SonaBar.slnx -c Release
+./.tools/dotnet/dotnet test  SonaBar.slnx -c Release
 ```
 
 Der Release-Build schreibt `dist/SonaBar-Portable-x64.zip`, `dist/SonaBar-Setup-x64.exe` und `dist/SHA256SUMS.txt`. Er lädt außerdem die gepinnte CPython-Laufzeit und die Qwen-Python-Abhängigkeiten nach `dist/SonaBar/qwen`; die Qwen-Modellgewichte bleiben ein separater, geprüfter Download.
@@ -275,17 +273,17 @@ Der Release-Build schreibt `dist/SonaBar-Portable-x64.zip`, `dist/SonaBar-Setup-
 ### Nativer Inferenz-Check
 
 ```powershell
-.tools/dotnet/dotnet run --project tests/SonaBar.NativeSmoke -c Release -- .tools/jfk.wav artifacts/native-smoke.json
+./.tools/dotnet/dotnet run --project tests/SonaBar.NativeSmoke -c Release -- third_party/whisper.cpp/samples/jfk.wav artifacts/native-smoke.json
 ```
 
 Parakeet und Qwen nutzen denselben Harness:
 
 ```powershell
-.tools/dotnet/dotnet run --project tests/SonaBar.NativeSmoke -c Release -- .tools/jfk.wav artifacts/parakeet-smoke.json --model=parakeet-tdt-0.6b-v3 --speech-only
+./.tools/dotnet/dotnet run --project tests/SonaBar.NativeSmoke -c Release -- third_party/whisper.cpp/samples/jfk.wav artifacts/parakeet-smoke.json --model=parakeet-tdt-0.6b-v3 --speech-only
 
 $env:SONABAR_QWEN_PYTHON="$PWD/dist/SonaBar/qwen/python.exe"
 $env:SONABAR_QWEN_SIDECAR="$PWD/dist/SonaBar/qwen/qwen_sidecar.py"
-.tools/dotnet/dotnet run --project tests/SonaBar.NativeSmoke -c Release -- .tools/jfk.wav artifacts/qwen-smoke.json --model=qwen3-asr-1.7b --speech-only
+./.tools/dotnet/dotnet run --project tests/SonaBar.NativeSmoke -c Release -- third_party/whisper.cpp/samples/jfk.wav artifacts/qwen-smoke.json --model=qwen3-asr-1.7b --speech-only
 ```
 
 Der Qwen-Sidecar wird mit einer zufälligen Named Pipe pro Prozess und gegenseitiger HMAC-Authentifizierung gestartet. Er hat keinen Listening-Socket, lädt das Modell mit `local_files_only=True` und wird beim Beenden der App beendet.
@@ -298,6 +296,7 @@ tests/          xUnit-Suite und nativer Smoke-Test
 installer/      per-user Installer
 resources/      Icons, Markenvektoren, Lizenzen
 scripts/        Asset- und Dependency-Tooling
+third_party/    gepinnte native Runtimes und Referenzaudio
 docs/           Design, Verifikation und manuelle Testmatrix
 ```
 
@@ -309,7 +308,6 @@ docs/           Design, Verifikation und manuelle Testmatrix
 | --- | --- |
 | [CHANGELOG.md](CHANGELOG.md) | Versionshistorie und sichtbare Änderungen |
 | [docs/IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md) | Umgesetzte Funktionen und bekannte Lücken |
-| [docs/WHISPERBAR_PARITY.md](docs/WHISPERBAR_PARITY.md) | Funktionsabgleich und bewusste Unterschiede |
 | [docs/MANUAL_TEST_CHECKLIST.md](docs/MANUAL_TEST_CHECKLIST.md) | Geräte-, Installer- und App-Checks |
 | [SECURITY.md](SECURITY.md) | Privater Meldeweg für Sicherheitslücken |
 | [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) | Lizenzen der enthaltenen Komponenten |

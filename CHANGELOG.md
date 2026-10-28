@@ -192,11 +192,11 @@ All notable changes to SonaBar are documented here. Versions follow
   Page headings and subtitles are clearer, the Snippets and Applications labels
   match their pages, and About shows the factual build line
   `Version 0.1.3 · Windows x64 · unsigned`.
-- **WhisperBar-inspired interface.** The shell now uses a light palette by
+- **Compact dictation-bar interface.** The shell now uses a light palette by
   default, native Windows chrome with minimize and close, the **Go to** page
   selector, white cards, green positive actions and a blue record control.
-  SonaBar is an independent SilasNet application and is not affiliated with
-  WhisperBar. The window is fixed at a compact size and keeps per-monitor DPI.
+  SonaBar is an independent SilasNet application. The window is fixed at a
+  compact size and keeps per-monitor DPI.
 - **Dictation delivery is verified end to end.** Native edit, UI Automation,
   Unicode and clipboard paths now confirm the text in the target; browser
   contenteditables are inspected through `TextPattern`, partial insertions are

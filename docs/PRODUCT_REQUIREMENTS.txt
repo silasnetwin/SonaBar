@@ -12,18 +12,15 @@ Private. Offline.
 
 PRIMARY GOAL
 
-Build a COMPLETE, polished Windows-native alternative to the macOS application WhisperBar from:
+Build a COMPLETE, polished Windows-native speech-to-text application.
 
-https://whisperbar.pro/
-https://whisperbar.pro/changelog.html
-
-The reference application is a private/offline speech-to-text utility that lives in the macOS menu bar.
+The reference category is a private/offline speech-to-text utility that lives in the macOS menu bar.
 
 SonaBar must provide essentially the same FUNCTIONAL EXPERIENCE on Windows, adapted correctly to Windows APIs and Windows UX.
 
-Do NOT copy WhisperBar's proprietary source code, logo, trademark, icons, paid assets, bundled proprietary files, or application package.
+Do NOT copy any third-party proprietary source code, logo, trademark, icons, paid assets, bundled proprietary files, or application package.
 
-Do NOT call the product WhisperBar.
+Do NOT use a third-party product name for SonaBar.
 
 We are implementing equivalent functionality independently under the SonaBar / SilasNet brand.
 
@@ -1235,7 +1232,7 @@ Use a modern Fluent-inspired Windows design.
 35. VISUAL DESIGN
 ==================================================
 
-The overall aesthetic should feel similar in QUALITY to WhisperBar:
+The overall aesthetic should feel similar in QUALITY to leading commercial dictation apps:
 
 minimal
 premium
@@ -1298,7 +1295,7 @@ Concept:
 
 minimal microphone / waveform / V
 
-Do not copy WhisperBar's icon.
+Do not copy any third-party icon.
 
 Create app assets for:
 
@@ -1972,7 +1969,7 @@ User should almost never lose their spoken text.
 65. REFERENCE FEATURE PARITY
 ==================================================
 
-WhisperBar publicly describes functionality including:
+The product category includes functionality such as:
 
 - global speech-to-text
 - text insertion into the active application

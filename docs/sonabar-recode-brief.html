@@ -667,7 +667,7 @@
       <div class="grid g3" style="margin-top:16px">
         <div class="card soft"><h4>Schon gut</h4><p class="small">Parakeet TDT v3 ist bereits eingebunden und CPU-verifiziert. Whisper, Qwen, History, Snippets, Typed Expansion, Updates und Qwen-Sidecar sind vorhanden. SonaBar muss die Engine nicht erfinden.</p></div>
         <div class="card soft"><h4>Wirklich neu</h4><p class="small">Compact-Shell, Settings-Dialog, echte CPU/Thread-Wahl, Min Hold, Hotword-Brücke, optionaler deutscher Parakeet-Fine-Tune. Das ist genug für einen großen Schnitt — aber kein Grund, die Logik neu zu schreiben.</p></div>
-        <div class="card soft"><h4>Nicht anfassen</h4><p class="small">Qwen-ASR bleibt im authentifizierten Named-Pipe-Sidecar ohne Netzwerk-Listener. Keine Modellgewichte ins Repo. Keine WhisperBar-Assets. Keine erfundenen Fortschritte oder GPU-Fähigkeiten.</p></div>
+        <div class="card soft"><h4>Nicht anfassen</h4><p class="small">Qwen-ASR bleibt im authentifizierten Named-Pipe-Sidecar ohne Netzwerk-Listener. Keine Modellgewichte ins Repo. Keine fremden Assets. Keine erfundenen Fortschritte oder GPU-Fähigkeiten.</p></div>
       </div>
     </div>
   </section>
@@ -753,11 +753,11 @@ Das ist ein Shell-Rebuild, kein Logik-Rewrite. Keine bestehende Funktion still e
 - Engines: Whisper (whisper.cpp v1.9.4, CPU/GPU), Parakeet TDT 0.6B v3 (NeMo-Speech.cpp C ABI, CPU-only, 25 Sprachen, q8 GGUF), Qwen3-ASR (authentifizierter Named-Pipe-Sidecar, kein Netzwerk-Listener).
 - Settings: `ProcessingDevice` = Automatic | CPU | GPU; `CpuThreads` 0 = Auto; `MinHoldMs` 0-2000. Parakeet ist in ParakeetEngine.cs hart auf Gpu = -1; Whisper nutzt den konfigurierten Thread-Wert.
 - UI: MainWindow.cs, 430x660 mit nativem Rahmen, **Go to**-Selektor, Header-Zahnrad für Settings, Footer mit Start/Save; alle 20 Seiten im selben Fenster; kein separater Workspace.
-- Tests: 240/240; Package-Smoke 20/20. Build: ./build.ps1 -Configuration Release. Native Smoke: tests/SonaBar.NativeSmoke.
+- Tests: 247/247; Package-Smoke 20/20. Build: ./build.ps1 -Configuration Release. Native Smoke: tests/SonaBar.NativeSmoke.
 
 # NICHT ZU TUN
 - Kein neues Python/Electron für die App; der bestehende Qwen-ASR-Sidecar bleibt unverändert. Kein Cloud-Zwang, keine API-Keys.
-- Keine WhisperBar-Assets, keine WhisperBar-Edition, keine Affiliations-Behauptung.
+- Keine fremden Assets, keine fremde Edition, keine Affiliations-Behauptung.
 - Keine Modellgewichte committen. Keine Downloads ohne HTTPS, SHA-256 und Lizenz.
 - Keine Fake-UI: kein "GPU", wenn die Engine CPU-only ist; keine Threads, die nicht gesetzt werden; kein "Ready", wenn kein Modell geladen ist.
 - Keine bestehenden Features entfernen: Files, Meetings, History, Statistics, Snippets (inkl. opt-in Typed Expansion), Writing, Custom Words, Applications, Privacy, Help, Updates, Themes.
@@ -890,7 +890,7 @@ Liefere zuerst einen kurzen Plan mit den betroffenen Dateien und Tests, dann die
             <li><input type="checkbox"> <span><b>Manuell</b>: Notepad, Browser, Passwortfeld, Elevated, Spiel, Roblox-String.</span></li>
             <li><input type="checkbox"> <span><b>Themes</b>: Light/Dark/System/High Contrast; DPI 100/150/200 %.</span></li>
             <li><input type="checkbox"> <span><b>Accessibility</b>: Fokus, Tab-Reihenfolge, AutomationProperties, Screenreader.</span></li>
-            <li><input type="checkbox"> <span><b>Doku</b>: README (DE), CHANGELOG, IMPLEMENTATION_STATUS, WHISPERBAR_PARITY, Manual Checklist.</span></li>
+            <li><input type="checkbox"> <span><b>Doku</b>: README (DE), CHANGELOG, IMPLEMENTATION_STATUS, Manual Checklist.</span></li>
             <li><input type="checkbox"> <span><b>Keine Gewichte</b> im Repo; Lizenzen/Attributionen aktualisiert.</span></li>
             <li><input type="checkbox"> <span><b>Commit/Push/CI</b> mit nachvollziehbarem Ergebnis.</span></li>
           </ul>
@@ -921,7 +921,6 @@ Liefere zuerst einen kurzen Plan mit den betroffenen Dateien und Tests, dann die
         <div><a href="https://huggingface.co/flozen1981/parakeet-primeline-onnx" target="_blank" rel="noreferrer">HF: flozen1981/parakeet-primeline-onnx</a><br><span>CC-BY-4.0 · int8 ONNX · ~640 MB</span></div>
         <div><a href="https://huggingface.co/nvidia/parakeet-tdt-0.6b-v3" target="_blank" rel="noreferrer">HF: nvidia/parakeet-tdt-0.6b-v3</a><br><span>Basis-Modell · CC-BY-4.0</span></div>
         <div><a href="IMPLEMENTATION_STATUS.md">SonaBar: IMPLEMENTATION_STATUS</a><br><span>Build, Tests, Package, Hashes</span></div>
-        <div><a href="WHISPERBAR_PARITY.md">SonaBar: WHISPERBAR_PARITY</a><br><span>Feature-Parität und bewusste Unterschiede</span></div>
       </div>
       <div class="hr"></div>
       <p class="tiny muted" style="margin-bottom:0">Dieses Dokument ist ein internes Briefing, keine Marketingseite. Es enthält keine Modellgewichte, keine API-Keys und keine personenbezogenen Daten. Die Videozitate sind aus dem deutschen Auto-Transkript; kleine Transkriptionsfehler wurden sinngemäß geglättet. Zahlen aus dem Video sind Demo-Messungen, keine Garantie.</p>

@@ -2,7 +2,7 @@
 
 ## Reference and design
 
-The [WhisperBar product site](https://whisperbar.pro/) informed the visual direction: generous whitespace, strong headings, quiet green accents, clear primary actions and short explanations. SonaBar keeps its own identity, copy, icon and native Windows layout. No WhisperBar assets or source code were copied.
+The compact dictation-bar category informed the visual direction: generous whitespace, strong headings, quiet green accents, clear primary actions and short explanations. SonaBar keeps its own identity, copy, icon and native Windows layout. No third-party assets or source code were copied.
 
 The WPF window now has a task-first sidebar, a clear page header, a focused home screen, consistent panels and controls, a visible status area and a persistent save action on settings pages. Rarely used pages sit under More. Light and dark themes use the same hierarchy. The selection editor has a scrollable, resizable layout; the separate writing assistant now has a clear input, instruction and result flow.
 
