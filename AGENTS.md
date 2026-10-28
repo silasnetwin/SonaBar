@@ -13,7 +13,7 @@ Tests are in `tests/SonaBar.Tests` (xUnit) and `tests/SonaBar.NativeSmoke` (real
 - `./build.ps1 -Configuration Release` restores, builds, tests, publishes, and packages the portable ZIP and installer.
 - `./build.ps1 -Configuration Release -UpdateFeed https://updates.example.com/releases.json` also embeds the production update feed in the release package.
 - `.tools/dotnet/dotnet test SonaBar.slnx` runs the xUnit suite after the local .NET 10 SDK is available.
-- `.tools/dotnet/dotnet run --project tests/SonaBar.NativeSmoke -c Release -- .tools/jfk.wav artifacts/native-smoke.json` verifies bundled native inference with reference audio.
+- `.tools/dotnet/dotnet run --project tests/SonaBar.NativeSmoke -c Release -- third_party/whisper.cpp/samples/jfk.wav artifacts/native-smoke.json` verifies bundled native inference with reference audio.
 
 ## Coding Style & Naming Conventions
 
